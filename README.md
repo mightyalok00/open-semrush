@@ -32,8 +32,8 @@
 </div>
 
 > [!TIP]
-> **Zero Subscriptions. Zero Telemetry. 100% Unmetered.**  
-> Self-host your own SEO intelligence platform on your laptop, VPS, or private cloud. Inspect unlimited domains and keywords with zero rate limits or paywalls.
+> **Self-hosted prototype — review data limitations before relying on results.**  
+> Technical page audits inspect fetched HTML. Keyword volume, difficulty, traffic histories, authority scores, backlink profiles, and fallback SERPs are modeled or synthetic. AI-generated SERP output is not independently verified as live Google results. Do not use these modeled values for client reporting or business decisions.
 
 ---
 
@@ -210,6 +210,9 @@ npm start
 ### Option B: Docker Compose
 
 ```bash
+# Configure optional AI keys and satisfy the Compose env_file requirement
+cp .env.example .env
+
 # Start in detached mode
 docker compose up -d
 
