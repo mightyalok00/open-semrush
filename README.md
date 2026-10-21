@@ -7,8 +7,8 @@ Official Google Search Console telemetry, empirical machine learning rank curves
 [![Node.js](https://img.shields.io/badge/Node.js-%E2%89%A522.0.0-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
 [![Tests: 95 Passing](https://img.shields.io/badge/Tests-95%20Passing-success)](#-tests-coverage-and-benchmarks)
 [![Coverage: 83.2%](https://img.shields.io/badge/Coverage-83.2%25-informational)](#-tests-coverage-and-benchmarks)
-[![Security Score: 9.5/10](https://img.shields.io/badge/Security%20Score-9.5%2F10-blueviolet)](reports/quality/production-readiness-2026-10-21.md)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Security Score: 9.5/10](https://img.shields.io/badge/Security%20Score-9.5%2F10-blueviolet)](https://github.com/mightyalok00/open-semrush/blob/main/reports/quality/production-readiness-2026-10-21.md)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/mightyalok00/open-semrush/blob/main/LICENSE)
 
 ---
 
@@ -173,14 +173,14 @@ npm run benchmark:crawl:matrix
 
 CI workflows verify Node.js 22 and 24, validate dependencies via `npm audit`, perform secret leak detection, enforce test coverage gates, and verify persistence across Docker container restarts.
 
-- Detailed audit and benchmark data: [reports/quality/production-readiness-2026-10-21.md](reports/quality/production-readiness-2026-10-21.md)
-- Product validation against ground-truth sites & live web: [reports/quality/reproducible-evaluation-2026-10-21.md](reports/quality/reproducible-evaluation-2026-10-21.md)
+- Detailed audit and benchmark data: [production-readiness-2026-10-21.md](https://github.com/mightyalok00/open-semrush/blob/main/reports/quality/production-readiness-2026-10-21.md)
+- Product validation against ground-truth sites & live web: [reproducible-evaluation-2026-10-21.md](https://github.com/mightyalok00/open-semrush/blob/main/reports/quality/reproducible-evaluation-2026-10-21.md)
 
 ---
 
 ## 🧠 Applied AI & Machine Learning Architecture
 
-See [docs/ai-ml-architecture.md](docs/ai-ml-architecture.md) for full mathematical derivations, variance proofs, and inference cascade specifications:
+See [ai-ml-architecture.md](https://github.com/mightyalok00/open-semrush/blob/main/docs/ai-ml-architecture.md) for full mathematical derivations, variance proofs, and inference cascade specifications:
 
 - **Empirical CTR Power-Law Model**: Regresses organic click decay using $CTR(p) = \alpha \cdot p^{-\beta}$ ($\alpha = 0.312, \beta = 0.93$) adjusted for layout cannibalization (featured snippets $-28\%$, video carousels $-15\%$, PAA accordions $-8\%$).
 - **Softmax Intent Probability Distribution**: Computes multi-class logit features ($z_{\text{Info}}, z_{\text{Comm}}, z_{\text{Nav}}, z_{\text{Trans}}$) with numerically stable softmax $\sigma(\mathbf{z})$ for calibrated confidence distributions.
@@ -194,7 +194,7 @@ See [docs/ai-ml-architecture.md](docs/ai-ml-architecture.md) for full mathematic
 
 - **Atomic JSON Storage (`JsonFileStorageAdapter`)**: Atomic replacement with `.tmp` staging, explicit `fsync` flushing, restrictive file permissions (`0o600`), and fail-closed schema corruption defense.
 - **Transactional SQLite Adapter (`SqliteStorageAdapter`)**: High-performance relational database engine powered by Node native `node:sqlite`. Uses Write-Ahead Logging (`WAL`), strict relational tables, and ACID transactions for high-concurrency clustered operations.
-- **Disaster Recovery Drills**: Documented drills for interrupted write recovery, corrupt snapshot rejection, atomic point-in-time restore, and SQLite WAL high-concurrency rollback. See full runbook: [reports/quality/disaster-recovery-runbook.md](reports/quality/disaster-recovery-runbook.md).
+- **Disaster Recovery Drills**: Documented drills for interrupted write recovery, corrupt snapshot rejection, atomic point-in-time restore, and SQLite WAL high-concurrency rollback. See full runbook: [disaster-recovery-runbook.md](https://github.com/mightyalok00/open-semrush/blob/main/reports/quality/disaster-recovery-runbook.md).
 - **Backup & Restore API**:
 
 ```javascript
@@ -220,7 +220,7 @@ const db = new SqliteStorageAdapter('./data/seo_projects.sqlite');
 - **Zero-Downtime Secret Rotation**: `OPEN_SEMRUSH_API_TOKENS` accepts comma-separated secrets compared via `crypto.timingSafeEqual` over SHA-256 digests.
 - **Reverse Proxy IP Parsing**: `cleanIpCandidate` strips ports, interface zone indexes (`%eth0`), and injection vectors. Set `TRUST_PROXY_HOPS` to enable spoof-proof rate limiting behind Cloudflare, Nginx, or AWS ALB.
 - **Graceful Draining Shutdown**: `SIGTERM` and `SIGINT` trigger connection draining, rejecting new requests with 503 while allowing in-flight audits up to 10 seconds to finish.
-- **Independent Security Review**: Documented threat model audit, vulnerability verification, and regression tests. See [reports/security/security-review-2026-10-21.md](reports/security/security-review-2026-10-21.md).
+- **Independent Security Review**: Documented threat model audit, vulnerability verification, and regression tests. See [security-review-2026-10-21.md](https://github.com/mightyalok00/open-semrush/blob/main/reports/security/security-review-2026-10-21.md).
 
 ---
 
@@ -246,9 +246,9 @@ We actively seek feedback from external SEO practitioners, developers, and agenc
    ```
 
 3. **Submit Your Report**:
-   - For crawl accuracy, false positives, or edge-case feedback, use the [External Tester Template](.github/ISSUE_TEMPLATE/external_feedback.md) on [GitHub Issues](https://github.com/mightyalok00/open-semrush/issues).
-   - For bug reports with reproduction steps, use the [Bug Report Template](.github/ISSUE_TEMPLATE/bug_report.md).
-   - For feature requests and new SEO metrics, submit a [Feature Request](.github/ISSUE_TEMPLATE/feature_request.md).
+   - For crawl accuracy, false positives, or edge-case feedback, use the [External Tester Template](https://github.com/mightyalok00/open-semrush/issues/new?template=external_feedback.md) on [GitHub Issues](https://github.com/mightyalok00/open-semrush/issues).
+   - For bug reports with reproduction steps, use the [Bug Report Template](https://github.com/mightyalok00/open-semrush/issues/new?template=bug_report.md).
+   - For feature requests and new SEO metrics, submit a [Feature Request](https://github.com/mightyalok00/open-semrush/issues/new?template=feature_request.md).
 
 ---
 
