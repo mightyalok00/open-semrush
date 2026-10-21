@@ -73,8 +73,8 @@ For a URL-prefix property, set siteUrl to https://example.com/. Optional query f
 | GET | /api/backlinks?domain=... | Synthetic backlink profile |
 | POST | /api/ai/fix | Optional AI suggestion; API key required |
 | POST | /api/ai/strategy | Optional AI outline; API key required |
-| GET | /api/projects | Persisted projects from audits |
-| GET | /api/history?domain=... | Persisted audit history |
+| GET | /api/projects | Persisted projects from audits; bearer token required |
+| GET | /api/history?domain=... | Persisted audit history; bearer token required |
 
 ## Tests, coverage and benchmarks
 
@@ -93,7 +93,7 @@ GitHub Actions runs unit/API tests, uploads coverage and benchmark output as an 
 - Outbound crawling accepts only HTTP(S), rejects URL credentials and local/private/reserved addresses, checks each redirect, resolves hostnames and pins the socket to a validated public IP to reduce DNS-rebinding/TOCTOU exposure.
 - Mixed DNS answers containing any non-public address fail closed.
 - Response bodies are capped at 5 MiB; requests have a 15-second socket timeout and redirects are capped at five.
-- POST /api/audit, POST /api/ai/* and GET /api/search-console require a bearer token when OPEN_SEMRUSH_API_TOKEN is configured. In NODE_ENV=production those routes fail closed with 503 if the token is absent. Supply Authorization: Bearer <token>. The dashboard prompts for this token and keeps it in sessionStorage for the current browser session only. Do not use this static-token model as multi-user identity. Other read-only demo endpoints remain public by design.
+- POST /api/audit, POST /api/ai/*, GET /api/search-console, GET /api/projects and GET /api/history require a bearer token when OPEN_SEMRUSH_API_TOKEN is configured. In NODE_ENV=production those routes fail closed with 503 if the token is absent. Supply Authorization: Bearer <token>. The dashboard prompts for this token and keeps it in sessionStorage for the current browser session only. Do not use this static-token model as multi-user identity. Other read-only demo endpoints remain public by design.
 - In-process per-IP rate limits default to 120 API requests/minute and 10 protected/expensive requests/minute. They are single-process limits, not a substitute for a trusted reverse proxy, distributed rate limiter, egress firewall, quotas or DDoS protection.
 - OAuth and AI secrets belong in .env or a secret manager, not source control. Multi-user identity and per-property authorization beyond Google's OAuth permissions are not implemented.
 - JSON persistence uses atomic replacement and fail-closed corruption handling, but is still not a transactional database. It is single-process/local-volume storage; multi-replica coordination, automated backup/restore drills and point-in-time recovery are not implemented.
