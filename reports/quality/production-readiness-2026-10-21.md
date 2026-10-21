@@ -4,7 +4,7 @@
 
 - Repository: https://github.com/mightyalok00/open-semrush
 - Branch: `main`
-- Tested commit: `894746f`
+- Tested commit: `421237c`
 - Workflow dispatch: Enabled (`workflow_dispatch:` in `.github/workflows/quality.yml` enabling the manual "Run workflow" button)
 - CI Workflow: https://github.com/mightyalok00/open-semrush/actions/workflows/quality.yml
 - Local Runner: Node.js v24.12.0, Windows x64 (verified on cross-platform Node.js v22/v24 runtime)
