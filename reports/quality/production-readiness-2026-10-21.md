@@ -18,7 +18,7 @@ This report records empirical verification and hardening improvements implemente
 
 - Repository: https://github.com/mightyalok00/open-semrush
 - Branch: `main`
-- Tested commit: Current `main` revision
+- Tested commit: `dad5b07`
 - Workflow dispatch: Enabled (`workflow_dispatch:` across quality, security, benchmark, and authorized crawl workflows)
 - CI Workflow: https://github.com/mightyalok00/open-semrush/actions/workflows/quality.yml
 - Local Runner: Node.js v24.12.0, Windows x64 (verified cross-platform against Linux x64 Node 22/24 in GitHub Actions)
