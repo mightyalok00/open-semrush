@@ -1,5 +1,13 @@
 // In-memory set of API keys that failed authentication (401/403) to avoid repeated failed network calls
 const invalidKeys = new Set();
+export const OPENROUTER_FREE_MODELS = [
+    'minimax/minimax-m3.1-flash:free',
+    'google/gemma-4-31b-it:free',
+    'google/gemma-4-26b-a4b-it:free',
+    'liquid/lfm-2.5-2.6b:free',
+    'nvidia/nemotron-3.5-lightning:free',
+    'openrouter/free',
+];
 /**
  * Universal fast AI query engine supporting OpenRouter (primary) and Google Gemini (direct fallback).
  */
@@ -14,53 +22,62 @@ export async function queryAiJson(prompt, preferredApiKey, maxTokens = 1500) {
     }
     const openRouterKey = process.env.OPENROUTER_API_KEY?.trim() || (preferredApiKey?.startsWith('sk-or-') ? preferredApiKey.trim() : undefined);
     const geminiKey = process.env.GEMINI_API_KEY?.trim() || (preferredApiKey && !preferredApiKey.startsWith('sk-or-') ? preferredApiKey.trim() : undefined);
-    // 1. Try OpenRouter first
+    // 1. Try OpenRouter first across active and free models
     if (openRouterKey && !invalidKeys.has(openRouterKey)) {
-        try {
-            const controller = new AbortController();
-            const timeout = setTimeout(() => controller.abort(), 15000);
-            const model = process.env.OPENROUTER_MODEL?.trim() || 'google/gemini-2.0-flash-001';
-            const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${openRouterKey}`,
-                    'HTTP-Referer': 'https://open-semrush.local',
-                    'X-Title': 'Open-Semrush Engine',
-                },
-                body: JSON.stringify({
-                    model,
-                    max_tokens: maxTokens,
-                    messages: [{ role: 'user', content: prompt }],
-                    response_format: { type: 'json_object' },
-                    temperature: 0.2,
-                }),
-                signal: controller.signal,
-            });
-            clearTimeout(timeout);
-            if (res.ok) {
-                const data = await res.json();
-                const raw = data.choices?.[0]?.message?.content;
-                if (raw) {
-                    const parsed = JSON.parse(raw);
-                    return parsed;
-                }
-            }
-            else {
-                if (res.status === 401 || res.status === 403) {
-                    invalidKeys.add(openRouterKey);
-                    if (process.env.NODE_ENV !== 'test') {
-                        console.warn(`[OpenRouter] Authentication failed (HTTP ${res.status}). Disabling OpenRouter key for this session.`);
+        const candidateModels = process.env.OPENROUTER_MODEL
+            ? [process.env.OPENROUTER_MODEL, ...OPENROUTER_FREE_MODELS.filter(m => m !== process.env.OPENROUTER_MODEL)]
+            : OPENROUTER_FREE_MODELS;
+        for (const model of candidateModels) {
+            try {
+                const controller = new AbortController();
+                const timeout = setTimeout(() => controller.abort(), 15000);
+                const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${openRouterKey}`,
+                        'HTTP-Referer': 'https://open-semrush.local',
+                        'X-Title': 'Open-Semrush Engine',
+                    },
+                    body: JSON.stringify({
+                        model,
+                        max_tokens: maxTokens,
+                        messages: [{ role: 'user', content: prompt }],
+                        response_format: { type: 'json_object' },
+                        temperature: 0.2,
+                    }),
+                    signal: controller.signal,
+                });
+                clearTimeout(timeout);
+                if (res.ok) {
+                    const data = await res.json();
+                    const raw = data.choices?.[0]?.message?.content;
+                    if (raw) {
+                        try {
+                            const parsed = JSON.parse(raw);
+                            return parsed;
+                        }
+                        catch {
+                            const jsonMatch = raw.match(/\{[\s\S]*\}/);
+                            if (jsonMatch) {
+                                return JSON.parse(jsonMatch[0]);
+                            }
+                        }
                     }
                 }
-                else if (process.env.NODE_ENV !== 'test') {
-                    console.warn(`[OpenRouter] Request failed with HTTP ${res.status}`);
+                else {
+                    if (res.status === 401 || res.status === 403) {
+                        invalidKeys.add(openRouterKey);
+                        if (process.env.NODE_ENV !== 'test') {
+                            console.warn(`[OpenRouter] Authentication failed (HTTP ${res.status}). Disabling key for this session.`);
+                        }
+                        break;
+                    }
+                    // If 429 rate limit or 504 provider timeout on a free model, try next candidate model
                 }
             }
-        }
-        catch (err) {
-            if (process.env.NODE_ENV !== 'test') {
-                console.warn('[OpenRouter] Network query failed, trying Gemini fallback...', err);
+            catch {
+                // Timeout or fetch error on this free model; proceed to next candidate
             }
         }
     }
