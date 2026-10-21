@@ -10,82 +10,97 @@
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6-3178C6.svg?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Pure Engine](https://img.shields.io/badge/Dependencies-Zero%20Heavy%20NPM-brightgreen.svg?style=for-the-badge)](#-zero-dependency-architecture)
+[![PRs Welcome](https://img.shields.io/badge/PRs-Welcome-brightgreen.svg?style=for-the-badge)](https://github.com/mightyalok00/open-semrush/pulls)
 
 <p align="center">
-  <b>A full-featured competitive SEO suite delivering Technical Crawling, Live Google SERP Top 10, Multi-Competitor Gap Matrices, Penguin Toxicity Analytics, and Gemini AI Remediation.</b>
+  <b>A production-grade competitive SEO suite delivering Technical Crawling, Live Google SERP Top 10, Multi-Competitor Gap Matrices, Penguin Toxicity Analytics, and Gemini AI Remediation.</b>
 </p>
 
 <p align="center">
-  <a href="#-quickstart">Quickstart</a> •
-  <a href="#-feature-matrix--comparison">Why Open Semrush</a> •
-  <a href="#-deep-dive-suite-capabilities">Capabilities</a> •
-  <a href="#-architecture">Architecture</a> •
-  <a href="#-docker-deployment">Docker</a> •
-  <a href="#-rest-api-documentation">REST API</a> •
-  <a href="#-cli-suite">CLI</a>
+  <a href="#-quickstart"><b>Quickstart (60s)</b></a> •
+  <a href="#-interactive-dashboard-preview"><b>UI Tour</b></a> •
+  <a href="#-feature-matrix--cost-comparison"><b>Why Open Semrush</b></a> •
+  <a href="#-core-suite-capabilities"><b>Capabilities</b></a> •
+  <a href="#-system-architecture"><b>Architecture</b></a> •
+  <a href="#-docker-deployment"><b>Docker</b></a> •
+  <a href="#-rest-api-documentation"><b>REST API</b></a> •
+  <a href="#-cli-suite"><b>CLI Tools</b></a>
 </p>
 
 ---
 
 </div>
 
-## 📊 Feature Matrix & Comparison
-
-Why pay **$1,500 – $6,000 every year** when you can run a private, unmetered SEO intelligence engine directly on your own machine or private cloud?
-
-| Feature / Capability | 🚀 **Open Semrush** | 🟧 **Semrush (Pro/Guru)** | 🟦 **Ahrefs (Lite/Std)** |
-| :--- | :---: | :---: | :---: |
-| **Pricing** | **100% Free & Open-Source** | $139.95 – $249.95 / mo | $129 – $249 / mo |
-| **Monthly Query Quotas** | **Unlimited (Unmetered)** | 500 – 1,500 queries / day | 500 export credits / mo |
-| **Data Privacy & Telemetry** | **Self-Hosted / Local Only** | Third-party tracking | Third-party tracking |
-| **Technical Site Health Audit** | **Included (TTFB, Security, Schema)** | Included | Included |
-| **24-Month Google Core Update Pins** | **Included (Interactive SVG)** | Limited to Guru tier | Not directly correlated |
-| **Live Google SERP Top 10 + CTR** | **Included (Curve-based CTR)** | Included | Included |
-| **Multi-Competitor Matrix (up to 5)** | **Included (Podium Badges)** | Guru tier required | Standard tier required |
-| **Interactive SVG Venn Diagram** | **Included (Clickable Nav)** | Static / Table only | Static / Table only |
-| **Backlink Penguin Toxicity Score** | **Included** | Guru tier ($249/mo) | Separate add-on |
-| **AI Remediation ("✨ Fix with AI")** | **Gemini & OpenRouter Built-in** | AI App Store ($20+/mo) | None / Manual |
-| **AI Outrank Content Strategist** | **H1-H3 Outline + Points** | Content Marketplace ($) | None |
-| **Data Export** | **RFC 4180 CSV + Print PDF** | Paywalled per seat | Paywalled export limits |
-| **Runtime Footprint** | **< 35MB RAM (Pure Node)** | Heavy SaaS | Heavy SaaS |
+> [!TIP]
+> **Zero Subscriptions. Zero Telemetry. 100% Unmetered.**  
+> Self-host your own SEO intelligence platform on your laptop, VPS, or private cloud. Inspect unlimited domains and keywords with zero rate limits or paywalls.
 
 ---
 
-## 🏗️ Architecture
+## 🖥️ Interactive Dashboard Preview
 
-Open Semrush is built from the ground up without heavy frameworks. The backend uses native Node.js runtime primitives (`node:http`, `node:fs`, `node:url`, native `fetch`), guaranteeing instant cold starts (< 100ms) and minimal RAM utilization.
-
-```mermaid
-graph TD
-    User([Analyst / Web Browser / Terminal CLI]) --> WebStudio[Web Dashboard / CLI Client]
-    
-    subgraph Open Semrush Engine
-        WebStudio --> Router[HTTP Dispatcher & REST API Router]
-        Router --> DomainEngine[Domain Intelligence & Historical 24M Engine]
-        Router --> KeywordEngine[Keyword Magic & Seasonality Model]
-        Router --> SerpEngine[Live SERP Scraper & CTR Curve Engine]
-        Router --> CrawlerEngine[Asynchronous Site Crawler & Security Auditor]
-        Router --> GapEngine[Multi-Competitor Matrix & Venn Calculator]
-        Router --> BacklinkEngine[Link Graph, PageRank & Toxicity Calculator]
-        Router --> StorageEngine[Local Projects JSON Persistence Engine]
-    end
-
-    subgraph AI Intelligence Layer
-        CrawlerEngine -.-> AiBridge[AI Optimization Bridge]
-        GapEngine -.-> AiBridge
-        AiBridge --> Gemini[Google Gemini / OpenRouter API]
-    end
+```text
+ ┌────────────────────────────────────────────────────────────────────────────────────────┐
+ │ 🌐 Open Semrush Studio           [ Domain: github.com ]  [ Country: 🇺🇸 US ▾ ]  [ Search ] │
+ ├────────────────────────────────────────────────────────────────────────────────────────┤
+ │                                                                                        │
+ │  AUTHORITY SCORE       ORGANIC TRAFFIC        RANKED KEYWORDS       PENGUIN TOXICITY   │
+ │  ┌───────────────┐     ┌───────────────┐      ┌───────────────┐     ┌───────────────┐  │
+ │  │      86       │     │  48,250,000   │      │   2,840,110   │     │  12% (Low)    │  │
+ │  │ █████████░░░░ │     │  ▲ +14.2% MoM │      │  ▲ +18,400 MoM│     │ 🟢 Safe Risk  │  │
+ │  └───────────────┘     └───────────────┘      └───────────────┘     └───────────────┘  │
+ │                                                                                        │
+ │  📈 24-MONTH TRAFFIC TRAJECTORY & GOOGLE CORE UPDATE OVERLAYS                          │
+ │  50M ┤                                           ★ Mar 26 Core   ★ Sep 26 Core         │
+ │      │                                                /\               /\              │
+ │  35M ┤                  ★ Aug 25 Core                /  \             /  \──           │
+ │      │       /\              /\                     /    \───        /                 │
+ │  20M ┤──────/  \────────────/  \───────────────────/         \──────/                  │
+ │      └───────────────────────────────────────────────────────────────────────────────  │
+ │        Oct 24   Jan 25   Apr 25   Jul 25   Oct 25   Jan 26   Apr 26   Jul 26   Oct 26    │
+ │                                                                                        │
+ │  ⚔️ MULTI-COMPETITOR GAP MATRIX                  ⭕ INTERACTIVE VENN DIAGRAM           │
+ │  ┌────────────────────────────────────────┐       ┌─────────┐   Overlap   ┌─────────┐  │
+ │  │ Keyword         github.com  gitlab.com │       │   YOU   │    (420)    │  RIVAL  │  │
+ │  ├────────────────────────────────────────┤       │ (1,840) │   (Shared)  │ (1,120) │  │
+ │  │ git hosting         #1 🥇       #3     │       │ Unique  │◄───────────►│ Missing │  │
+ │  │ open source ci      #4          #1 🥇  │       └─────────┘             └─────────┘  │
+ │  │ pull request flow   #1 🥇       —      │         [Click any bubble to jump to list] │
+ └────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## ⚡ Deep Dive: Suite Capabilities
+## 📊 Feature Matrix & Cost Comparison
 
-### 1. 🌐 Domain Overview & Historical Algorithm Trajectory
-- **Domain Authority Score (0–100):** Algorithmic composite evaluating referring domain quality, dofollow ratios, and organic reach.
-- **Estimated Monthly Traffic & Indexed Keywords:** Computes estimated visits and ranked terms across multiple target geos (`US`, `UK`, `IN`, `DE`, `CA`, `AU`).
-- **24-Month Trajectory Area Chart:** Handcrafted vector SVG graph mapping 2-year traffic shifts with **milestone pins for real Google Core Algorithm Updates** (e.g., March 2025, August 2025, March 2026, September 2026).
-- **Competitor Discovery:** Automatically pinpoints top rivals with one-click drill-down shortcuts.
+Why pay **$1,500 – $6,000 every year** to SaaS vendors when you can own your SEO pipeline?
+
+| Feature / Capability | 🚀 **Open Semrush** | 🟧 **Semrush (Pro/Guru)** | 🟦 **Ahrefs (Lite/Std)** |
+| :--- | :---: | :---: | :---: |
+| **Annual License Fee** | **$0 (Free & Open Source)** | $1,679 – $2,999 / yr | $1,548 – $2,988 / yr |
+| **Monthly Query Quota** | **Unlimited (Unmetered)** | 500 – 1,500 queries / day | 500 export credits / mo |
+| **Data Privacy & Telemetry** | **100% Local / Self-Hosted** | Third-party tracking | Third-party tracking |
+| **Technical Site Health Audit** | **Included (TTFB, Security, Schema)** | Included | Included |
+| **24-Month Google Algorithm Pins** | **Included (Interactive SVG)** | Guru tier required | Not correlated |
+| **Live Google SERP Top 10 + CTR** | **Included (Curve-based CTR)** | Included | Included |
+| **Multi-Competitor Matrix (up to 5)** | **Included (Podium Badges)** | Guru tier ($249/mo) | Standard ($199/mo) |
+| **Interactive SVG Venn Diagram** | **Included (Clickable Nav)** | Static table only | Static table only |
+| **Penguin Toxicity Risk Score** | **Included** | Guru tier ($249/mo) | Separate add-on |
+| **AI Remediation ("✨ Fix with AI")** | **Gemini & OpenRouter Built-in** | AI App Store ($20+/mo) | None / Manual |
+| **AI Outrank Content Strategist** | **H1-H3 Outline + Points** | Marketplace ($/token) | None |
+| **Data Export** | **RFC 4180 CSV + Print PDF** | Paywalled per seat | Paywalled export credits |
+| **Cold Startup Time** | **< 100 ms (Pure Node)** | Cloud SaaS | Cloud SaaS |
+| **RAM Footprint** | **< 35 MB Idle** | N/A | N/A |
+
+---
+
+## ⚡ Core Suite Capabilities
+
+### 1. 🌐 Domain Overview & Historical Trajectory
+- **Algorithmic Authority Score (AS):** Real-time composite score (1–100) factoring referring domain diversity, dofollow authority, and organic reach.
+- **Multi-Country Traffic Breakdown:** Computes estimated monthly visits and ranked keyword indices across regional markets (`US`, `UK`, `IN`, `DE`, `CA`, `AU`).
+- **24-Month Trajectory Area Chart:** Handcrafted vector SVG graph tracking 2-year traffic shifts with **milestone pins for real Google Core Algorithm Updates** (March 2025, August 2025, March 2026, September 2026).
+- **Competitor Discovery:** Automatically detects top organic search rivals with one-click drill-down shortcuts.
 
 ### 2. 🔑 Keyword Magic Tool & Seasonality Trends
 - **Search Volume & Keyword Difficulty (KD%):** Categorizes competition tiers (`Easy`, `Moderate`, `Very Hard`) with visual gradient gauges.
@@ -125,43 +140,80 @@ graph TD
 
 ---
 
-## 🚀 Quickstart
+## 🏗️ System Architecture
 
-### Prerequisites
-- [Node.js](https://nodejs.org/) v18.0.0 or higher
-- (Optional) [Docker](https://www.docker.com/) & Docker Compose
+```mermaid
+flowchart TD
+    subgraph Client["Analyst Interface Layer"]
+        Browser["🌐 Web Studio (Vanilla JS + Glassmorphism CSS)"]
+        CLI["💻 Terminal CLI (scripts/semrush.mjs)"]
+    end
 
-### 📦 Local Installation (Under 60 Seconds)
+    subgraph Server["Open Semrush Engine (Node.js Built-ins)"]
+        Router["HTTP Router & API Dispatcher"]
+        
+        DomainEngine["Domain & Historical Trajectory Engine"]
+        KeywordEngine["Keyword Magic & Seasonality Modeler"]
+        SerpEngine["Live SERP Scraper & CTR Curve Calculator"]
+        CrawlerEngine["Async Multi-Page Crawler & Security Auditor"]
+        GapEngine["Multi-Competitor Matrix & Venn Geometry"]
+        BacklinkEngine["PageRank, Link Graph & Toxicity Engine"]
+        StorageEngine["JSON Project Persistence Layer"]
+        
+        Router --> DomainEngine
+        Router --> KeywordEngine
+        Router --> SerpEngine
+        Router --> CrawlerEngine
+        Router --> GapEngine
+        Router --> BacklinkEngine
+        Router --> StorageEngine
+    end
 
-```bash
-# 1. Clone the repository
-git clone https://github.com/mightyalok00/open-semrush.git
-cd open-semrush
+    subgraph AI["AI Remediation Layer"]
+        AiBridge["AI Dispatch Bridge"]
+        Gemini["Google Gemini 2.5 Flash / OpenRouter"]
+        CrawlerEngine -.-> AiBridge
+        GapEngine -.-> AiBridge
+        AiBridge --> Gemini
+    end
 
-# 2. Configure environment (optional, required only for AI features)
-cp .env.example .env
-
-# 3. Start the Web Studio & API server
-npm start
+    Browser <--> Router
+    CLI <--> Router
 ```
-
-🎉 Open your browser at **`http://localhost:3000`** to access the dashboard.
 
 ---
 
-## 🐳 Docker Deployment
+## 🚀 Quickstart
 
-Run Open Semrush as an isolated container in your homelab or production VPS:
+### Option A: Local Run (Under 60 Seconds)
 
 ```bash
-# Build and launch in detached mode
-docker compose up -d
+# 1. Clone repository
+git clone https://github.com/mightyalok00/open-semrush.git
+cd open-semrush
 
-# Verify container health
-docker compose ps
+# 2. Configure environment variables (optional, needed for AI features)
+cp .env.example .env
+
+# 3. Start Open Semrush Studio
+npm start
 ```
 
-To stop the container:
+🎉 Open your browser at **`http://localhost:3000`**!
+
+---
+
+### Option B: Docker Compose
+
+```bash
+# Start in detached mode
+docker compose up -d
+
+# Check live logs
+docker compose logs -f
+```
+
+To stop:
 ```bash
 docker compose down
 ```
@@ -189,11 +241,37 @@ node scripts/semrush.mjs gap github.com gitlab.com
 node scripts/semrush.mjs backlinks github.com
 ```
 
+<details>
+<summary><b>📺 Click to view sample terminal output</b></summary>
+
+```text
+$ node scripts/semrush.mjs keyword "seo tools"
+
+⚡ Analyzing Keyword: "seo tools"...
+
+=======================================================
+🔑 KEYWORD OVERVIEW: "seo tools"
+=======================================================
+Search Volume:        165,000 / mo
+Keyword Difficulty:   74% (Hard)
+Search Intent:        Commercial
+Cost Per Click (CPC): $8.40 USD
+Competitive Density:  0.89 (0.00 - 1.00)
+-------------------------------------------------------
+Related Variations & Questions:
+  • best free seo tools
+  • seo tools for digital marketing
+  • what are the best automated seo tools?
+  • automated seo audit software
+=======================================================
+```
+</details>
+
 ---
 
 ## 📡 REST API Documentation
 
-Open Semrush exposes clean JSON endpoints for integration into third-party dashboards and automated pipelines:
+Open Semrush exposes clean JSON endpoints for integration into third-party dashboards, automated CI/CD checks, and data pipelines:
 
 | Method | Endpoint | Query / Body Parameters | Response Summary |
 | :--- | :--- | :--- | :--- |
@@ -208,44 +286,64 @@ Open Semrush exposes clean JSON endpoints for integration into third-party dashb
 | `POST` | `/api/ai/strategy` | `{"domainA": "...", "competitorDomain": "...", "missingKeyword": "..."}` | Outrank article blueprint, title, and H1/H2/H3 outline |
 | `GET` | `/api/projects` | *None* | List of previously audited domains and health scores |
 
-#### Example: Analyzing a Domain via cURL
-```bash
-curl -s "http://localhost:3000/api/domain?domain=github.com&country=us" | jq .
+<details>
+<summary><b>🔍 Click to view sample JSON API response (/api/domain)</b></summary>
+
+```json
+{
+  "domain": "github.com",
+  "authorityScore": 86,
+  "estimatedMonthlyOrganicTraffic": 48250000,
+  "totalRankedKeywords": 2840110,
+  "topCompetitors": ["gitlab.com", "bitbucket.org", "sourceforge.net"],
+  "history24Months": [
+    { "month": "Jan 25", "organicTraffic": 42100000 },
+    { "month": "Mar 25", "organicTraffic": 39800000, "googleUpdate": "March 2025 Core Update" },
+    { "month": "Aug 25", "organicTraffic": 44500000, "googleUpdate": "August 2025 Core Update" },
+    { "month": "Mar 26", "organicTraffic": 46800000, "googleUpdate": "March 2026 Core Update" }
+  ]
+}
+```
+</details>
+
+---
+
+## ⚙️ Environment Configuration
+
+Create a `.env` file in the root directory:
+
+```env
+# Server Configuration
+PORT=3000
+NODE_ENV=production
+
+# AI Remediation Engine (Gemini / OpenRouter)
+# Free API key from Google AI Studio: https://aistudio.google.com/
+GEMINI_API_KEY=your_gemini_api_key_here
+
+# Optional: OpenRouter API key as alternative provider
+OPENROUTER_API_KEY=your_openrouter_api_key_here
 ```
 
 ---
 
-## ⚙️ Environment Variables
+## 🔒 Zero-Dependency Guarantee
 
-Create a `.env` file in the project root to enable AI-powered fixes and content strategies:
-
-| Variable | Required | Description | Example |
-| :--- | :---: | :--- | :--- |
-| `PORT` | Optional | Web server listening port (Default: `3000`) | `3000` |
-| `NODE_ENV` | Optional | Environment mode | `production` |
-| `GEMINI_API_KEY` | Optional | Google Gemini API Key for AI features | `AIzaSy...` |
-| `OPENROUTER_API_KEY`| Optional | OpenRouter API Key (alternative provider) | `sk-or-v1-...` |
-
-*Get a free Gemini API key from [Google AI Studio](https://aistudio.google.com/).*
-
----
-
-## 🔒 Zero-Dependency Architecture
-
-Unlike many modern web projects burdened with hundreds of transitive NPM dependencies, Open Semrush's core engines (`crawler.ts`, `domain.ts`, `keywords.ts`, `serp.ts`, `backlinks.ts`) are implemented using **standard Node.js built-ins**:
-- `node:http` — Fast, native asynchronous HTTP/REST server
-- `node:fs` — Local database file persistence
-- `node:url` — Robust URL parsing and normalization
+Unlike projects weighed down by hundreds of NPM dependencies, Open Semrush implements its core analysis engines using **pure Node.js runtime primitives**:
+- `node:http` — Fast, native asynchronous HTTP server
+- `node:fs` — Reliable filesystem persistence
+- `node:url` — RFC 3986 URL parsing and normalization
 - Native `fetch` — Streaming HTML crawler and outbound probes
 
-This guarantees:
-- 🛡️ **Zero Supply-Chain Vulnerabilities:** Immune to malicious dependency injections.
-- ⚡ **Instant Startup:** Server starts in **< 100 milliseconds**.
-- 🪶 **Tiny Footprint:** Production container weighs less than **80 MB**.
+> [!NOTE]
+> **Why this matters for your infrastructure:**
+> 1. **Zero Supply-Chain Vulnerabilities:** Immune to compromised transitive packages.
+> 2. **Instant Startup:** Cold boots in less than 100 milliseconds.
+> 3. **Ultra-Low Memory:** Consumes less than 35MB of RAM idle.
 
 ---
 
-## 🗺️ Roadmap
+## 🗺️ Roadmap & Upcoming Features
 
 - [x] Technical Site Crawler with TTFB, HSTS, CSP, and Schema.org
 - [x] Live Google SERP Top 10 with logarithmic CTR curve & PAA questions
@@ -254,16 +352,17 @@ This guarantees:
 - [x] Backlink Analytics with Penguin Toxicity Scoring & Semrush Anchor Taxonomy
 - [x] AI-Powered Code Remediation & Outrank Content Strategy Builder
 - [x] RFC 4180 CSV Export & Executive Print PDF Stylesheet
+- [ ] Core Web Vitals (LCP, FID, CLS) Real-User Metric Gauges
 - [ ] Automated Scheduled Crawls with Webhook Alerts (Slack / Discord)
 - [ ] Google Search Console (GSC) OAuth2 Integration
-- [ ] Core Web Vitals (LCP, FID, CLS) Real-User Metric Gauges
 
 ---
 
 ## 🤝 Contributing
 
-Contributions make the open-source community thrive!
-1. **Fork the Project**
+Contributions make open-source software great. Here's how to contribute:
+
+1. **Fork the Project** (`https://github.com/mightyalok00/open-semrush/fork`)
 2. **Create your Feature Branch** (`git checkout -b feat/amazing-feature`)
 3. **Commit your Changes** (`git commit -m 'feat: add amazing feature'`)
 4. **Push to the Branch** (`git push origin feat/amazing-feature`)
@@ -273,8 +372,12 @@ Contributions make the open-source community thrive!
 
 ## 📜 License
 
-Distributed under the **MIT License**. See [`LICENSE`](LICENSE) for more information.
+Distributed under the **MIT License**. See [`LICENSE`](LICENSE) for details.
 
 <div align="center">
-  <sub>Built with ❤️ by <a href="https://github.com/mightyalok00">mightyalok00</a> and the open-source community.</sub>
+
+### ⭐ Star us on GitHub — it helps the project grow!
+
+Built with ❤️ by [mightyalok00](https://github.com/mightyalok00) and the open-source community.
+
 </div>
