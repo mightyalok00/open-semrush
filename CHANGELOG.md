@@ -1,0 +1,62 @@
+# 📜 Changelog
+
+All notable changes to the **Open Semrush** project are documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+---
+
+## [1.1.0] - 2026-10-21
+
+### 🚀 Added
+
+- **Empirical CTR Power-Law Regression (`src/ml.ts`)**:
+  - Parametric power-law model ($CTR(p) = \alpha \cdot p^{-\beta}$) with $\alpha = 0.312$ and $\beta = 0.93$.
+  - Layout feature cannibalization factors for featured snippets, video carousels, knowledge panels, and PAA accordions.
+- **Probabilistic Softmax Search Intent Classifier (`src/ml.ts`)**:
+  - 4-class multi-dimensional logit fusion ($z_{\text{Info}}, z_{\text{Comm}}, z_{\text{Nav}}, z_{\text{Trans}}$).
+  - Numerically stable softmax normalization outputting calibrated confidence scores and probability distributions.
+- **Parametric 95% Traffic Forecast Intervals (`src/ml.ts`)**:
+  - Point estimate visits $\hat{Y} = V \cdot \text{CTR}$.
+  - Uncertainty variance decomposition combining binomial sampling dispersion and seasonal volatility ($I_{0.95} = \hat{Y} \pm 1.96\sigma$).
+- **Agglomerative N-Gram Semantic Keyword Clustering (`src/ml.ts`)**:
+  - Character 3-gram Jaccard similarity metric and greedy clustering for keyword gap grouping.
+- **Autonomous Multi-Model LLM Inference Cascade (`src/ai.ts`)**:
+  - OpenRouter free model pool (`minimax/minimax-m3.1-flash:free`, `google/gemma-4-31b-it:free`, `google/gemma-4-26b-a4b-it:free`, `liquid/lfm-2.5-2.6b:free`, `nvidia/nemotron-3.5-lightning:free`).
+  - Google Gemini pool (`gemini-3.5-flash`, `gemini-3.5-flash-lite`, `gemini-3.1-flash-lite`, `gemini-3.8-flash`, `gemini-3.7-flash`, `gemini-flash-latest`).
+  - Runtime circuit breaking for 401/403 authorization failures to avoid repeated failed calls.
+- **New REST API Endpoints (`scripts/semrush-server.mjs`)**:
+  - `GET /api/ml/forecast`: Predictive power-law CTR, intent distribution, and 95% traffic forecast.
+  - `GET /api/ai/status`: Operational readiness and active model telemetry.
+- **Community Health & Governance**:
+  - `CONTRIBUTING.md`: Development environment setup, PR guidelines, and testing checklist.
+  - `SECURITY.md`: Security architecture overview, SSRF policy, and private disclosure runbook.
+  - `.github/ISSUE_TEMPLATE/`: Structured bug report and feature request issue templates.
+  - `.github/PULL_REQUEST_TEMPLATE.md`: Standard pull request checklist.
+
+### 🛡️ Security & Hardening
+
+- Added `cleanIpCandidate` port and zone-index sanitization to defeat reverse-proxy spoofing.
+- Implemented constant-time secret comparison via `crypto.timingSafeEqual` with SHA-256 digest hashing.
+- Enforced zero-downtime secret rotation supporting comma-separated `OPEN_SEMRUSH_API_TOKENS`.
+- DNS answers pinned to pre-flight socket addresses to defeat TOCTOU rebinding attacks.
+
+---
+
+## [1.0.0] - 2026-10-20
+
+### 🚀 Initial Release
+
+- **Core Technical Crawler**:
+  - Bounded multi-page crawler with redirect loop protection and response size caps (5 MiB).
+  - On-page technical checks: Title, meta description, canonical, H1 hierarchy, alt tags, schema, security headers.
+- **Google Search Console Integration**:
+  - First-party telemetry via official Search Analytics API (clicks, impressions, CTR, average position).
+- **Persistence Engines**:
+  - Atomic JSON storage with `.tmp` staging, `fsync`, and restrictive permissions (`0o600`).
+  - Transactional SQLite adapter (`node:sqlite` WAL mode) with ACID rollback and disaster recovery snapshot APIs.
+- **Competitive SEO Intelligence**:
+  - Domain overview, keyword gap comparison, multi-domain matrix, and synthetic backlink profiling.
+- **Web Studio UI**:
+  - Single-page application with dark theme, responsive layouts, CSV export, and print-ready PDF reports.
