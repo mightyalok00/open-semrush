@@ -4,7 +4,7 @@ ENV NODE_ENV=production
 ENV PORT=3000
 COPY package.json tsconfig.json ./
 COPY src ./src
-RUN npm install --no-audit --no-fund && npm run build && npm prune --omit=dev && mkdir -p /app/data && chown -R node:node /app
+RUN npm install --include=dev --no-audit --no-fund && npm run build && npm prune --omit=dev && mkdir -p /app/data && chown -R node:node /app
 COPY scripts ./scripts
 COPY public ./public
 USER node
