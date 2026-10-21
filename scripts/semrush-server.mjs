@@ -41,7 +41,8 @@ const {
   getAllProjects,
   getDomainAuditHistory,
   fetchLiveSerp,
-  compareMultiCompetitorGap
+  compareMultiCompetitorGap,
+  assertPublicHttpUrl
 } = semrushModule;
 
 // Resolve public assets directory
@@ -64,7 +65,6 @@ const MIME_TYPES = {
 function sendJson(res, statusCode, data) {
   res.writeHead(statusCode, {
     'Content-Type': 'application/json; charset=utf-8',
-    'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
   });
@@ -125,7 +125,6 @@ const server = http.createServer(async (req, res) => {
   // CORS Preflight
   if (req.method === 'OPTIONS') {
     res.writeHead(204, {
-      'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type',
     });
@@ -148,7 +147,7 @@ const server = http.createServer(async (req, res) => {
       const domain = reqUrl.searchParams.get('domain') || 'github.com';
       const country = reqUrl.searchParams.get('country') || 'us';
       const data = await generateDomainOverview(domain, country);
-      sendJson(res, 200, data);
+      sendJson(res, 200, { ...data, dataProvenance: { type: 'modeled', verified: false, note: 'Traffic, authority, keyword and history metrics are modeled or AI-generated, not verified against a live SEO data provider.' } });
       return;
     }
 
@@ -157,7 +156,7 @@ const server = http.createServer(async (req, res) => {
       const query = reqUrl.searchParams.get('q') || 'seo tools';
       const metrics = analyzeKeyword(query);
       const variations = generateKeywordVariations(query);
-      sendJson(res, 200, { metrics, variations });
+      sendJson(res, 200, { metrics, variations, dataProvenance: { type: 'modeled', verified: false, note: 'Search volume, difficulty, CPC and seasonality are deterministic illustrative estimates, not provider data.' } });
       return;
     }
 
@@ -165,10 +164,20 @@ const server = http.createServer(async (req, res) => {
     if (pathname === '/api/audit' && req.method === 'POST') {
       const body = await parseJsonBody(req);
       const url = body.url;
-      const maxPages = Number(body.maxPages) || 3;
+      const requestedMaxPages = Number(body.maxPages);
+      const maxPages = Number.isFinite(requestedMaxPages) && requestedMaxPages > 0
+        ? Math.min(100, Math.floor(requestedMaxPages))
+        : 3;
 
       if (!url) {
         sendJson(res, 400, { error: 'url is required' });
+        return;
+      }
+
+      try {
+        await assertPublicHttpUrl(url);
+      } catch (validationError) {
+        sendJson(res, 400, { error: validationError instanceof Error ? validationError.message : 'Invalid target URL.' });
         return;
       }
 
@@ -241,7 +250,7 @@ const server = http.createServer(async (req, res) => {
     if (pathname === '/api/serp' && req.method === 'GET') {
       const q = reqUrl.searchParams.get('q') || 'best seo tools';
       const serpData = await fetchLiveSerp(q);
-      sendJson(res, 200, serpData);
+      sendJson(res, 200, { ...serpData, dataProvenance: { type: 'generated-demo', verified: false, note: 'Results may be AI-generated or algorithmic fallback examples; they are not verified live Google rankings.' } });
       return;
     }
 
@@ -258,7 +267,7 @@ const server = http.createServer(async (req, res) => {
         d2,
         overviewB.topOrganicKeywords.map(k => k.keyword)
       );
-      sendJson(res, 200, gap);
+      sendJson(res, 200, { ...gap, dataProvenance: { type: 'modeled', verified: false, note: 'Keyword sets are derived from modeled domain overviews, not a verified ranking database.' } });
       return;
     }
 
@@ -267,7 +276,7 @@ const server = http.createServer(async (req, res) => {
       const domainsParam = reqUrl.searchParams.get('domains') || 'github.com,gitlab.com,bitbucket.org';
       const domains = domainsParam.split(',').map(d => d.trim()).filter(Boolean);
       const matrixReport = await compareMultiCompetitorGap(domains);
-      sendJson(res, 200, matrixReport);
+      sendJson(res, 200, { ...matrixReport, dataProvenance: { type: 'modeled', verified: false, note: 'Keyword rankings and volumes are illustrative model outputs.' } });
       return;
     }
 
@@ -275,7 +284,7 @@ const server = http.createServer(async (req, res) => {
     if (pathname === '/api/backlinks' && req.method === 'GET') {
       const domain = reqUrl.searchParams.get('domain') || 'github.com';
       const profile = generateBacklinkReport(domain);
-      sendJson(res, 200, profile);
+      sendJson(res, 200, { ...profile, dataProvenance: { type: 'synthetic', verified: false, note: 'Backlink counts, sources and toxicity are generated examples, not observed link data.' } });
       return;
     }
 

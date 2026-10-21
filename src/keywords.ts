@@ -40,6 +40,7 @@ export function calculateKeywordDifficulty(
 ): number {
   const words = query.trim().split(/\s+/).filter(Boolean);
   const wordCount = words.length;
+  if (wordCount === 0) return 0;
 
   // 1. Long-tail vs Head term penalty: 1-word terms are intrinsically much harder to rank for
   let baseDifficulty = 45;

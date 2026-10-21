@@ -13,7 +13,7 @@
 [![PRs Welcome](https://img.shields.io/badge/PRs-Welcome-brightgreen.svg?style=for-the-badge)](https://github.com/mightyalok00/open-semrush/pulls)
 
 <p align="center">
-  <b>A production-grade competitive SEO suite delivering Technical Crawling, Live Google SERP Top 10, Multi-Competitor Gap Matrices, Penguin Toxicity Analytics, and Gemini AI Remediation.</b>
+  <b>A self-hosted technical SEO audit and research prototype with crawling, modeled keyword metrics, SERP previews, competitor-gap exploration, backlink-profile demonstrations, and optional AI assistance.</b>
 </p>
 
 <p align="center">
@@ -32,12 +32,14 @@
 </div>
 
 > [!TIP]
-> **Zero Subscriptions. Zero Telemetry. 100% Unmetered.**  
-> Self-host your own SEO intelligence platform on your laptop, VPS, or private cloud. Inspect unlimited domains and keywords with zero rate limits or paywalls.
+> **Self-hosted prototype — review data limitations before relying on results.**  
+> Technical page audits inspect fetched HTML. Keyword volume, difficulty, traffic histories, authority scores, backlink profiles, and fallback SERPs are modeled or synthetic. AI-generated SERP output is not independently verified as live Google results. Do not use these modeled values for client reporting or business decisions.
 
 ---
 
-## 🖥️ Interactive Dashboard Preview
+## 🖥️ Illustrative Dashboard Preview
+
+> All values in the ASCII mock dashboard below are illustrative examples, not verified measurements.
 
 ```text
  ┌────────────────────────────────────────────────────────────────────────────────────────┐
@@ -73,6 +75,8 @@
 
 ## 📊 Feature Matrix & Cost Comparison
 
+> Cost and quota comparisons are marketing estimates and have not been independently verified. Modeled metrics are not equivalent to paid-provider datasets.
+
 Why pay **$1,500 – $6,000 every year** to SaaS vendors when you can own your SEO pipeline?
 
 | Feature / Capability | 🚀 **Open Semrush** | 🟧 **Semrush (Pro/Guru)** | 🟦 **Ahrefs (Lite/Std)** |
@@ -82,7 +86,7 @@ Why pay **$1,500 – $6,000 every year** to SaaS vendors when you can own your S
 | **Data Privacy & Telemetry** | **100% Local / Self-Hosted** | Third-party tracking | Third-party tracking |
 | **Technical Site Health Audit** | **Included (TTFB, Security, Schema)** | Included | Included |
 | **24-Month Google Algorithm Pins** | **Included (Interactive SVG)** | Guru tier required | Not correlated |
-| **Live Google SERP Top 10 + CTR** | **Included (Curve-based CTR)** | Included | Included |
+| **SERP preview (AI-generated or algorithmic fallback) + CTR** | **Included (Curve-based CTR)** | Included | Included |
 | **Multi-Competitor Matrix (up to 5)** | **Included (Podium Badges)** | Guru tier ($249/mo) | Standard ($199/mo) |
 | **Interactive SVG Venn Diagram** | **Included (Clickable Nav)** | Static table only | Static table only |
 | **Penguin Toxicity Risk Score** | **Included** | Guru tier ($249/mo) | Separate add-on |
@@ -97,19 +101,19 @@ Why pay **$1,500 – $6,000 every year** to SaaS vendors when you can own your S
 ## ⚡ Core Suite Capabilities
 
 ### 1. 🌐 Domain Overview & Historical Trajectory
-- **Algorithmic Authority Score (AS):** Real-time composite score (1–100) factoring referring domain diversity, dofollow authority, and organic reach.
+- **Illustrative Authority Score (AS):** A heuristic score (1–100) factoring referring domain diversity, dofollow authority, and organic reach.
 - **Multi-Country Traffic Breakdown:** Computes estimated monthly visits and ranked keyword indices across regional markets (`US`, `UK`, `IN`, `DE`, `CA`, `AU`).
 - **24-Month Trajectory Area Chart:** Handcrafted vector SVG graph tracking 2-year traffic shifts with **milestone pins for real Google Core Algorithm Updates** (March 2025, August 2025, March 2026, September 2026).
 - **Competitor Discovery:** Automatically detects top organic search rivals with one-click drill-down shortcuts.
 
 ### 2. 🔑 Keyword Magic Tool & Seasonality Trends
-- **Search Volume & Keyword Difficulty (KD%):** Categorizes competition tiers (`Easy`, `Moderate`, `Very Hard`) with visual gradient gauges.
+- **Modeled Search Volume & Keyword Difficulty (KD%):** Deterministic illustrative values; not provider-backed keyword research.
 - **Commercial Intent Modeling:** Classifies user intent into `Commercial`, `Informational`, `Navigational`, or `Transactional`.
 - **12-Month Seasonality Bars:** Visualizes seasonal demand peaks from January to December.
 - **CPC & Competitive Density:** Evaluates paid advertising benchmarks ($ USD) and bidding competition (0.00 to 1.00).
 
 ### 3. 🎯 Live Google SERP Top 10 & SERP Features Inspector
-- **Real-Time Top 10 Rankings:** Displays live titles, URLs, and snippet descriptions.
+- **SERP Preview:** Parses supplied SERP HTML or shows AI-generated/demo results. Current fallback results are not live-verified Google rankings.
 - **Logarithmic CTR Curve:** Projects organic click distribution from Position 1 (39.8%) down to Position 10 (1.6%).
 - **SERP Features Detection:** Identifies **Featured Snippets (Position 0)**, **People Also Ask (PAA)** interactive accordions, **Video Packs**, and **Knowledge Panels**.
 
@@ -129,8 +133,8 @@ Why pay **$1,500 – $6,000 every year** to SaaS vendors when you can own your S
 - **⚡ Outrank Plan:** Produces an AI-crafted content blueprint with recommended title, word count, and H1/H2/H3 outline.
 
 ### 6. 🔗 Backlink Analytics & Penguin Toxicity Engine
-- **Inbound Link Graph:** Total backlink count, referring root domains, and dofollow vs. nofollow ratio bars.
-- **Penguin Toxicity Risk Score:** Algorithmic calculation evaluating suspicious TLDs, non-descriptive anchors, and linking velocity to assign `Low Risk`, `Moderate`, or `High Risk` warning levels.
+- **Synthetic Backlink Profile:** Demonstration counts and generated example links; no live backlink index is queried.
+- **Illustrative Link-Risk Heuristic:** A demonstration calculation evaluating suspicious TLDs, non-descriptive anchors, and linking velocity to assign `Low Risk`, `Moderate`, or `High Risk` warning levels.
 - **Semrush Anchor Category Distribution:** Automatically classifies backlink anchor text into **Branded**, **Exact Match**, **Naked URL**, and **Generic** buckets.
 - **Live Inbound Feed:** Real-time stream of incoming links with target destinations and source PageRank authority.
 
@@ -206,6 +210,9 @@ npm start
 ### Option B: Docker Compose
 
 ```bash
+# Configure optional AI keys and satisfy the Compose env_file requirement
+cp .env.example .env
+
 # Start in detached mode
 docker compose up -d
 
@@ -270,6 +277,8 @@ Related Variations & Questions:
 ---
 
 ## 📡 REST API Documentation
+
+> The API currently returns modeled/synthetic SEO metrics for several endpoints. A successful HTTP response does not imply that traffic, keyword, backlink, or ranking data was obtained from a live data provider.
 
 Open Semrush exposes clean JSON endpoints for integration into third-party dashboards, automated CI/CD checks, and data pipelines:
 
@@ -337,9 +346,9 @@ Unlike projects weighed down by hundreds of NPM dependencies, Open Semrush imple
 
 > [!NOTE]
 > **Why this matters for your infrastructure:**
-> 1. **Zero Supply-Chain Vulnerabilities:** Immune to compromised transitive packages.
-> 2. **Instant Startup:** Cold boots in less than 100 milliseconds.
-> 3. **Ultra-Low Memory:** Consumes less than 35MB of RAM idle.
+> 1. **Small runtime dependency surface:** Core engine modules use Node.js built-ins; development still requires TypeScript tooling.
+> 2. **Startup:** Measure locally for your deployment; no reproducible benchmark is published yet.
+> 3. **Memory:** No reproducible memory benchmark is published yet.
 
 ---
 

@@ -7,7 +7,7 @@
  *   - Domain Overview with 24-month historical trajectory area chart
  *   - Google Core Algorithm Update correlation pins
  *   - Keyword Magic Tool with 12-month seasonality trends & SERP features
- *   - Live Google SERP Top 10 analyzer with CTR curve & PAA questions
+ *   - SERP preview (AI-generated/demo) analyzer with CTR curve & PAA questions
  *   - Technical Site Audit with crawler, TTFB latency, security headers & Schema.org
  *   - Multi-Competitor Keyword Gap matrix with interactive SVG Venn diagram
  *   - Backlink Analytics with PageRank, Penguin toxicity scoring & anchor taxonomy

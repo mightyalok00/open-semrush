@@ -1,7 +1,7 @@
 {
   "name": "open-semrush",
   "version": "1.0.0",
-  "description": "Open-Source Semrush & Ahrefs Alternative — SEO intelligence suite featuring Technical Site Audit, Live Google SERP Top 10, Multi-Competitor Keyword Gap, Backlink Analytics, and AI Outrank Strategist.",
+  "description": "Self-hosted technical SEO audit prototype with modeled keyword metrics, SERP previews, competitor-gap exploration, and optional AI assistance.",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -16,7 +16,8 @@
     "cli": "node scripts/semrush.mjs",
     "docker:build": "docker compose build",
     "docker:up": "docker compose up -d",
-    "docker:down": "docker compose down"
+    "docker:down": "docker compose down",
+    "test": "npm run build && node --test"
   },
   "keywords": [
     "seo",
