@@ -81,9 +81,9 @@ For a URL-prefix property, set siteUrl to https://example.com/. Optional query f
     npm run test:coverage
     npm run benchmark
 
-npm test compiles TypeScript and runs Node's test runner. npm run test:coverage emits coverage summaries; no percentage is claimed until a real run produces evidence. npm run benchmark emits JSON with Node version, OS/architecture, warm-up, iteration count, elapsed time and operations per second. Set BENCH_WARMUP and BENCH_ITERATIONS to reproduce a run. These are CPU-only microbenchmarks, not end-to-end crawl benchmarks, and no universal latency claim is made.
+npm test compiles TypeScript and runs Node's test runner. npm run test:coverage emits coverage summaries; the measured baseline is published in reports/quality/ci-evidence-2026-10-21.md. npm run benchmark emits JSON with Node version, OS/architecture, warm-up, iteration count, elapsed time and operations per second. Set BENCH_WARMUP and BENCH_ITERATIONS to reproduce a run. These are CPU-only microbenchmarks, not end-to-end crawl benchmarks, and no universal latency claim is made.
 
-GitHub Actions runs unit/API tests, uploads coverage and benchmark output as an artifact, and builds/runs a clean Docker Compose stack to check health, API behavior and audit-history persistence across a restart. The workflow run and artifact are the evidence source for actual measurements.
+GitHub Actions runs unit/API tests, uploads coverage and benchmark output as an artifact, and builds/runs a clean Docker Compose stack to check health, API behavior and audit-history persistence across a restart. The checked-in quality report records a passing run and measured baseline; the workflow run and its quality-evidence artifact contain the raw outputs.
 
 ## Security model
 
