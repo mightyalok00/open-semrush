@@ -58,7 +58,7 @@ jobs:
           curl --fail -H 'Authorization: Bearer ci-load-test-token' http://localhost:3000/api/projects | grep -q 'example.com'
           docker compose restart
           for i in $(seq 1 30); do curl --fail --silent http://localhost:3000/api/health && break; sleep 2; done
-          curl --fail http://localhost:3000/api/projects | grep -q 'example.com'
+          curl --fail -H 'Authorization: Bearer ci-load-test-token' http://localhost:3000/api/projects | grep -q 'example.com'
       - name: Logs on failure
         if: failure()
         run: docker compose logs
