@@ -14,14 +14,16 @@ function isPrivateIpv4(address: string): boolean {
     (a === 100 && b >= 64 && b <= 127) ||
     (a === 169 && b === 254) ||
     (a === 172 && b >= 16 && b <= 31) ||
-    (a === 192 && b === 168) ||
-    (a === 198 && (b === 18 || b === 19));
+    (a === 192 && (b === 0 || b === 168)) ||
+    (a === 198 && (b === 18 || b === 19 || b === 51)) ||
+    (a === 203 && b === 0);
 }
 
 function isPrivateIpv6(address: string): boolean {
   const normalized = address.toLowerCase().split('%')[0] ?? address.toLowerCase();
   if (normalized === '::' || normalized === '::1') return true;
-  if (normalized.startsWith('fc') || normalized.startsWith('fd')) return true;
+  if (normalized.startsWith('fc') || normalized.startsWith('fd') || normalized.startsWith('ff')) return true;
+  if (normalized.startsWith('2001:db8:') || normalized.startsWith('2001:10:')) return true;
   if (/^fe[89ab]/.test(normalized)) return true;
 
   const mappedIpv4 = normalized.match(/::ffff:(\d{1,3}(?:\.\d{1,3}){3})$/);
