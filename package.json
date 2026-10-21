@@ -12,7 +12,7 @@
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit",
-    "lint": "node --check scripts/semrush-server.mjs scripts/semrush.mjs scripts/production-controls.mjs scripts/benchmark.mjs scripts/crawl-benchmark.mjs scripts/load-benchmark.mjs scripts/check-secrets.mjs",
+    "lint": "node --check scripts/semrush-server.mjs scripts/semrush.mjs scripts/production-controls.mjs scripts/benchmark.mjs scripts/crawl-benchmark.mjs scripts/load-benchmark.mjs scripts/check-secrets.mjs scripts/multi-target-crawl.mjs",
     "start": "npm run build && node scripts/semrush-server.mjs",
     "dev": "npm run build && node scripts/semrush-server.mjs",
     "cli": "node scripts/semrush.mjs",
@@ -26,6 +26,7 @@
     "benchmark:crawl": "npm run build && node scripts/crawl-benchmark.mjs",
     "benchmark:crawl:real": "npm run build && node scripts/crawl-benchmark.mjs --mode real --iterations 20 --concurrency 4",
     "benchmark:crawl:matrix": "npm run build && node scripts/crawl-benchmark.mjs --matrix",
+    "benchmark:crawl:multi": "npm run build && node scripts/multi-target-crawl.mjs",
     "check:security": "npm run build && node --no-warnings=ExperimentalWarning --test tests/security-regression.test.mjs",
     "check:secrets": "node scripts/check-secrets.mjs"
   },

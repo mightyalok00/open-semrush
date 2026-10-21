@@ -76,7 +76,7 @@ All identified attack surfaces are defended in depth and verified with dedicated
 ## 3. Independent Security Review Verdict
 
 | Review Area | Risk Level | Status | Notes |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Outbound Network (SSRF / DNS) | High | **RESOLVED / SECURED** | Socket IP pinning and CIDR validator verified |
 | Inbound Network & Headers | Medium | **RESOLVED / SECURED** | Port/zone stripping, TRUST_PROXY_HOPS verified |
 | Authentication & Credentials | High | **RESOLVED / SECURED** | Constant-time digest equality, token rotation |

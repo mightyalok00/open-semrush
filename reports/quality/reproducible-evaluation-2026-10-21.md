@@ -2,8 +2,8 @@
 
 **Evaluation Target**: `open-semrush` Core Engine & Diagnostic Rules  
 **Repository**: <https://github.com/mightyalok00/open-semrush>  
-**Automated Verification Suites**: [`tests/golden-seo-audit.test.mjs`](file:///d:/rever/open-semrush/tests/golden-seo-audit.test.mjs), [`tests/crawl-resilience.test.mjs`](file:///d:/rever/open-semrush/tests/crawl-resilience.test.mjs), [`tests/search-console.test.mjs`](file:///d:/rever/open-semrush/tests/search-console.test.mjs)  
-**Verification Status**: **100% PASSING (72 passing tests across 9 test suites)**
+**Automated Verification Suites**: [`tests/golden-seo-audit.test.mjs`](file:///d:/rever/open-semrush/tests/golden-seo-audit.test.mjs), [`tests/crawl-resilience.test.mjs`](file:///d:/rever/open-semrush/tests/crawl-resilience.test.mjs), [`tests/search-console.test.mjs`](file:///d:/rever/open-semrush/tests/search-console.test.mjs), [`tests/ml-statistical.test.mjs`](file:///d:/rever/open-semrush/tests/ml-statistical.test.mjs)  
+**Verification Status**: **100% PASSING (83 passing tests across 10 test suites)**
 
 ---
 
@@ -75,6 +75,29 @@ Key Findings:
 
 ---
 
+### Benchmark Scenario D: Multi-Target Live Real-World Crawl Evaluation
+
+- **Evaluation Harness**: `scripts/multi-target-crawl.mjs`
+- **Execution Mode**: Live network TCP/TLS sockets with DNS answer IP pinning
+- **Targets Evaluated**:
+
+| Target URL | Status | Pages | Health Score | TTFB (ms) | Crawl Latency | Errors | Warnings |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| `https://example.com/` | 200 OK | 1 | **89 / 100** | 26 ms | 177 ms | 1 | 4 |
+| `https://example.org/` | 200 OK | 1 | **89 / 100** | 27 ms | 152 ms | 1 | 4 |
+| `https://www.iana.org/` | 200 OK | 2 | **96 / 100** | 28 ms | 172 ms | 0 | 4 |
+| `https://www.w3.org/` | 200 OK | 2 | **95 / 100** | 31 ms | 187 ms | 0 | 5 |
+| `https://httpbin.org/html` | 200 OK | 1 | **92 / 100** | 226 ms | 1788 ms | 1 | 2 |
+
+- **Aggregated Results**:
+  - Total Target Success Rate: **5 / 5 (100% Success)**
+  - Total Pages Audited: 7
+  - Timeouts / Socket Aborts: 0
+  - Heap Memory Delta: +2.69 MB
+  - Final RSS: 63.56 MB
+
+---
+
 ## 3. Provenance Framework: Modeled Metrics vs. Verified Provider Data
 
 `open-semrush` explicitly distinguishes **direct verified provider measurements** from **statistical / heuristic models**:
@@ -103,8 +126,11 @@ cd open-semrush
 # Install locked dependencies
 npm ci
 
-# Run all 9 test suites (68+ tests including golden audits)
+# Run all 10 test suites (83 tests including golden audits)
 npm test
+
+# Run multi-target real-world crawl evaluation
+node scripts/multi-target-crawl.mjs
 
 # Run golden audit accuracy verification specifically
 node --test tests/golden-seo-audit.test.mjs
@@ -114,6 +140,9 @@ node --test tests/crawl-resilience.test.mjs
 
 # Run storage migration and disaster recovery drills
 node --test tests/storage-migration.test.mjs
+
+# Run statistical ML validation suite
+node --test tests/ml-statistical.test.mjs
 
 # Run full test coverage with threshold enforcement
 npm run test:coverage

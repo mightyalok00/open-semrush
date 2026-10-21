@@ -142,6 +142,9 @@ npm run benchmark:crawl
 # Run 20-run live network crawl against public targets
 npm run benchmark:crawl:real
 
+# Run multi-target live public network crawl across diverse real domains
+npm run benchmark:crawl:multi
+
 # Run multi-dimensional matrix sweep (320 runs across 4 depths & 4 concurrency tiers)
 npm run benchmark:crawl:matrix
 ```
@@ -149,7 +152,7 @@ npm run benchmark:crawl:matrix
 CI workflows verify Node.js 22 and 24, validate dependencies via `npm audit`, perform secret leak detection, enforce test coverage gates, and verify persistence across Docker container restarts.
 
 - Detailed audit and benchmark data: [reports/quality/production-readiness-2026-10-21.md](reports/quality/production-readiness-2026-10-21.md)
-- Product validation against ground-truth sites: [reports/quality/reproducible-evaluation-2026-10-21.md](reports/quality/reproducible-evaluation-2026-10-21.md)
+- Product validation against ground-truth sites & live web: [reports/quality/reproducible-evaluation-2026-10-21.md](reports/quality/reproducible-evaluation-2026-10-21.md)
 
 ---
 
@@ -169,6 +172,7 @@ See [docs/ai-ml-architecture.md](docs/ai-ml-architecture.md) for full mathematic
 
 - **Atomic JSON Storage (`JsonFileStorageAdapter`)**: Atomic replacement with `.tmp` staging, explicit `fsync` flushing, restrictive file permissions (`0o600`), and fail-closed schema corruption defense.
 - **Transactional SQLite Adapter (`SqliteStorageAdapter`)**: High-performance relational database engine powered by Node native `node:sqlite`. Uses Write-Ahead Logging (`WAL`), strict relational tables, and ACID transactions for high-concurrency clustered operations.
+- **Disaster Recovery Drills**: Documented drills for interrupted write recovery, corrupt snapshot rejection, atomic point-in-time restore, and SQLite WAL high-concurrency rollback. See full runbook: [reports/quality/disaster-recovery-runbook.md](reports/quality/disaster-recovery-runbook.md).
 - **Backup & Restore API**:
 
 ```javascript
@@ -194,6 +198,31 @@ const db = new SqliteStorageAdapter('./data/seo_projects.sqlite');
 - **Zero-Downtime Secret Rotation**: `OPEN_SEMRUSH_API_TOKENS` accepts comma-separated secrets compared via `crypto.timingSafeEqual` over SHA-256 digests.
 - **Reverse Proxy IP Parsing**: `cleanIpCandidate` strips ports, interface zone indexes (`%eth0`), and injection vectors. Set `TRUST_PROXY_HOPS` to enable spoof-proof rate limiting behind Cloudflare, Nginx, or AWS ALB.
 - **Graceful Draining Shutdown**: `SIGTERM` and `SIGINT` trigger connection draining, rejecting new requests with 503 while allowing in-flight audits up to 10 seconds to finish.
+- **Independent Security Review**: Documented threat model audit, vulnerability verification, and regression tests. See [reports/security/security-review-2026-10-21.md](reports/security/security-review-2026-10-21.md).
+
+---
+
+## 🌐 Community Testing & Feedback
+
+We actively seek feedback from external SEO practitioners, developers, and agency teams testing Open Semrush across diverse real-world websites.
+
+### How to Test
+
+1. **One-Line Docker Run**:
+   ```bash
+   git clone https://github.com/mightyalok00/open-semrush.git && cd open-semrush
+   docker compose up -d
+   ```
+2. **Execute an Audit on Your Target**:
+   ```bash
+   curl -X POST http://localhost:3000/api/audit \
+     -H 'Content-Type: application/json' \
+     -d '{"url":"https://your-website.com","depth":2,"maxPages":10}'
+   ```
+3. **Submit Your Report**:
+   - For crawl accuracy, false positives, or edge-case feedback, use the [External Tester Template](.github/ISSUE_TEMPLATE/external_feedback.md) on [GitHub Issues](https://github.com/mightyalok00/open-semrush/issues).
+   - For bug reports with reproduction steps, use the [Bug Report Template](.github/ISSUE_TEMPLATE/bug_report.md).
+   - For feature requests and new SEO metrics, submit a [Feature Request](.github/ISSUE_TEMPLATE/feature_request.md).
 
 ---
 
