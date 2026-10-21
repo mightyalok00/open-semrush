@@ -20,7 +20,8 @@
     "test": "npm run build && node --test",
     "test:coverage": "npm run build && node --experimental-test-coverage --test",
     "benchmark": "npm run build && node scripts/benchmark.mjs",
-    "benchmark:load": "node scripts/load-benchmark.mjs"
+    "benchmark:load": "node scripts/load-benchmark.mjs",
+    "benchmark:crawl": "npm run build && node scripts/crawl-benchmark.mjs"
   },
   "keywords": [
     "seo",

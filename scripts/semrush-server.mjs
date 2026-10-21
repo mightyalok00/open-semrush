@@ -127,6 +127,12 @@ function serveStaticFile(req, res, pathname) {
   });
 }
 
+let activeRequests = 0;
+let totalRequests = 0;
+let totalErrors = 0;
+let isShuttingDown = false;
+const serverStartTime = Date.now();
+
 const server = http.createServer(async (req, res) => {
   // CORS Preflight
   if (req.method === 'OPTIONS') {
@@ -137,6 +143,18 @@ const server = http.createServer(async (req, res) => {
     res.end();
     return;
   }
+
+  if (isShuttingDown) {
+    sendJson(res, 503, { error: 'Server is shutting down', status: 'draining' }, { Connection: 'close' });
+    return;
+  }
+
+  activeRequests += 1;
+  totalRequests += 1;
+  res.on('finish', () => {
+    activeRequests = Math.max(0, activeRequests - 1);
+    if (res.statusCode >= 500) totalErrors += 1;
+  });
 
   const reqUrl = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
   const pathname = reqUrl.pathname;
@@ -151,7 +169,32 @@ const server = http.createServer(async (req, res) => {
     }
     // API Route: Health
     if (pathname === '/api/health') {
-      sendJson(res, 200, { status: 'healthy', timestamp: new Date().toISOString() });
+      const status = isShuttingDown ? 'draining' : 'healthy';
+      sendJson(res, isShuttingDown ? 503 : 200, {
+        status,
+        timestamp: new Date().toISOString(),
+        uptimeSeconds: Math.floor((Date.now() - serverStartTime) / 1000),
+        activeRequests,
+      });
+      return;
+    }
+
+    // API Route: Operational Metrics
+    if (pathname === '/api/metrics' && req.method === 'GET') {
+      const mem = process.memoryUsage();
+      sendJson(res, 200, {
+        status: isShuttingDown ? 'draining' : 'healthy',
+        uptimeSeconds: Math.floor((Date.now() - serverStartTime) / 1000),
+        activeRequests,
+        totalRequests,
+        totalErrors,
+        isShuttingDown,
+        memory: {
+          heapUsedBytes: mem.heapUsed,
+          heapTotalBytes: mem.heapTotal,
+          rssBytes: mem.rss,
+        },
+      });
       return;
     }
 
@@ -360,4 +403,38 @@ function startServer(port) {
   });
 }
 
+function gracefulShutdown(signal) {
+  if (isShuttingDown) return;
+  isShuttingDown = true;
+  console.log(`\nReceived ${signal}. Initiating graceful shutdown (draining ${activeRequests} active requests)...`);
+
+  server.close(() => {
+    console.log('HTTP server closed successfully.');
+    process.exit(0);
+  });
+
+  const checkInterval = setInterval(() => {
+    if (activeRequests === 0) {
+      clearInterval(checkInterval);
+      clearTimeout(forceExitTimer);
+      server.close(() => {
+        process.exit(0);
+      });
+    }
+  }, 100);
+
+  const forceExitTimer = setTimeout(() => {
+    clearInterval(checkInterval);
+    console.warn(`Graceful shutdown timed out with ${activeRequests} active requests remaining. Forcefully exiting.`);
+    process.exit(1);
+  }, 10_000);
+
+  if (checkInterval.unref) checkInterval.unref();
+  if (forceExitTimer.unref) forceExitTimer.unref();
+}
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
 startServer(DEFAULT_PORT);
+

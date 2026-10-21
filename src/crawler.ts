@@ -6,6 +6,10 @@ export interface CrawlerOptions {
   readonly timeoutMs?: number;
   readonly userAgent?: string;
   readonly respectSitemap?: boolean;
+  readonly safeFetchDependencies?: {
+    resolver?: (hostname: string, options: { all: true; verbatim: true }) => Promise<Array<{ address: string; family: number }>>;
+    requester?: (url: URL, address: string, family: number, init: RequestInit) => Promise<Response>;
+  };
 }
 
 const DEFAULT_USER_AGENT = 'Mozilla/5.0 (compatible; REA-SemrushBot/2.0; +https://rea.tools)';
@@ -13,14 +17,14 @@ const DEFAULT_USER_AGENT = 'Mozilla/5.0 (compatible; REA-SemrushBot/2.0; +https:
 /**
  * Checks for robots.txt and extracts sitemap directives.
  */
-async function inspectRobotsTxt(origin: string, userAgent: string): Promise<{ exists: boolean; sitemaps: string[] }> {
+async function inspectRobotsTxt(origin: string, userAgent: string, deps?: CrawlerOptions['safeFetchDependencies']): Promise<{ exists: boolean; sitemaps: string[] }> {
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 4000);
     const res = await safeFetch(`${origin}/robots.txt`, {
       headers: { 'User-Agent': userAgent },
       signal: controller.signal,
-    });
+    }, deps);
     clearTimeout(timeout);
 
     if (res.status !== 200) return { exists: false, sitemaps: [] };
@@ -43,14 +47,14 @@ async function inspectRobotsTxt(origin: string, userAgent: string): Promise<{ ex
 /**
  * Fetches and parses an XML sitemap to extract page URLs.
  */
-async function discoverSitemapUrls(sitemapUrl: string, userAgent: string, maxLimit = 50): Promise<string[]> {
+async function discoverSitemapUrls(sitemapUrl: string, userAgent: string, maxLimit = 50, deps?: CrawlerOptions['safeFetchDependencies']): Promise<string[]> {
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 5000);
     const res = await safeFetch(sitemapUrl, {
       headers: { 'User-Agent': userAgent },
       signal: controller.signal,
-    });
+    }, deps);
     clearTimeout(timeout);
 
     if (!res.ok) return [];
@@ -81,7 +85,8 @@ async function discoverSitemapUrls(sitemapUrl: string, userAgent: string, maxLim
 export async function auditSinglePage(
   url: string,
   timeoutMs: number = 10000,
-  userAgent: string = DEFAULT_USER_AGENT
+  userAgent: string = DEFAULT_USER_AGENT,
+  deps?: CrawlerOptions['safeFetchDependencies']
 ): Promise<PageAuditResult> {
   const issues: SeoIssue[] = [];
   const startTime = Date.now();
@@ -99,7 +104,7 @@ export async function auditSinglePage(
       },
       signal: controller.signal,
       redirect: 'follow',
-    });
+    }, deps);
     clearTimeout(timeoutId);
 
     ttfbMs = Date.now() - startTime;
@@ -432,25 +437,26 @@ export async function runSiteAudit(
   const maxPages = Math.max(1, Math.min(100, Math.floor(options.maxPages ?? 5)));
   const timeoutMs = Math.max(1000, Math.min(30000, Math.floor(options.timeoutMs ?? 10000)));
   const userAgent = options.userAgent ?? DEFAULT_USER_AGENT;
-  const validatedStartUrl = await assertPublicHttpUrl(startUrl);
+  const deps = options.safeFetchDependencies;
+  const validatedStartUrl = await assertPublicHttpUrl(startUrl, deps?.resolver);
   const normalizedStartUrl = validatedStartUrl.href;
 
   const startTime = Date.now();
   const startOrigin = validatedStartUrl.origin;
 
   // Step A: Inspect robots.txt
-  const robotsInfo = await inspectRobotsTxt(startOrigin, userAgent);
+  const robotsInfo = await inspectRobotsTxt(startOrigin, userAgent, deps);
 
   // Step B: Discover sitemap URLs if available
   const sitemapCandidate = robotsInfo.sitemaps[0] ?? `${startOrigin}/sitemap.xml`;
   let sitemapTarget = `${startOrigin}/sitemap.xml`;
   try {
-    const candidateUrl = await assertPublicHttpUrl(sitemapCandidate);
+    const candidateUrl = await assertPublicHttpUrl(sitemapCandidate, deps?.resolver);
     if (candidateUrl.origin === startOrigin) sitemapTarget = candidateUrl.href;
   } catch {
     // Ignore unsafe sitemap declarations and use the target origin's default sitemap.
   }
-  const discoveredSitemapUrls = (await discoverSitemapUrls(sitemapTarget, userAgent, 30))
+  const discoveredSitemapUrls = (await discoverSitemapUrls(sitemapTarget, userAgent, 30, deps))
     .filter((candidate) => {
       try { return new URL(candidate).origin === startOrigin; } catch { return false; }
     });
@@ -470,7 +476,7 @@ export async function runSiteAudit(
     if (!currentUrl || visited.has(currentUrl)) continue;
     visited.add(currentUrl);
 
-    const audit = await auditSinglePage(currentUrl, timeoutMs, userAgent);
+    const audit = await auditSinglePage(currentUrl, timeoutMs, userAgent, deps);
     pageResults.push(audit);
 
     // Fallback recursive link discovery if sitemap didn't provide enough URLs
@@ -479,7 +485,7 @@ export async function runSiteAudit(
         const res = await safeFetch(currentUrl, {
           method: 'GET',
           headers: { 'User-Agent': userAgent },
-        });
+        }, deps);
         const html = await res.text();
         const matches = html.matchAll(/<a\b[^>]*href=["']([^"']+)["'][^>]*>/gi);
 

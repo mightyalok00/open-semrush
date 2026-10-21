@@ -25,16 +25,38 @@ function equalSecret(provided, expected) {
   return timingSafeEqual(a, b);
 }
 
+export function getValidTokens() {
+  const raw = [process.env.OPEN_SEMRUSH_API_TOKEN, process.env.OPEN_SEMRUSH_API_TOKENS]
+    .filter(Boolean)
+    .join(',');
+  return raw
+    .split(',')
+    .map(t => t.trim())
+    .filter(Boolean);
+}
+
+export function parseClientIp(req, trustHops = boundedIntegerEnv('TRUST_PROXY_HOPS', 0, 0, 10)) {
+  const remote = req.socket?.remoteAddress || 'unknown';
+  if (trustHops > 0 && req.headers?.['x-forwarded-for']) {
+    const raw = String(req.headers['x-forwarded-for']);
+    const parts = raw.split(',').map(s => s.trim()).filter(Boolean);
+    if (parts.length >= trustHops) {
+      return parts[parts.length - trustHops] || remote;
+    }
+    return parts[0] || remote;
+  }
+  return remote;
+}
+
 function clientKey(req) {
-  // Do not trust X-Forwarded-For unless a trusted reverse proxy has normalized it.
-  return req.socket?.remoteAddress || 'unknown';
+  return parseClientIp(req);
 }
 
 /** Returns null on success or an HTTP response description on rejection. */
 export function checkProductionControls(req, pathname, now = Date.now()) {
   // Keep container/orchestrator liveness probes available during application traffic spikes.
   if (pathname === '/api/health') return null;
-  const token = process.env.OPEN_SEMRUSH_API_TOKEN;
+  const tokens = getValidTokens();
   const isProtected = protectedPath(req.method || 'GET', pathname);
   const key = clientKey(req);
   let bucket = buckets.get(key);
@@ -65,13 +87,14 @@ export function checkProductionControls(req, pathname, now = Date.now()) {
   }
 
   if (isProtected) {
-    if (!token && process.env.NODE_ENV === 'production') {
+    if (tokens.length === 0 && process.env.NODE_ENV === 'production') {
       return { status: 503, body: { error: 'Protected API routes are disabled until OPEN_SEMRUSH_API_TOKEN is configured.' } };
     }
-    if (token) {
+    if (tokens.length > 0) {
       const header = String(req.headers?.authorization || '');
       const provided = header.startsWith('Bearer ') ? header.slice(7).trim() : '';
-      if (!equalSecret(provided, token)) {
+      const matched = tokens.some(token => equalSecret(provided, token));
+      if (!matched) {
         return { status: 401, headers: { 'WWW-Authenticate': 'Bearer realm="open-semrush"' }, body: { error: 'A valid bearer token is required for this endpoint.' } };
       }
     }
@@ -82,3 +105,4 @@ export function checkProductionControls(req, pathname, now = Date.now()) {
 export function resetRateLimitsForTests() {
   buckets.clear();
 }
+

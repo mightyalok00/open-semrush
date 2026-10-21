@@ -76,3 +76,47 @@ test('Search Console endpoint fails closed when provider credentials are absent'
   assert.equal(response.status, 503);
   assert.match((await response.json()).error, /not configured/i);
 });
+
+test('HTTP API exports operational metrics with memory and request telemetry', async () => {
+  const response = await fetch(`${baseUrl}/api/metrics`);
+  assert.equal(response.status, 200);
+  const data = await response.json();
+  assert.equal(data.status, 'healthy');
+  assert.ok(typeof data.uptimeSeconds === 'number' && data.uptimeSeconds >= 0);
+  assert.ok(typeof data.totalRequests === 'number' && data.totalRequests > 0);
+  assert.ok(typeof data.activeRequests === 'number' && data.activeRequests >= 0);
+  assert.ok(typeof data.memory?.heapUsedBytes === 'number' && data.memory.heapUsedBytes > 0);
+});
+
+test('HTTP API domain and gap endpoints return modeled provenance', async () => {
+  const domainRes = await fetch(`${baseUrl}/api/domain?domain=github.com`);
+  assert.equal(domainRes.status, 200);
+  const domainData = await domainRes.json();
+  assert.equal(domainData.domain, 'github.com');
+  assert.equal(domainData.dataProvenance.type, 'modeled');
+
+  const gapRes = await fetch(`${baseUrl}/api/gap?domainA=github.com&domainB=gitlab.com`);
+  assert.equal(gapRes.status, 200);
+  const gapData = await gapRes.json();
+  assert.equal(gapData.dataProvenance.type, 'modeled');
+
+  const multiRes = await fetch(`${baseUrl}/api/gap/multi?domains=github.com,gitlab.com`);
+  assert.equal(multiRes.status, 200);
+  const multiData = await multiRes.json();
+  assert.equal(multiData.dataProvenance.type, 'modeled');
+
+  const backlinkRes = await fetch(`${baseUrl}/api/backlinks?domain=github.com`);
+  assert.equal(backlinkRes.status, 200);
+  const backlinkData = await backlinkRes.json();
+  assert.equal(backlinkData.dataProvenance.type, 'synthetic');
+});
+
+test('HTTP API serves static files and returns 404 for missing paths', async () => {
+  const home = await fetch(`${baseUrl}/`);
+  assert.equal(home.status, 200);
+  assert.match(home.headers.get('content-type') || '', /text\/html/);
+
+  const missing = await fetch(`${baseUrl}/nonexistent-file-xyz.txt`);
+  assert.equal(missing.status, 404);
+});
+

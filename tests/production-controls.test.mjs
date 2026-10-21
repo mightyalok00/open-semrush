@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { checkProductionControls, resetRateLimitsForTests } from '../scripts/production-controls.mjs';
+import { checkProductionControls, resetRateLimitsForTests, parseClientIp } from '../scripts/production-controls.mjs';
 
-function request({ method = 'GET', authorization, address = '192.0.2.10' } = {}) {
-  return { method, headers: authorization ? { authorization } : {}, socket: { remoteAddress: address } };
+function request({ method = 'GET', authorization, address = '192.0.2.10', headers = {} } = {}) {
+  return { method, headers: { ...(authorization ? { authorization } : {}), ...headers }, socket: { remoteAddress: address } };
 }
 
 test('protected API routes reject missing and incorrect bearer tokens', () => {
@@ -21,6 +21,30 @@ test('protected API routes accept the configured bearer token', () => {
   const result = checkProductionControls(request({ method: 'POST', authorization: 'Bearer test-secret' }), '/api/audit', 2000);
   assert.equal(result, null);
   delete process.env.OPEN_SEMRUSH_API_TOKEN;
+});
+
+test('supports multiple tokens for zero-downtime secret rotation', () => {
+  resetRateLimitsForTests();
+  process.env.OPEN_SEMRUSH_API_TOKENS = 'token-old, token-new';
+  assert.equal(checkProductionControls(request({ method: 'POST', authorization: 'Bearer token-old' }), '/api/audit', 7000), null);
+  assert.equal(checkProductionControls(request({ method: 'POST', authorization: 'Bearer token-new' }), '/api/audit', 7001), null);
+  assert.equal(checkProductionControls(request({ method: 'POST', authorization: 'Bearer token-invalid' }), '/api/audit', 7002)?.status, 401);
+  delete process.env.OPEN_SEMRUSH_API_TOKENS;
+});
+
+test('extracts client IP safely with TRUST_PROXY_HOPS', () => {
+  const req = {
+    headers: { 'x-forwarded-for': '203.0.113.195, 70.41.3.18, 150.172.238.178' },
+    socket: { remoteAddress: '10.0.0.1' },
+  };
+  // 0 hops: ignore header
+  assert.equal(parseClientIp(req, 0), '10.0.0.1');
+  // 1 hop: client is 150.172.238.178
+  assert.equal(parseClientIp(req, 1), '150.172.238.178');
+  // 2 hops: client is 70.41.3.18
+  assert.equal(parseClientIp(req, 2), '70.41.3.18');
+  // Missing header falls back to remoteAddress
+  assert.equal(parseClientIp({ socket: { remoteAddress: '198.51.100.5' } }, 1), '198.51.100.5');
 });
 
 test('expensive endpoints have a lower independent request budget and return Retry-After', () => {
@@ -58,3 +82,4 @@ test('stored project and history endpoints require authentication', () => {
   assert.equal(checkProductionControls(request({ method: 'GET', authorization: 'Bearer test-secret' }), '/api/history', 6001), null);
   delete process.env.OPEN_SEMRUSH_API_TOKEN;
 });
+

@@ -1,7 +1,7 @@
-import { safeFetch } from './url-safety.js';
 import { calculateCtrByPosition } from './serp.js';
 import { analyzeKeyword } from './keywords.js';
 import { analyzeDomainWithAi } from './ai.js';
+import { safeFetch } from './url-safety.js';
 const KNOWN_DOMAINS = {
     'github.com': {
         authorityScore: 94,
