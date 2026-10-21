@@ -19,7 +19,8 @@
     "docker:down": "docker compose down",
     "test": "npm run build && node --test",
     "test:coverage": "npm run build && node --experimental-test-coverage --test",
-    "benchmark": "npm run build && node scripts/benchmark.mjs"
+    "benchmark": "npm run build && node scripts/benchmark.mjs",
+    "benchmark:load": "node scripts/load-benchmark.mjs"
   },
   "keywords": [
     "seo",
