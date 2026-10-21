@@ -35,6 +35,8 @@
           <span>Domain Overview</span>
         </button>
 
+        <button class="nav-item" data-tab="search-console"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19V5M4 19h16M8 15l3-4 3 2 4-6"/></svg><span>Search Console</span></button>
+
         <button class="nav-item" data-tab="keywords">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-6-6m2-5a7 7 0 1 1-14 0 7 7 0 0 1 14 0zM10 7v6M7 10h6"/></svg>
           <span>Keyword Magic Tool</span>
@@ -97,7 +99,7 @@
           </button>
           <div class="stat-pill">
             <span class="label">AI Remediation:</span>
-            <span class="value accent">Gemini + OpenRouter Active</span>
+            <span class="value accent">Optional (API key required)</span>
           </div>
         </div>
       </header>
@@ -316,11 +318,35 @@
                     </tr>
                   </thead>
                   <tbody id="serpTableBody">
-                    <tr><td colspan="5" style="text-align: center; color: var(--text-secondary); padding: 20px;">Search a keyword above to inspect the live SERP landscape.</td></tr>
+                    <tr><td colspan="5" style="text-align: center; color: var(--text-secondary); padding: 20px;">Search a keyword above to inspect demo SERP examples; fallback results are not verified live rankings.</td></tr>
                   </tbody>
                 </table>
               </div>
             </div>
+          </div>
+        </section>
+
+        <!-- FIRST-PARTY GOOGLE SEARCH CONSOLE -->
+        <section id="tab-search-console" class="tab-pane">
+          <div class="query-card">
+            <form id="searchConsoleForm" class="search-form" style="flex-wrap: wrap;">
+              <div class="input-wrapper"><label for="gscSiteUrl">Property</label><input id="gscSiteUrl" type="text" placeholder="sc-domain:example.com" required></div>
+              <div class="input-wrapper"><label for="gscStartDate">Start date</label><input id="gscStartDate" type="date" required></div>
+              <div class="input-wrapper"><label for="gscEndDate">End date</label><input id="gscEndDate" type="date" required></div>
+              <div class="input-wrapper"><label for="gscQuery">Query contains (optional)</label><input id="gscQuery" type="text" placeholder="brand or keyword"></div>
+              <button type="submit" class="btn-primary"><span>Fetch verified data</span></button>
+            </form>
+            <p style="margin-top:12px;color:var(--text-secondary);font-size:.85rem">First-party Google Search Console performance for a property your configured OAuth account can access. Requires server OAuth credentials; no synthetic fallback is used.</p>
+          </div>
+          <div id="gscStatus" role="status" style="padding:12px 0">Configure Google OAuth credentials to use this report.</div>
+          <div id="gscResults" class="results-container hidden">
+            <div class="kpi-grid">
+              <div class="kpi-card"><div class="kpi-label">Clicks</div><div id="gscClicks" class="kpi-value">—</div></div>
+              <div class="kpi-card"><div class="kpi-label">Impressions</div><div id="gscImpressions" class="kpi-value">—</div></div>
+              <div class="kpi-card"><div class="kpi-label">CTR</div><div id="gscCtr" class="kpi-value">—</div></div>
+              <div class="kpi-card"><div class="kpi-label">Average position</div><div id="gscPosition" class="kpi-value">—</div></div>
+            </div>
+            <div class="panel-card"><div class="panel-header"><h3>Search queries (Google Search Console)</h3></div><div class="table-responsive"><table class="data-table"><thead><tr><th>Query</th><th>Clicks</th><th>Impressions</th><th>CTR</th><th>Avg. position</th></tr></thead><tbody id="gscRows"></tbody></table></div></div>
           </div>
         </section>
 
@@ -626,7 +652,7 @@
 
               <div class="panel-card">
                 <div class="panel-header">
-                  <h3>Recent Inbound Backlink Samples</h3>
+                  <h3>Synthetic backlink examples (not a live index)</h3>
                 </div>
                 <div class="backlink-feed" id="blFeedList"></div>
               </div>
