@@ -21,6 +21,7 @@ const latencies = [];
 const statuses = {};
 let failures = 0;
 let next = 0;
+const startedAt = new Date().toISOString();
 const start = performance.now();
 
 async function worker() {
@@ -56,7 +57,7 @@ const percentile = p => latencies.length ? Number(latencies[Math.min(latencies.l
 const result = {
   benchmark: 'open-semrush-http-load-v1',
   mode,
-  startedAt: new Date().toISOString(),
+  startedAt,
   baseUrl,
   targetUrl: mode === 'crawl' ? targetUrl : undefined,
   node: process.version,
