@@ -1,7 +1,7 @@
 # Reproducible SEO Audit Evaluation & Product Validation Report — 2026-10-21
 
 **Evaluation Target**: `open-semrush` Core Engine & Diagnostic Rules  
-**Repository**: https://github.com/mightyalok00/open-semrush  
+**Repository**: <https://github.com/mightyalok00/open-semrush>  
 **Automated Verification Suites**: [`tests/golden-seo-audit.test.mjs`](file:///d:/rever/open-semrush/tests/golden-seo-audit.test.mjs), [`tests/crawl-resilience.test.mjs`](file:///d:/rever/open-semrush/tests/crawl-resilience.test.mjs), [`tests/search-console.test.mjs`](file:///d:/rever/open-semrush/tests/search-console.test.mjs)  
 **Verification Status**: **100% PASSING (72 passing tests across 9 test suites)**
 
@@ -12,6 +12,7 @@
 This evaluation validates the analytical accuracy, heuristic reliability, and data provenance boundaries of `open-semrush`. Rather than relying on simulated placeholders or unverified scoring, the audit rules and metrics were evaluated against **ground-truth manually reviewed site architectures** and **verified Google Search Console data**.
 
 Key Findings:
+
 1. **Deterministic Accuracy**: The audit engine scores a flawless semantic page with 100% health score and 0 issues, while reliably catching 100% of injected technical SEO flaws (missing title, missing H1, missing alt tags, missing canonical, missing schema, missing meta description).
 2. **Clear Provenance Distinction**: Verified provider data (Google Search Console API) is explicitly separated from algorithmic and modeled metrics (Domain Authority, Keyword Difficulty, Estimated Organic Traffic, CTR Curve models).
 3. **Reproducibility**: All evaluation scenarios are codified as automated test suites that run continuously in CI quality gates.
@@ -21,6 +22,7 @@ Key Findings:
 ## 2. Ground-Truth Manually Reviewed Site Evaluations
 
 ### Benchmark Scenario A: Flawless Enterprise Standard Page
+
 - **Test File**: `tests/golden-seo-audit.test.mjs` ("Golden Audit: Flawless page achieves 100% health score with zero issues")
 - **Architecture**:
   - Semantic HTML5 structure with single `<h1>`, hierarchical subheadings, and > 200 words of substantive content.
@@ -40,6 +42,7 @@ Key Findings:
 ---
 
 ### Benchmark Scenario B: Degraded Site with Technical SEO Flaws
+
 - **Test File**: `tests/golden-seo-audit.test.mjs` ("Golden Audit: Degraded page produces exact deterministic SEO issue codes")
 - **Injected Flaws**:
   - Missing `<title>` tag.
@@ -60,6 +63,7 @@ Key Findings:
 ---
 
 ### Benchmark Scenario C: HTTP Error & Edge Conditions
+
 - **Test File**: `tests/golden-seo-audit.test.mjs` & `tests/crawl-resilience.test.mjs`
 - **Scenarios Evaluated**:
   - HTTP 404 Client Error: Flagged as `HTTP_CLIENT_ERROR` (`error`).
@@ -76,7 +80,7 @@ Key Findings:
 `open-semrush` explicitly distinguishes **direct verified provider measurements** from **statistical / heuristic models**:
 
 | SEO Dimension | Category | Source / Engine | Provenance Contract |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | **Clicks, Impressions, CTR, Position** | **Verified Provider Data** | Google Search Console API | Direct OAuth2 telemetry from Google Search Index. Labeled `verified: true`, `source: "google_search_console"`. |
 | **Organic Health Score** | **Empirical Heuristic** | Technical Crawler Rule Engine | Computed from deterministic W3C, RFC, and search engine best practices. |
 | **Domain Authority Score (0-100)** | **Modeled SEO Metric** | Algorithmic Backlink & Domain Graph | Modeled estimation based on curated profiles and domain signals. Labeled `modeled: true`. |

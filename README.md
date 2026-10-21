@@ -25,7 +25,7 @@ Requirements: Node.js 22+ recommended; Docker Compose v2 for container use. The 
     npm install
     npm start
 
-Open http://localhost:3000. npm start compiles TypeScript before launching. Google Search Console remains unavailable until OAuth credentials are configured.
+Open <http://localhost:3000>. npm start compiles TypeScript before launching. Google Search Console remains unavailable until OAuth credentials are configured.
 
 ### Docker Compose
 
@@ -41,10 +41,10 @@ Compose persists audit history in the named volume open-semrush-data. Running do
 
 ## Google Search Console
 
-This uses Google's official Search Console Search Analytics API: https://developers.google.com/webmaster-tools/v1/searchanalytics/query. It returns first-party performance for a property the configured OAuth user can access. It does not provide competitors' traffic, third-party keyword volume or backlink indexes.
+This uses Google's official Search Console Search Analytics API: <https://developers.google.com/webmaster-tools/v1/searchanalytics/query>. It returns first-party performance for a property the configured OAuth user can access. It does not provide competitors' traffic, third-party keyword volume or backlink indexes.
 
 1. Enable the Search Console API in Google Cloud and create OAuth credentials.
-2. Authorize the https://www.googleapis.com/auth/webmasters.readonly scope and obtain a refresh token for an account that has access to the property.
+2. Authorize the <https://www.googleapis.com/auth/webmasters.readonly> scope and obtain a refresh token for an account that has access to the property.
 3. Store credentials in the local .env file. Never commit secrets.
 
     GOOGLE_OAUTH_CLIENT_ID=
@@ -56,12 +56,12 @@ A short-lived GOOGLE_SEARCH_CONSOLE_ACCESS_TOKEN is supported, but refresh-token
 
     curl 'http://localhost:3000/api/search-console?siteUrl=sc-domain%3Aexample.com&startDate=2026-09-01&endDate=2026-09-30'
 
-For a URL-prefix property, set siteUrl to https://example.com/. Optional query filters matching query strings. If Google is unavailable, the endpoint returns an error rather than synthetic substitute data. verified:true means the response came from Google's API for the authorized property; it is not a guarantee that every interpretation is correct.
+For a URL-prefix property, set siteUrl to <https://example.com/>. Optional query filters matching query strings. If Google is unavailable, the endpoint returns an error rather than synthetic substitute data. verified:true means the response came from Google's API for the authorized property; it is not a guarantee that every interpretation is correct.
 
 ## API reference
 
 | Method | Endpoint | Source / behavior |
-|---|---|---|
+| --- | --- | --- |
 | GET | /api/health | Process health check |
 | GET | /api/metrics | Operational metrics (uptime, active requests, memory telemetry) |
 | GET | /api/search-console?siteUrl=...&startDate=YYYY-MM-DD&endDate=YYYY-MM-DD | Google Search Console; OAuth required |
@@ -98,15 +98,14 @@ GitHub Actions runs unit/API/security tests across Node.js 22 and 24, verifies d
 - **Atomic JSON Storage (`JsonFileStorageAdapter`)**: Atomic replacement with `.tmp` staging, `fsync`, restrictive permissions (`0o600`), and fail-closed schema corruption defense.
 - **Transactional SQLite Adapter (`SqliteStorageAdapter`)**: Built-in transactional database engine powered by Node native `node:sqlite`. Uses Write-Ahead Logging (`WAL`), strict relational tables, and ACID transactions for multi-instance or high-concurrency clustered operations.
 - **Backup & Restore API**:
-  ```javascript
-  import { backupDb, restoreDb, SqliteStorageAdapter } from './dist/storage.js';
-  // Create verified atomic backup snapshot
-  const backup = backupDb();
-  // Restore database with schema validation
-  restoreDb(backup.backupPath);
-  // Or switch to transactional SQLite adapter
-  const db = new SqliteStorageAdapter('./data/seo_projects.sqlite');
-  ```
+
+      import { backupDb, restoreDb, SqliteStorageAdapter } from './dist/storage.js';
+      // Create verified atomic backup snapshot
+      const backup = backupDb();
+      // Restore database with schema validation
+      restoreDb(backup.backupPath);
+      // Or switch to transactional SQLite adapter
+      const db = new SqliteStorageAdapter('./data/seo_projects.sqlite');
 
 ## Security model
 
