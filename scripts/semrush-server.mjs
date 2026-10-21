@@ -64,7 +64,6 @@ const MIME_TYPES = {
 function sendJson(res, statusCode, data) {
   res.writeHead(statusCode, {
     'Content-Type': 'application/json; charset=utf-8',
-    'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
   });
@@ -125,7 +124,6 @@ const server = http.createServer(async (req, res) => {
   // CORS Preflight
   if (req.method === 'OPTIONS') {
     res.writeHead(204, {
-      'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type',
     });
@@ -165,7 +163,10 @@ const server = http.createServer(async (req, res) => {
     if (pathname === '/api/audit' && req.method === 'POST') {
       const body = await parseJsonBody(req);
       const url = body.url;
-      const maxPages = Number(body.maxPages) || 3;
+      const requestedMaxPages = Number(body.maxPages);
+      const maxPages = Number.isFinite(requestedMaxPages) && requestedMaxPages > 0
+        ? Math.min(100, Math.floor(requestedMaxPages))
+        : 3;
 
       if (!url) {
         sendJson(res, 400, { error: 'url is required' });
