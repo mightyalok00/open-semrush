@@ -13,12 +13,15 @@ Official Google Search Console telemetry, empirical machine learning rank curves
 ---
 
 > ⚠️ **Data Integrity & Provenance Disclosure**:
+>
 > Open Semrush enforces a strict **Data Provenance Contract** on every API response and metric. Facts and estimates are never conflated:
+>
 > - `verified_provider`: Direct first-party telemetry from official APIs (Google Search Console Search Analytics API).
 > - `empirical_observation`: Factual measurements observed during active HTTP crawls (status codes, response headers, DOM markup, SSL certificates).
 > - `provider_api`: Live search data from external search providers (Google Suggest Autocomplete, DataForSEO Labs).
 > - `statistical_model`: Bounded mathematical regressions (Empirical CTR power-law curve, Softmax intent probability distribution, 95% traffic forecast confidence intervals).
 > - `synthetic_estimate`: Modeled preview simulations for backlinks and competitor authority scores (clearly labeled; do not cite as factual client reporting until a commercial backlink provider is connected).
+>
 
 ---
 
