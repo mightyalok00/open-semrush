@@ -16,7 +16,8 @@
     "cli": "node scripts/semrush.mjs",
     "docker:build": "docker compose build",
     "docker:up": "docker compose up -d",
-    "docker:down": "docker compose down"
+    "docker:down": "docker compose down",
+    "test": "npm run build && node --test"
   },
   "keywords": [
     "seo",
