@@ -51,7 +51,7 @@ This is a local API smoke test, **not** a crawl-throughput benchmark or producti
 
 ## Controls implemented
 
-- Bearer-token checks on POST `/api/audit`, POST `/api/ai/*`, and GET `/api/search-console`; in production, protected routes fail closed when no token is configured.
+- Bearer-token checks on POST `/api/audit`, POST `/api/ai/*`, and GET `/api/search-console`, `/api/projects`, and `/api/history`; in production, protected routes fail closed when no token is configured.
 - In-process per-client rate limiting; default 120 API requests/minute and 10 expensive/provider-sensitive requests/minute. Health probes are exempt.
 - Bounded and validated limiter/history configuration.
 - JSON persistence uses temporary files, fsync and atomic rename, restrictive file modes, bounded history, detached read snapshots, and fail-closed corruption handling.
