@@ -28,14 +28,74 @@ function emptyDb(): DatabaseSchema {
   return { projects: [], history: [] };
 }
 
-function validateDb(value: unknown): DatabaseSchema {
+function isSafeIntegerNonNegative(val: unknown): boolean {
+  return typeof val === 'number' && Number.isSafeInteger(val) && val >= 0;
+}
+
+function isValidScore(val: unknown): boolean {
+  return typeof val === 'number' && Number.isSafeInteger(val) && val >= 0 && val <= 100;
+}
+
+function validateProject(p: unknown): TrackedProjectRecord {
+  if (!p || typeof p !== 'object' || Array.isArray(p)) {
+    throw new Error('Stored project entry must be an object.');
+  }
+  const rec = p as Record<string, unknown>;
+  if (typeof rec.id !== 'string' || !rec.id.trim()) throw new Error('Stored project ID must be a non-empty string.');
+  if (typeof rec.domain !== 'string' || !rec.domain.trim()) throw new Error('Stored project domain must be a non-empty string.');
+  if (typeof rec.createdAt !== 'string' || !rec.createdAt.trim()) throw new Error('Stored project createdAt must be a valid timestamp string.');
+  if (!isValidScore(rec.lastAuditScore)) throw new Error('Stored project lastAuditScore must be an integer between 0 and 100.');
+  if (!Array.isArray(rec.trackedKeywords) || rec.trackedKeywords.some(k => typeof k !== 'string')) {
+    throw new Error('Stored project trackedKeywords must be an array of strings.');
+  }
+  return {
+    id: rec.id.trim(),
+    domain: rec.domain.trim().toLowerCase(),
+    createdAt: rec.createdAt,
+    lastAuditScore: rec.lastAuditScore as number,
+    trackedKeywords: [...(rec.trackedKeywords as string[])],
+  };
+}
+
+function validateHistoryEntry(h: unknown): AuditHistoryEntry {
+  if (!h || typeof h !== 'object' || Array.isArray(h)) {
+    throw new Error('Stored history entry must be an object.');
+  }
+  const rec = h as Record<string, unknown>;
+  if (typeof rec.timestamp !== 'string' || !rec.timestamp.trim()) throw new Error('Stored history timestamp must be a valid string.');
+  if (typeof rec.domain !== 'string' || !rec.domain.trim()) throw new Error('Stored history domain must be a non-empty string.');
+  if (!isValidScore(rec.healthScore)) throw new Error('Stored history healthScore must be an integer between 0 and 100.');
+  if (!isSafeIntegerNonNegative(rec.errors)) throw new Error('Stored history errors must be a non-negative integer.');
+  if (!isSafeIntegerNonNegative(rec.warnings)) throw new Error('Stored history warnings must be a non-negative integer.');
+  if (!isSafeIntegerNonNegative(rec.notices)) throw new Error('Stored history notices must be a non-negative integer.');
+  return {
+    timestamp: rec.timestamp,
+    domain: rec.domain.trim().toLowerCase(),
+    healthScore: rec.healthScore as number,
+    errors: rec.errors as number,
+    warnings: rec.warnings as number,
+    notices: rec.notices as number,
+  };
+}
+
+export function validateDb(value: unknown): DatabaseSchema {
   if (!value || typeof value !== 'object') throw new Error('Stored SEO database is not a JSON object.');
   const candidate = value as Partial<DatabaseSchema>;
   if (!Array.isArray(candidate.projects) || !Array.isArray(candidate.history)) {
     throw new Error('Stored SEO database has an invalid schema; refusing to overwrite it.');
   }
-  return { projects: candidate.projects, history: candidate.history };
+  const projects = candidate.projects.map(validateProject);
+  const history = candidate.history.map(validateHistoryEntry);
+  return { projects, history };
 }
+
+export interface StorageAdapter {
+  readonly name: string;
+  getAllProjects(): TrackedProjectRecord[];
+  getDomainAuditHistory(domain: string): AuditHistoryEntry[];
+  recordAuditInHistory(domain: string, healthScore: number, errors: number, warnings: number, notices: number): void;
+}
+
 
 function ensureDbFile(): DatabaseSchema {
   fs.mkdirSync(DATA_DIR, { recursive: true, mode: 0o700 });
@@ -88,26 +148,30 @@ export function recordAuditInHistory(
   const db = ensureDbFile();
   const normalizedDomain = domain.toLowerCase().trim();
   if (!normalizedDomain) throw new Error('A non-empty domain is required for audit history.');
+  const safeScore = Math.max(0, Math.min(100, Math.round(Number(healthScore) || 0)));
+  const safeErrors = Math.max(0, Math.floor(Number(errors) || 0));
+  const safeWarnings = Math.max(0, Math.floor(Number(warnings) || 0));
+  const safeNotices = Math.max(0, Math.floor(Number(notices) || 0));
   const entry: AuditHistoryEntry = {
     timestamp: new Date().toISOString(),
     domain: normalizedDomain,
-    healthScore,
-    errors,
-    warnings,
-    notices,
+    healthScore: safeScore,
+    errors: safeErrors,
+    warnings: safeWarnings,
+    notices: safeNotices,
   };
   db.history.push(entry);
   if (db.history.length > MAX_HISTORY_ENTRIES) db.history.splice(0, db.history.length - MAX_HISTORY_ENTRIES);
 
   const existingProj = db.projects.find(p => p.domain === normalizedDomain);
   if (existingProj) {
-    (existingProj as TrackedProjectRecord & { lastAuditScore: number }).lastAuditScore = healthScore;
+    (existingProj as TrackedProjectRecord & { lastAuditScore: number }).lastAuditScore = safeScore;
   } else {
     db.projects.push({
       id: `proj_${Date.now()}_${randomUUID().slice(0, 8)}`,
       domain: normalizedDomain,
       createdAt: entry.timestamp,
-      lastAuditScore: healthScore,
+      lastAuditScore: safeScore,
       trackedKeywords: [],
     });
   }
@@ -124,3 +188,20 @@ export function getDomainAuditHistory(domain: string): AuditHistoryEntry[] {
   const clean = domain.toLowerCase().trim();
   return ensureDbFile().history.filter(entry => entry.domain === clean).map(entry => ({ ...entry }));
 }
+
+/** Standard file-based JSON persistence engine conforming to StorageAdapter interface. */
+export class JsonFileStorageAdapter implements StorageAdapter {
+  readonly name = 'json-file';
+  getAllProjects(): TrackedProjectRecord[] {
+    return getAllProjects();
+  }
+  getDomainAuditHistory(domain: string): AuditHistoryEntry[] {
+    return getDomainAuditHistory(domain);
+  }
+  recordAuditInHistory(domain: string, healthScore: number, errors: number, warnings: number, notices: number): void {
+    recordAuditInHistory(domain, healthScore, errors, warnings, notices);
+  }
+}
+
+export const defaultStorageAdapter: StorageAdapter = new JsonFileStorageAdapter();
+

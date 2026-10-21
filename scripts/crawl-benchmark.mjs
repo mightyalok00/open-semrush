@@ -93,7 +93,9 @@ const mockRequester = async (url) => {
   return new Response(page.body, { status: page.status, headers: page.headers });
 };
 
-const deps = { resolver: mockResolver, requester: mockRequester };
+const mode = process.env.CRAWL_BENCH_MODE || (process.env.CRAWL_TARGET_URL ? 'real' : 'simulated');
+const targetUrl = process.env.CRAWL_TARGET_URL || (mode === 'real' ? 'https://example.com/' : 'https://benchmark.example.com/');
+const deps = mode === 'simulated' ? { resolver: mockResolver, requester: mockRequester } : undefined;
 
 const latencies = [];
 let failures = 0;
@@ -111,7 +113,7 @@ async function worker() {
     if (idx >= iterations) return;
     const t0 = performance.now();
     try {
-      const report = await runSiteAudit('https://benchmark.example.com/', {
+      const report = await runSiteAudit(targetUrl, {
         maxPages,
         safeFetchDependencies: deps,
       });
@@ -135,6 +137,8 @@ const percentile = p => latencies.length ? Number(latencies[Math.min(latencies.l
 
 const result = {
   benchmark: 'open-semrush-crawl-benchmark-v1',
+  mode,
+  targetUrl,
   startedAt,
   node: process.version,
   platform: process.platform,
@@ -158,8 +162,11 @@ const result = {
     rssFinal: Number((memEnd.rss / (1024 * 1024)).toFixed(2)),
   },
   failures,
-  note: 'Deterministic, verified end-to-end multi-page crawl and parser benchmark using in-memory public mock responder; measures parser, SEO evaluation, robots/sitemap discovery, and crawl concurrency without external network noise.',
+  note: mode === 'real'
+    ? 'Real-world live network crawl benchmark measuring real DNS resolution, TLS handshakes, socket transfers, HTML parsing and audit evaluations.'
+    : 'Deterministic multi-page crawl benchmark using in-memory public mock responder to measure parser and signal evaluation speed.',
 };
 
 console.log(JSON.stringify(result, null, 2));
 if (failures > 0) process.exitCode = 1;
+

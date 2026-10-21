@@ -531,16 +531,27 @@ async function fetchSerpData(query) {
     const paaBox = document.getElementById('serpPaaBox');
     if (feats.peopleAlsoAsk && feats.peopleAlsoAsk.length > 0) {
       paaBox.classList.remove('hidden');
-      let paaHtml = '<div style="font-weight: 700; margin-bottom: 8px;">❓ People Also Ask:</div><div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 8px;">';
+      paaBox.innerHTML = '';
+      const titleDiv = document.createElement('div');
+      titleDiv.style.fontWeight = '700';
+      titleDiv.style.marginBottom = '8px';
+      titleDiv.textContent = '❓ People Also Ask:';
+      const grid = document.createElement('div');
+      grid.style.display = 'grid';
+      grid.style.gridTemplateColumns = 'repeat(auto-fit, minmax(280px, 1fr))';
+      grid.style.gap = '8px';
       feats.peopleAlsoAsk.forEach(q => {
-        paaHtml += `
-          <div style="background: rgba(255,255,255,0.02); padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; border-left: 2px solid var(--accent-orange); cursor: pointer;" onclick="document.getElementById('keywordInput').value='${escapeHtml(q)}'; fetchKeywordData('${escapeHtml(q)}');">
-            ${escapeHtml(q)}
-          </div>
-        `;
+        const item = document.createElement('div');
+        item.style.cssText = 'background: rgba(255,255,255,0.02); padding: 8px 12px; border-radius: 6px; font-size: 0.85rem; border-left: 2px solid var(--accent-orange); cursor: pointer;';
+        item.textContent = q;
+        item.addEventListener('click', () => {
+          document.getElementById('keywordInput').value = q;
+          fetchKeywordData(q);
+        });
+        grid.appendChild(item);
       });
-      paaHtml += '</div>';
-      paaBox.innerHTML = paaHtml;
+      paaBox.appendChild(titleDiv);
+      paaBox.appendChild(grid);
     } else {
       paaBox.classList.add('hidden');
     }
@@ -550,6 +561,12 @@ async function fetchSerpData(query) {
     tbody.innerHTML = '';
     (data.topRankings || []).forEach(r => {
       const tr = document.createElement('tr');
+      const inspectBtn = document.createElement('button');
+      inspectBtn.className = 'kpi-badge';
+      inspectBtn.style.cssText = 'cursor: pointer; background: var(--bg-card);';
+      inspectBtn.textContent = 'Inspect';
+      inspectBtn.addEventListener('click', () => inspectDomainFromSerp(r.domain));
+
       tr.innerHTML = `
         <td><span class="rank-pos ${r.position === 1 ? 'pos-1' : ''}">${r.position}</span></td>
         <td>
@@ -558,12 +575,9 @@ async function fetchSerpData(query) {
         </td>
         <td><span class="kpi-badge badge-high">${r.authorityScore}</span></td>
         <td style="font-weight: 600; color: var(--accent-green);">${(r.estimatedCtr * 100).toFixed(1)}%</td>
-        <td>
-          <button class="kpi-badge" style="cursor: pointer; background: var(--bg-card);" onclick="inspectDomainFromSerp('${escapeHtml(r.domain)}')">
-            Inspect
-          </button>
-        </td>
+        <td class="inspect-cell"></td>
       `;
+      tr.querySelector('.inspect-cell').appendChild(inspectBtn);
       tbody.appendChild(tr);
     });
 
@@ -664,7 +678,7 @@ function setupSiteAudit() {
                   <div class="issue-message">[${escapeHtml(iss.code)}] ${escapeHtml(iss.message)}</div>
                   <div class="issue-fix">Fix: ${escapeHtml(iss.recommendation)}</div>
                 </div>
-                <button class="btn-ai-fix" onclick="requestAiFix('${escapeHtml(page.url)}', '${escapeHtml(iss.code)}', '${escapeHtml(originalVal)}', '${escapeHtml(iss.message)}')">
+                <button class="btn-ai-fix" data-url="${escapeHtml(page.url)}" data-code="${escapeHtml(iss.code)}" data-original="${escapeHtml(originalVal)}" data-message="${escapeHtml(iss.message)}">
                   ✨ Fix with AI
                 </button>
               </div>
@@ -708,6 +722,11 @@ function setupSiteAudit() {
             ${issuesHtml}
           </div>
         `;
+        item.querySelectorAll('.btn-ai-fix').forEach(btn => {
+          btn.addEventListener('click', () => {
+            requestAiFix(btn.dataset.url, btn.dataset.code, btn.dataset.original, btn.dataset.message);
+          });
+        });
         acc.appendChild(item);
       });
 
@@ -1194,15 +1213,15 @@ window.requestAiStrategy = async function(d1, d2, keyword) {
       <div class="kpi-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 20px;">
         <div class="kpi-card">
           <div class="kpi-label">Target Intent</div>
-          <div class="kpi-value" style="font-size: 1.2rem;">${data.targetIntent}</div>
+          <div class="kpi-value" style="font-size: 1.2rem;">${escapeHtml(data.targetIntent)}</div>
         </div>
         <div class="kpi-card">
           <div class="kpi-label">Recommended Length</div>
-          <div class="kpi-value" style="font-size: 1.2rem;">${data.recommendedWordCount} words</div>
+          <div class="kpi-value" style="font-size: 1.2rem;">${escapeHtml(data.recommendedWordCount)} words</div>
         </div>
         <div class="kpi-card">
           <div class="kpi-label">Keyword Difficulty</div>
-          <div class="kpi-value accent-kd" style="font-size: 1.2rem;">${data.estimatedDifficulty}%</div>
+          <div class="kpi-value accent-kd" style="font-size: 1.2rem;">${escapeHtml(data.estimatedDifficulty)}%</div>
         </div>
       </div>
 
@@ -1222,7 +1241,7 @@ window.requestAiStrategy = async function(d1, d2, keyword) {
       </div>
     `;
   } catch (err) {
-    bodyEl.innerHTML = `<div style="color: var(--accent-rose); padding: 20px;">Error generating strategy: ${err.message}</div>`;
+    bodyEl.innerHTML = `<div style="color: var(--accent-rose); padding: 20px;">Error generating strategy: ${escapeHtml(err.message)}</div>`;
   }
 };
 
@@ -1288,13 +1307,14 @@ function setupExportPdf() {
  * @returns {string} Sanitized string safe for DOM interpolation
  */
 function escapeHtml(str) {
-  if (!str) return '';
+  if (str === null || str === undefined) return '';
   return String(str)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
+    .replace(/'/g, '&#039;')
+    .replace(/`/g, '&#x60;');
 }
 
 
