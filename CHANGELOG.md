@@ -60,3 +60,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Domain overview, keyword gap comparison, multi-domain matrix, and synthetic backlink profiling.
 - **Web Studio UI**:
   - Single-page application with dark theme, responsive layouts, CSV export, and print-ready PDF reports.
+
+[1.1.0]: https://github.com/mightyalok00/open-semrush/releases/tag/v1.1.0
+[1.0.0]: https://github.com/mightyalok00/open-semrush/releases/tag/v1.0.0
