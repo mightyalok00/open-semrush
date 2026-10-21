@@ -1,0 +1,32 @@
+name: Security Audit and Compliance
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, "improve/**"]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  security-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies and build
+        run: |
+          npm install --no-audit --no-fund
+          npm run build
+      - name: Dependency vulnerability scan (npm audit)
+        run: npm audit --audit-level=high
+      - name: Scan repository for committed secrets
+        run: node scripts/check-secrets.mjs
+      - name: Run dedicated SSRF, redirect, and DNS rebinding regressions
+        run: npm run check:security
+      - name: Verify storage recovery, atomic writes, and crash resilience
+        run: node --test tests/storage-recovery.test.mjs

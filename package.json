@@ -24,7 +24,8 @@
     "benchmark:crawl": "npm run build && node scripts/crawl-benchmark.mjs",
     "benchmark:crawl:real": "npm run build && node scripts/crawl-benchmark.mjs --mode real --iterations 20 --concurrency 4",
     "benchmark:crawl:matrix": "npm run build && node scripts/crawl-benchmark.mjs --matrix",
-    "check:security": "npm run build && node --test tests/security-regression.test.mjs"
+    "check:security": "npm run build && node --test tests/security-regression.test.mjs",
+    "check:secrets": "node scripts/check-secrets.mjs"
   },
   "keywords": [
     "seo",

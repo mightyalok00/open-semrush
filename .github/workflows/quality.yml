@@ -26,8 +26,7 @@ jobs:
       - name: Dependency security vulnerability audit
         run: npm audit --audit-level=high
       - name: Check for committed secrets and sensitive keys
-        run: |
-          ! grep -rnE --exclude-dir={.git,node_modules,dist} "(BEGIN PRIVATE KEY|AKIA[0-9A-Z]{16}|ya29\.[0-9A-Za-z_-]+)" .
+        run: node scripts/check-secrets.mjs
       - name: Build TypeScript (production compilation check)
         run: npm run build
       - name: Run dedicated security regression test suite
