@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { calculateKeywordDifficulty, classifySearchIntent, analyzeKeyword } from '../dist/keywords.js';
 import { calculateCtrByPosition, parseSerpHtml } from '../dist/serp.js';
 import { compareKeywordGap } from '../dist/domain.js';
-import { isPublicIpAddress } from '../dist/url-safety.js';
+import { assertPublicHttpUrl, isPublicIpAddress } from '../dist/url-safety.js';
 
 test('keyword intent classification is stable and case-insensitive', () => {
   assert.equal(classifySearchIntent('BEST SEO TOOLS'), 'Commercial');
@@ -46,4 +46,11 @@ test('outbound URL guard rejects loopback, private, link-local, and reserved add
   }
   assert.equal(isPublicIpAddress('8.8.8.8'), true);
   assert.equal(isPublicIpAddress('2606:4700:4700::1111'), true);
+});
+
+test('outbound URL guard rejects unsafe schemes, credentials, and localhost without network access', async () => {
+  await assert.rejects(assertPublicHttpUrl('file:///etc/passwd'), /Only HTTP and HTTPS/);
+  await assert.rejects(assertPublicHttpUrl('http://127.0.0.1/'), /Private or reserved IP/);
+  await assert.rejects(assertPublicHttpUrl('http://localhost/'), /Local and metadata hostnames/);
+  await assert.rejects(assertPublicHttpUrl('https://user:pass@example.com/'), /credentials/);
 });
