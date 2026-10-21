@@ -20,6 +20,16 @@ export const OPENROUTER_FREE_MODELS: readonly string[] = [
   'openrouter/free',
 ];
 
+export const GEMINI_WORKING_MODELS: readonly string[] = [
+  'gemini-3.5-flash',
+  'gemini-3.5-flash-lite',
+  'gemini-3.1-flash-lite',
+  'gemini-3.8-flash',
+  'gemini-3.7-flash',
+  'gemini-flash-lite-latest',
+  'gemini-flash-latest',
+];
+
 /**
  * Universal fast AI query engine supporting OpenRouter (primary) and Google Gemini (direct fallback).
  */
@@ -104,49 +114,59 @@ export async function queryAiJson<T>(
     }
   }
 
-  // 2. Fallback to direct Google Gemini API
+  // 2. Direct Google Gemini API fallback across working models
   if (geminiKey && !invalidKeys.has(geminiKey)) {
-    try {
-      const model = process.env.GEMINI_MODEL?.trim() || 'gemini-1.5-flash';
-      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(geminiKey)}`;
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 20000);
+    const candidateModels = process.env.GEMINI_MODEL
+      ? [process.env.GEMINI_MODEL, ...GEMINI_WORKING_MODELS.filter(m => m !== process.env.GEMINI_MODEL)]
+      : GEMINI_WORKING_MODELS;
 
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.2,
-            responseMimeType: 'application/json',
-          },
-        }),
-        signal: controller.signal,
-      });
-      clearTimeout(timeout);
+    for (const model of candidateModels) {
+      try {
+        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(geminiKey)}`;
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 20000);
 
-      if (res.ok) {
-        const data = await res.json() as {
-          candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-        };
-        const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (rawText) {
-          return JSON.parse(rawText) as T;
-        }
-      } else {
-        if (res.status === 400 || res.status === 401 || res.status === 403) {
-          invalidKeys.add(geminiKey);
-          if (process.env.NODE_ENV !== 'test') {
-            console.warn(`[Gemini] Direct API key authentication failed (HTTP ${res.status}). Disabling Gemini key for this session.`);
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: {
+              temperature: 0.2,
+              responseMimeType: 'application/json',
+            },
+          }),
+          signal: controller.signal,
+        });
+        clearTimeout(timeout);
+
+        if (res.ok) {
+          const data = await res.json() as {
+            candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+          };
+          const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (rawText) {
+            try {
+              return JSON.parse(rawText) as T;
+            } catch {
+              const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+              if (jsonMatch) {
+                return JSON.parse(jsonMatch[0]) as T;
+              }
+            }
           }
-        } else if (process.env.NODE_ENV !== 'test') {
-          console.warn(`[Gemini] Direct API request failed with HTTP ${res.status}`);
+        } else {
+          if (res.status === 401 || res.status === 403) {
+            invalidKeys.add(geminiKey);
+            if (process.env.NODE_ENV !== 'test') {
+              console.warn(`[Gemini] API key authentication failed (HTTP ${res.status}). Disabling key for this session.`);
+            }
+            break;
+          }
+          // If 404, 429, or 503, try next working model in cascade
         }
-      }
-    } catch (err) {
-      if (process.env.NODE_ENV !== 'test') {
-        console.error('[Gemini] Direct query failed:', err);
+      } catch {
+        // Timeout or fetch error; try next working candidate model
       }
     }
   }
