@@ -426,3 +426,28 @@ Generate a comprehensive content strategy outline to outrank the competitor in r
     ],
   };
 }
+
+export interface AiEngineStatus {
+  readonly openRouterConfigured: boolean;
+  readonly openRouterModelCount: number;
+  readonly openRouterModels: readonly string[];
+  readonly geminiConfigured: boolean;
+  readonly geminiModelCount: number;
+  readonly geminiModels: readonly string[];
+  readonly totalInvalidatedKeys: number;
+}
+
+/**
+ * Returns runtime operational telemetry for configured AI model cascades.
+ */
+export function getAiEngineStatus(): AiEngineStatus {
+  return {
+    openRouterConfigured: Boolean(process.env.OPENROUTER_API_KEY?.trim()),
+    openRouterModelCount: OPENROUTER_FREE_MODELS.length,
+    openRouterModels: OPENROUTER_FREE_MODELS,
+    geminiConfigured: Boolean(process.env.GEMINI_API_KEY?.trim()),
+    geminiModelCount: GEMINI_WORKING_MODELS.length,
+    geminiModels: GEMINI_WORKING_MODELS,
+    totalInvalidatedKeys: invalidKeys.size,
+  };
+}

@@ -55,6 +55,26 @@ export interface SiteAuditReport {
 
 export type SearchIntent = 'Informational' | 'Navigational' | 'Commercial' | 'Transactional';
 
+export interface IntentProbabilityDistribution {
+  readonly primaryIntent: SearchIntent;
+  readonly confidence: number;
+  readonly probabilities: {
+    readonly Informational: number;
+    readonly Commercial: number;
+    readonly Navigational: number;
+    readonly Transactional: number;
+  };
+  readonly intentSignals: readonly string[];
+}
+
+export interface TrafficForecastInterval {
+  readonly expectedVisits: number;
+  readonly lower95: number;
+  readonly upper95: number;
+  readonly standardError: number;
+  readonly confidenceLevel: number;
+}
+
 export interface KeywordMetrics {
   readonly keyword: string;
   readonly searchVolume: number;
@@ -63,6 +83,8 @@ export interface KeywordMetrics {
   readonly cpcUsd: number;
   readonly competitiveDensity: number; // 0.0 to 1.0
   readonly seasonalityTrend: readonly number[]; // 12 months relative interest (0 - 100)
+  readonly intentDistribution?: IntentProbabilityDistribution;
+  readonly trafficForecast?: TrafficForecastInterval;
 }
 
 export interface SerpRankingItem {

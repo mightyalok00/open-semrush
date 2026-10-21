@@ -44,7 +44,11 @@ const {
   fetchLiveSerp,
   compareMultiCompetitorGap,
   assertPublicHttpUrl,
-  fetchSearchConsoleReport
+  fetchSearchConsoleReport,
+  getAiEngineStatus,
+  predictCtrPowerLaw,
+  calculateTrafficForecast,
+  classifySearchIntentProbabilities,
 } = semrushModule;
 
 // Resolve public assets directory
@@ -309,6 +313,42 @@ const server = http.createServer(async (req, res) => {
       );
 
       sendJson(res, 200, outline || { error: 'Failed to generate content strategy' });
+      return;
+    }
+
+    // API Route: AI Model Cascade Status
+    if (pathname === '/api/ai/status' && req.method === 'GET') {
+      sendJson(res, 200, {
+        ...getAiEngineStatus(),
+        timestamp: new Date().toISOString(),
+      });
+      return;
+    }
+
+    // API Route: Machine Learning Predictive Forecast
+    if (pathname === '/api/ml/forecast' && req.method === 'GET') {
+      const q = reqUrl.searchParams.get('q') || 'seo tools';
+      const volume = parseInt(reqUrl.searchParams.get('volume') || '10000', 10);
+      const position = parseInt(reqUrl.searchParams.get('position') || '1', 10);
+      const hasFeaturedSnippet = reqUrl.searchParams.get('hasFeaturedSnippet') === 'true';
+
+      const intentDist = classifySearchIntentProbabilities(q);
+      const ctrPred = predictCtrPowerLaw(position, { hasFeaturedSnippet });
+      const forecast = calculateTrafficForecast(volume, ctrPred.adjustedCtr);
+
+      sendJson(res, 200, {
+        query: q,
+        position,
+        monthlySearchVolume: volume,
+        intentDistribution: intentDist,
+        ctrPrediction: ctrPred,
+        trafficForecast: forecast,
+        modelProvenance: {
+          ctrModel: 'empirical_power_law (alpha=0.312, beta=0.93)',
+          intentClassifier: 'softmax_distribution (4-class logit fusion)',
+          uncertaintyMethod: 'binomial_volatility_prediction_interval (95% CI, z=1.96)',
+        },
+      });
       return;
     }
 

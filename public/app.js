@@ -1126,7 +1126,7 @@ window.requestAiFix = async function(url, issueCode, originalVal, message) {
   const expEl = document.getElementById('aiFixExplanation');
 
   titleEl.textContent = `Fixing: ${issueCode}`;
-  descEl.textContent = 'Generating AI optimization via Gemini...';
+  descEl.textContent = 'Generating AI optimization via OpenRouter / Gemini cascade...';
   codeEl.textContent = '/* Thinking... */';
   expEl.textContent = 'Evaluating page topic and computing optimal search signals...';
   modal.classList.remove('hidden');
@@ -1150,7 +1150,7 @@ window.requestAiFix = async function(url, issueCode, originalVal, message) {
     expEl.textContent = fix.explanation;
   } catch (err) {
     descEl.textContent = `Error: ${err.message}`;
-    codeEl.textContent = '<!-- Ensure GEMINI_API_KEY is configured in .env -->';
+    codeEl.textContent = '<!-- Ensure OPENROUTER_API_KEY or GEMINI_API_KEY is configured in .env -->';
   }
 };
 
@@ -1175,7 +1175,7 @@ window.requestAiStrategy = async function(d1, d2, keyword) {
   const bodyEl = document.getElementById('aiStrategyBody');
 
   titleEl.textContent = `Outrank Strategy: "${keyword}"`;
-  bodyEl.innerHTML = '<div style="padding: 30px; text-align: center;"><div class="spinner"></div><p style="margin-top: 12px;">Gemini is analyzing competitor keyword gaps and structuring article outline...</p></div>';
+  bodyEl.innerHTML = '<div style="padding: 30px; text-align: center;"><div class="spinner"></div><p style="margin-top: 12px;">AI Engine (OpenRouter / Gemini) is analyzing competitor keyword gaps and structuring article outline...</p></div>';
   modal.classList.remove('hidden');
 
   try {

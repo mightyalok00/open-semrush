@@ -72,6 +72,8 @@ For a URL-prefix property, set siteUrl to <https://example.com/>. Optional query
 | GET | /api/gap?domainA=...&domainB=... | Gap comparison from modeled keyword lists |
 | GET | /api/gap/multi?domains=a,b,c | Modeled multi-domain comparison |
 | GET | /api/backlinks?domain=... | Synthetic backlink profile |
+| GET | /api/ai/status | AI cascade engine status & telemetry probe |
+| GET | /api/ml/forecast?q=...&volume=...&position=... | Empirical power-law CTR & 95% traffic forecast |
 | POST | /api/ai/fix | Optional AI suggestion; API key required |
 | POST | /api/ai/strategy | Optional AI outline; API key required |
 | GET | /api/projects | Persisted projects from audits; bearer token required |
@@ -89,9 +91,19 @@ For a URL-prefix property, set siteUrl to <https://example.com/>. Optional query
     npm run benchmark:crawl:real
     npm run benchmark:crawl:matrix
 
-npm test compiles TypeScript and runs Node's native test runner across 60+ unit, security regression, and storage recovery tests. npm run test:coverage emits coverage summaries with an enforced 72% minimum coverage gate. npm run check:security runs dedicated SSRF, redirect, DNS rebinding, proxy header spoofing, and authentication rotation regressions. npm run benchmark emits JSON microbenchmark throughput. npm run benchmark:crawl executes a 25-iteration multi-page simulated crawl benchmark. npm run benchmark:crawl:real executes 20 live network crawls against public targets with concurrency 4. npm run benchmark:crawl:matrix sweeps across 1, 3, 5, and 10 pages at 1, 2, 4, and 8 concurrency levels. npm run benchmark:load sends concurrent HTTP requests to LOAD_TEST_BASE_URL (default localhost) and records p50/p95/p99 latency, throughput, failures and status counts.
+npm test compiles TypeScript and runs Node's native test runner across 80+ unit, ML statistical, security regression, and storage recovery tests. npm run test:coverage emits coverage summaries with an enforced 72% minimum coverage gate. npm run check:security runs dedicated SSRF, redirect, DNS rebinding, proxy header spoofing, and authentication rotation regressions. npm run benchmark emits JSON microbenchmark throughput. npm run benchmark:crawl executes a 25-iteration multi-page simulated crawl benchmark. npm run benchmark:crawl:real executes 20 live network crawls against public targets with concurrency 4. npm run benchmark:crawl:matrix sweeps across 1, 3, 5, and 10 pages at 1, 2, 4, and 8 concurrency levels. npm run benchmark:load sends concurrent HTTP requests to LOAD_TEST_BASE_URL (default localhost) and records p50/p95/p99 latency, throughput, failures and status counts.
 
 GitHub Actions runs unit/API/security tests across Node.js 22 and 24, verifies dependencies with `npm audit`, performs secret leak scanning, uploads coverage and benchmark evidence as artifacts, and builds/runs a clean Docker Compose stack to verify health, API behavior and audit-history persistence across a restart. The latest production-readiness report is [reports/quality/production-readiness-2026-10-21.md](reports/quality/production-readiness-2026-10-21.md).
+
+## Applied AI & Machine Learning Architecture
+
+The analytical pipeline uses applied statistical models and multi-tier LLM cascades. See [docs/ai-ml-architecture.md](docs/ai-ml-architecture.md) for complete mathematical formulations:
+
+- **Empirical CTR Power-Law Model**: Fits rank-decay curves using $CTR(p) = \alpha \cdot p^{-\beta}$ ($\alpha = 0.312, \beta = 0.93$) adjusted for SERP layout feature attenuation (featured snippet cannibalization, PAA accordion dampening, video carousels).
+- **Softmax Intent Probability Distribution**: Evaluates multi-class logit features ($z_{\text{Info}}, z_{\text{Comm}}, z_{\text{Nav}}, z_{\text{Trans}}$) normalized with numerically stable softmax $\sigma(\mathbf{z})$ to provide full probability distributions and confidence scores rather than hard-coded binary labels.
+- **Parametric Traffic Forecasting (95% CI)**: Estimates organic searcher visits $\hat{Y} = V \cdot CTR$ accompanied by 95% confidence intervals combining binomial sampling variance and seasonal volatility dispersion ($I_{0.95} = [\hat{Y} - 1.96\sigma, \hat{Y} + 1.96\sigma]$).
+- **N-Gram Semantic Clustering**: Aggregates composite queries into topical clusters using character 3-gram Jaccard similarity matrices and greedy agglomerative clustering.
+- **Autonomous Multi-Tier LLM Cascade**: In-flight failover chain connecting OpenRouter free models (`minimax`, `gemma-4`, `lfm-2.5`, `nemotron-3.5`) and Google Gemini (`gemini-3.5-flash`, `gemini-3.1-flash-lite`, `gemini-flash-latest`) with deterministic air-gapped fallback.
 
 ## Storage and Disaster Recovery
 
