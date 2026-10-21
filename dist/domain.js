@@ -197,25 +197,7 @@ export async function generateDomainOverview(domain, countryCode = 'us') {
         hash |= 0;
     }
     const positiveHash = Math.abs(hash);
-    // 1. Check AI integration if API keys are configured (OpenRouter or Gemini)
-    if (process.env.OPENROUTER_API_KEY || process.env.GEMINI_API_KEY) {
-        const aiResult = await analyzeDomainWithAi(cleanDomain);
-        if (aiResult) {
-            const scaledTraffic = Math.round(aiResult.estimatedMonthlyOrganicTraffic * cMult);
-            const scaledKeywords = Math.round(aiResult.totalRankedKeywords * Math.min(1.0, cMult * 1.1));
-            return {
-                domain: cleanDomain,
-                countryCode: cCode,
-                authorityScore: aiResult.authorityScore,
-                estimatedMonthlyOrganicTraffic: scaledTraffic,
-                totalRankedKeywords: scaledKeywords,
-                topOrganicKeywords: aiResult.topOrganicKeywords,
-                topCompetitors: aiResult.topCompetitors,
-                history24Months: generate24MonthTrendline(scaledTraffic, scaledKeywords, positiveHash),
-            };
-        }
-    }
-    // 2. Check curated ground-truth database
+    // 1. Check curated ground-truth database first for instant, calibrated results
     const curated = KNOWN_DOMAINS[cleanDomain];
     if (curated) {
         const topKeywords = curated.topKeywords.map(k => {
@@ -241,6 +223,24 @@ export async function generateDomainOverview(domain, countryCode = 'us') {
             topCompetitors: curated.topCompetitors,
             history24Months: generate24MonthTrendline(scaledTraffic, scaledKeywords, positiveHash),
         };
+    }
+    // 2. Check AI integration for uncataloged domains if API keys are configured (OpenRouter or Gemini)
+    if (process.env.OPENROUTER_API_KEY || process.env.GEMINI_API_KEY) {
+        const aiResult = await analyzeDomainWithAi(cleanDomain);
+        if (aiResult) {
+            const scaledTraffic = Math.round(aiResult.estimatedMonthlyOrganicTraffic * cMult);
+            const scaledKeywords = Math.round(aiResult.totalRankedKeywords * Math.min(1.0, cMult * 1.1));
+            return {
+                domain: cleanDomain,
+                countryCode: cCode,
+                authorityScore: aiResult.authorityScore,
+                estimatedMonthlyOrganicTraffic: scaledTraffic,
+                totalRankedKeywords: scaledKeywords,
+                topOrganicKeywords: aiResult.topOrganicKeywords,
+                topCompetitors: aiResult.topCompetitors,
+                history24Months: generate24MonthTrendline(scaledTraffic, scaledKeywords, positiveHash),
+            };
+        }
     }
     // 2. Dynamic live inspection for other domains
     const liveTopics = await inspectLiveDomainTopics(cleanDomain);

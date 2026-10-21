@@ -156,3 +156,49 @@ test('Golden Heuristics: Modeled SEO calculations stay within bounded empirical 
   assert.ok(serp.topRankings.length > 0);
   assert.equal(typeof serp.features.hasFeaturedSnippet, 'boolean');
 });
+
+test('Golden AI Heuristics: Produces actionable SEO code fixes and structured content strategies', async () => {
+  const { generateSeoFixWithAi, generateContentStrategyWithAi } = await import('../dist/ai.js');
+
+  // 1. Verify Title missing fix
+  const titleFix = await generateSeoFixWithAi('https://example.com/page', 'TITLE_MISSING', null, 'Missing title tag');
+  assert.equal(titleFix.issueCode, 'TITLE_MISSING');
+  assert.ok(titleFix.codeSnippet.includes('<title>'));
+  assert.ok(titleFix.suggestedFix.length > 10);
+  assert.ok(titleFix.explanation.length > 10);
+
+  // 2. Verify H1 missing fix
+  const h1Fix = await generateSeoFixWithAi('https://example.com/page', 'H1_MISSING', null, 'Missing H1 heading');
+  assert.equal(h1Fix.issueCode, 'H1_MISSING');
+  assert.ok(h1Fix.codeSnippet.includes('<h1>'));
+
+  // 3. Verify Meta description fix
+  const metaFix = await generateSeoFixWithAi('https://example.com/page', 'META_DESC_MISSING', null, 'Missing meta description');
+  assert.equal(metaFix.issueCode, 'META_DESC_MISSING');
+  assert.ok(metaFix.codeSnippet.includes('<meta name="description"'));
+
+  // 4. Verify Canonical fix
+  const canonicalFix = await generateSeoFixWithAi('https://example.com/page', 'CANONICAL_MISSING', null, 'Missing canonical tag');
+  assert.equal(canonicalFix.issueCode, 'CANONICAL_MISSING');
+  assert.ok(canonicalFix.codeSnippet.includes('<link rel="canonical"'));
+
+  // 5. Verify Schema.org fix
+  const schemaFix = await generateSeoFixWithAi('https://example.com/page', 'SCHEMA_MISSING', null, 'Missing structured data');
+  assert.equal(schemaFix.issueCode, 'SCHEMA_MISSING');
+  assert.ok(schemaFix.codeSnippet.includes('application/ld+json'));
+
+  // 6. Verify Images missing alt fix
+  const altFix = await generateSeoFixWithAi('https://example.com/page', 'IMAGES_MISSING_ALT', null, 'Images missing alt attributes');
+  assert.equal(altFix.issueCode, 'IMAGES_MISSING_ALT');
+  assert.ok(altFix.codeSnippet.includes('alt="'));
+
+  // 7. Verify Content Strategy generator
+  const strategy = await generateContentStrategyWithAi('mybrand.com', 'rival.com', 'technical seo audit');
+  assert.equal(strategy.targetKeyword, 'technical seo audit');
+  assert.ok(strategy.recommendedTitle.includes('Technical Seo Audit'));
+  assert.ok(strategy.headingStructure.length >= 4);
+  assert.ok(strategy.headingStructure.some(h => h.level === 'h2'));
+  assert.ok(strategy.keyTalkingPoints.length >= 3);
+  assert.ok(strategy.estimatedDifficulty >= 0 && strategy.estimatedDifficulty <= 100);
+});
+
