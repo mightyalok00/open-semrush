@@ -342,11 +342,53 @@ export class SqliteStorageAdapter {
             throw err;
         }
     }
+    upsertProjectRecord(project) {
+        const upsert = this.db.prepare(`
+      INSERT INTO projects (id, domain, created_at, last_audit_score, tracked_keywords_json)
+      VALUES (?, ?, ?, ?, ?)
+      ON CONFLICT(domain) DO UPDATE SET
+        last_audit_score = excluded.last_audit_score,
+        tracked_keywords_json = excluded.tracked_keywords_json;
+    `);
+        upsert.run(project.id, project.domain.toLowerCase().trim(), project.createdAt, project.lastAuditScore, JSON.stringify(project.trackedKeywords || []));
+    }
+    insertHistoryEntry(entry) {
+        const insert = this.db.prepare(`
+      INSERT INTO audit_history (timestamp, domain, health_score, errors, warnings, notices)
+      VALUES (?, ?, ?, ?, ?, ?);
+    `);
+        insert.run(entry.timestamp, entry.domain.toLowerCase().trim(), entry.healthScore, entry.errors, entry.warnings, entry.notices);
+    }
     close() {
         try {
             this.db.close();
         }
         catch { }
     }
+}
+/** Migrates existing validated JSON persistence data into transactional SQLite storage. */
+export function migrateJsonToSqlite(jsonDbPath = DB_FILE, sqliteDbPath = path.join(DATA_DIR, 'seo_projects.sqlite')) {
+    if (!fs.existsSync(jsonDbPath)) {
+        throw new Error(`JSON database file does not exist at: ${jsonDbPath}`);
+    }
+    const raw = fs.readFileSync(jsonDbPath, 'utf8');
+    const parsed = validateDb(JSON.parse(raw));
+    const adapter = new SqliteStorageAdapter(sqliteDbPath);
+    try {
+        for (const project of parsed.projects) {
+            adapter.upsertProjectRecord(project);
+        }
+        for (const entry of parsed.history) {
+            adapter.insertHistoryEntry(entry);
+        }
+    }
+    finally {
+        adapter.close();
+    }
+    return {
+        migratedProjects: parsed.projects.length,
+        migratedHistoryEntries: parsed.history.length,
+        sqliteDbPath,
+    };
 }
 export const defaultStorageAdapter = new JsonFileStorageAdapter();

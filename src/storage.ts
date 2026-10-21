@@ -382,11 +382,79 @@ export class SqliteStorageAdapter implements StorageAdapter {
     }
   }
 
+  upsertProjectRecord(project: TrackedProjectRecord): void {
+    const upsert = this.db.prepare(`
+      INSERT INTO projects (id, domain, created_at, last_audit_score, tracked_keywords_json)
+      VALUES (?, ?, ?, ?, ?)
+      ON CONFLICT(domain) DO UPDATE SET
+        last_audit_score = excluded.last_audit_score,
+        tracked_keywords_json = excluded.tracked_keywords_json;
+    `);
+    upsert.run(
+      project.id,
+      project.domain.toLowerCase().trim(),
+      project.createdAt,
+      project.lastAuditScore,
+      JSON.stringify(project.trackedKeywords || [])
+    );
+  }
+
+  insertHistoryEntry(entry: AuditHistoryEntry): void {
+    const insert = this.db.prepare(`
+      INSERT INTO audit_history (timestamp, domain, health_score, errors, warnings, notices)
+      VALUES (?, ?, ?, ?, ?, ?);
+    `);
+    insert.run(
+      entry.timestamp,
+      entry.domain.toLowerCase().trim(),
+      entry.healthScore,
+      entry.errors,
+      entry.warnings,
+      entry.notices
+    );
+  }
+
   close(): void {
     try {
       this.db.close();
     } catch {}
   }
+}
+
+export interface MigrationResult {
+  readonly migratedProjects: number;
+  readonly migratedHistoryEntries: number;
+  readonly sqliteDbPath: string;
+}
+
+/** Migrates existing validated JSON persistence data into transactional SQLite storage. */
+export function migrateJsonToSqlite(
+  jsonDbPath: string = DB_FILE,
+  sqliteDbPath: string = path.join(DATA_DIR, 'seo_projects.sqlite')
+): MigrationResult {
+  if (!fs.existsSync(jsonDbPath)) {
+    throw new Error(`JSON database file does not exist at: ${jsonDbPath}`);
+  }
+  const raw = fs.readFileSync(jsonDbPath, 'utf8');
+  const parsed = validateDb(JSON.parse(raw));
+  const adapter = new SqliteStorageAdapter(sqliteDbPath);
+
+  try {
+    for (const project of parsed.projects) {
+      adapter.upsertProjectRecord(project);
+    }
+    for (const entry of parsed.history) {
+      adapter.insertHistoryEntry(entry);
+    }
+  } finally {
+    adapter.close();
+  }
+
+  return {
+    migratedProjects: parsed.projects.length,
+    migratedHistoryEntries: parsed.history.length,
+    sqliteDbPath,
+  };
 }
 
 export const defaultStorageAdapter: StorageAdapter = new JsonFileStorageAdapter();
