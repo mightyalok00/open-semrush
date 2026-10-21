@@ -20,3 +20,12 @@ Thumbs.db
 *.log
 npm-debug.log*
 yarn-debug.log*
+
+# Generated test and benchmark output
+coverage/
+coverage-report.txt
+benchmark-results.json
+load-benchmark.json
+crawl-load-benchmark.json
+audit-response.json
+server.log
