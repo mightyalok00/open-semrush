@@ -10,6 +10,13 @@ function isPrivateIpv6(ip) { const n = ip.toLowerCase().split('%')[0] ?? ip.toLo
     return true; const second = Number.parseInt(parts[1] || '0', 16); if (first === 0x2001 && Number.isFinite(second) && second <= 0x1ff)
     return true; return n.startsWith('2001:db8:') || n.startsWith('2002:') || n.startsWith('3fff:'); }
 export function isPublicIpAddress(ip) { const v = isIP(ip); return v === 4 ? !isPrivateIpv4(ip) : v === 6 ? !isPrivateIpv6(ip) : false; }
+function hasAlternativeIpEncoding(host) { if (/^\d+$/.test(host))
+    return true; if (/^0x[0-9a-f]+(\.0x[0-9a-f]+)*$/i.test(host))
+    return true; if (/^(\d{1,4}\.){1,3}\d{1,4}$/.test(host)) {
+    const parts = host.split('.');
+    if (parts.some(p => p.length > 1 && p.startsWith('0')))
+        return true;
+} return false; }
 async function resolvePublicTarget(input, resolver = lookup) { let url; try {
     url = input instanceof URL ? new URL(input.href) : new URL(input);
 }
@@ -17,8 +24,9 @@ catch {
     throw new Error('A valid absolute URL is required.');
 } if (url.protocol !== 'http:' && url.protocol !== 'https:')
     throw new Error('Only HTTP and HTTPS URLs are supported.'); if (url.username || url.password)
-    throw new Error('URLs containing credentials are not allowed.'); const host = url.hostname.toLowerCase().replace(/^\[|\]$/g, ''); if (!host || host === 'localhost' || host.endsWith('.localhost') || host.endsWith('.local') || host === 'metadata.google.internal' || host.endsWith('.internal'))
-    throw new Error('Local and metadata hostnames are not allowed.'); const version = isIP(host); if (version) {
+    throw new Error('URLs containing credentials are not allowed.'); const host = url.hostname.toLowerCase().replace(/^\[|\]$/g, ''); if (!host || host === 'localhost' || host.endsWith('.localhost') || host.endsWith('.local') || host === 'metadata.google.internal' || host.endsWith('.internal') || host === 'instance-data' || host === '0.0.0.0' || host === '::')
+    throw new Error('Local and metadata hostnames are not allowed.'); if (hasAlternativeIpEncoding(host))
+    throw new Error('Alternative and non-canonical IP representations are not allowed.'); const version = isIP(host); if (version) {
     if (!isPublicIpAddress(host))
         throw new Error('Private or reserved IP addresses are not allowed.');
     return { url, address: host, family: version };

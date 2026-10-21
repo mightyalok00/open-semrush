@@ -67,14 +67,29 @@ function equalSecret(provided, expected) {
   return timingSafeEqual(a, b);
 }
 
-export function getValidTokens() {
+export function getParsedTokens() {
   const raw = [process.env.OPEN_SEMRUSH_API_TOKEN, process.env.OPEN_SEMRUSH_API_TOKENS]
     .filter(Boolean)
     .join(',');
   return raw
     .split(',')
     .map(t => t.trim())
-    .filter(Boolean);
+    .filter(Boolean)
+    .map(entry => {
+      const idx = entry.lastIndexOf(':');
+      if (idx > 0) {
+        const secret = entry.slice(0, idx).trim();
+        const role = entry.slice(idx + 1).trim().toLowerCase();
+        if (['admin', 'analyst', 'viewer'].includes(role)) {
+          return { secret, role };
+        }
+      }
+      return { secret: entry, role: 'admin' };
+    });
+}
+
+export function getValidTokens() {
+  return getParsedTokens().map(t => t.secret);
 }
 
 export function cleanIpCandidate(raw) {
@@ -114,7 +129,17 @@ function clientKey(req) {
 export function checkProductionControls(req, pathname, now = Date.now(), store = defaultRateLimiterStore) {
   // Keep container/orchestrator liveness probes available during application traffic spikes.
   if (pathname === '/api/health') return null;
-  const tokens = getValidTokens();
+
+  // Validate optional multi-tenant header
+  const rawTenant = req.headers?.['x-tenant-id'];
+  if (rawTenant !== undefined) {
+    const tenantStr = String(rawTenant).trim();
+    if (!/^[a-zA-Z0-9_-]{1,64}$/.test(tenantStr)) {
+      return { status: 400, body: { error: 'Invalid x-tenant-id header format (must be 1-64 alphanumeric, dash, or underscore characters).' } };
+    }
+  }
+
+  const parsedTokens = getParsedTokens();
   const isProtected = protectedPath(req.method || 'GET', pathname);
   const key = clientKey(req);
   const expensive = expensivePath(req.method || 'GET', pathname);
@@ -131,17 +156,25 @@ export function checkProductionControls(req, pathname, now = Date.now(), store =
     return { status: 429, headers: { 'Retry-After': String(retryAfter), 'RateLimit-Limit': String(limit), 'RateLimit-Remaining': '0' }, body: { error: 'Request rate limit exceeded.', retryAfterSeconds: retryAfter } };
   }
 
-
   if (isProtected) {
-    if (tokens.length === 0 && process.env.NODE_ENV === 'production') {
+    if (parsedTokens.length === 0 && process.env.NODE_ENV === 'production') {
       return { status: 503, body: { error: 'Protected API routes are disabled until OPEN_SEMRUSH_API_TOKEN is configured.' } };
     }
-    if (tokens.length > 0) {
+    if (parsedTokens.length > 0) {
       const header = String(req.headers?.authorization || '');
       const provided = header.startsWith('Bearer ') ? header.slice(7).trim() : '';
-      const matched = tokens.some(token => equalSecret(provided, token));
+      const matched = parsedTokens.find(token => equalSecret(provided, token.secret));
       if (!matched) {
         return { status: 401, headers: { 'WWW-Authenticate': 'Bearer realm="open-semrush"' }, body: { error: 'A valid bearer token is required for this endpoint.' } };
+      }
+
+      // Enforce Role-Based Access Control (RBAC)
+      const method = req.method || 'GET';
+      if (matched.role === 'viewer' && method !== 'GET') {
+        return { status: 403, body: { error: 'Viewer role is restricted to read-only operations.' } };
+      }
+      if (matched.role === 'analyst' && method === 'DELETE') {
+        return { status: 403, body: { error: 'Analyst role is not authorized to perform deletion or destructive actions.' } };
       }
     }
   }

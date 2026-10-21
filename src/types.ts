@@ -56,7 +56,16 @@ export interface PageAuditResult {
     readonly xContentTypeOptions: boolean;
   };
   readonly issues: readonly SeoIssue[];
+  readonly spaDetected?: boolean;
+  readonly renderEngine?: 'raw_html' | 'headless_browser';
   readonly provenance?: ProvenanceMetadata;
+}
+
+export type ApiUserRole = 'admin' | 'analyst' | 'viewer';
+
+export interface AuthContext {
+  readonly role: ApiUserRole;
+  readonly tenantId: string;
 }
 
 export interface SiteAuditReport {

@@ -44,13 +44,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Multi-Target Real Network Crawl Suite (`scripts/multi-target-crawl.mjs`)**:
   - Verification harness executing production crawls against diverse external targets (`httpbin.org`, `example.com`, `wikipedia.org`) with SSRF validation.
 
+- **Production Boundary Solutions & Hardening**:
+  - **Crawl Resilience & Politeness**: Added `politenessDelayMs` pacing between requests in `src/crawler.ts` to prevent target host rate-limiting.
+  - **Competitor Visibility Estimation**: Exported `estimateCompetitorVisibility` in `src/domain.ts` to project competitor organic visibility from real SERP rankings and empirical CTR curves without requiring first-party Search Console credentials.
+  - **Closed-Loop GSC Calibration**: Added `calibratePowerLawModel` in `src/ml.ts` performing OLS log-linear regression ($\ln(CTR) = \ln(\alpha) - \beta \cdot \ln(p)$) on empirical GSC data for custom rank curves, plus `hasAiOverview` (-35% at pos 1) and `hasLocalPack` layout attenuation factors.
+  - **Client-Side SPA Hydration Detection**: Added automated detection for React/Next/Vue/Angular SPAs (`<div id="root">`, `<div id="app">`, `__NEXT_DATA__`) in `src/crawler.ts` emitting `SPA_CLIENT_RENDER_DETECTED` diagnostic warnings.
+  - **Advanced SSRF & Alternative IP Defense**: Hardened `src/url-safety.ts` against non-canonical IP representations (octal `0177.0.0.1`, hex `0x7f000001`, dword decimal `2130706433`), `0.0.0.0`, and cloud metadata hosts (`instance-data`).
+  - **Role-Based Access Control (RBAC) & Multi-Tenancy**: Added multi-role token parsing (`admin`, `analyst`, `viewer`) in `scripts/production-controls.mjs`, restricting `viewer` to read-only operations (403 on POST/DELETE) and `analyst` from destructive deletions, with strict validation for `x-tenant-id` tenant separation.
+
 ### 🧪 Testing & Verification
 
-- Expanded test suite from 83 to 95 tests (100% pass rate).
+- Expanded test suite from 83 to 102 tests (100% pass rate).
 - Added `tests/gsc-intelligence.test.mjs` (striking distance, cannibalization, CTR gap scoring).
 - Added `tests/real-keywords.test.mjs` (Google Suggest parsing, questions/comparisons, DataForSEO fallback).
 - Added `tests/rank-tracker.test.mjs` (atomic persistence, visibility index, winner/loser deltas).
-- Maintained 83.2% line coverage across the entire TypeScript and JavaScript codebase.
+- Added `tests/boundary-enhancements.test.mjs` (SPA detection, competitor projection, closed-loop calibration, SSRF alternative IP defense, RBAC, and multi-tenancy).
+- Line coverage increased to **84.03%** across the entire TypeScript and JavaScript codebase.
 
 ---
 

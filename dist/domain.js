@@ -416,3 +416,41 @@ export async function compareMultiCompetitorGap(rawDomains) {
         provenance: GAP_MATRIX_PROVENANCE,
     };
 }
+/**
+ * Projects competitor organic visibility by applying empirical CTR curves over
+ * observed SERP rankings without requiring first-party Search Console credentials.
+ */
+export function estimateCompetitorVisibility(competitorDomain, observedRankings) {
+    const normDomain = competitorDomain.toLowerCase().replace(/^(https?:\/\/)?(www\.)?/, '').replace(/\/.*$/, '');
+    let totalClicks = 0;
+    let posSum = 0;
+    const processed = observedRankings.map(r => {
+        const vol = r.searchVolume ?? 1000;
+        const ctr = calculateCtrByPosition(r.position, false);
+        const clicks = Math.round(vol * ctr);
+        totalClicks += clicks;
+        posSum += r.position;
+        return {
+            query: r.query,
+            position: r.position,
+            estimatedCtr: Number(ctr.toFixed(4)),
+            estimatedClicks: clicks,
+        };
+    });
+    const avgPos = observedRankings.length > 0 ? Number((posSum / observedRankings.length).toFixed(1)) : 0;
+    return {
+        competitorDomain: normDomain,
+        observedKeywordsCount: observedRankings.length,
+        estimatedMonthlyClicks: totalClicks,
+        averagePosition: avgPos,
+        rankings: processed,
+        provenance: {
+            tier: 'statistical_model',
+            isFactual: false,
+            dataSource: 'Competitor SERP Aggregation & Empirical CTR Power Law',
+            methodology: 'Applies calibrated organic search CTR curve across observed live competitor search rankings',
+            confidence: 'modeled',
+            warning: 'Estimated competitor visibility. Search volume and positions are observed; click-through totals are statistical approximations.',
+        },
+    };
+}

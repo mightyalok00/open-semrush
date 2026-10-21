@@ -6,6 +6,8 @@ export interface CrawlerOptions {
   readonly timeoutMs?: number;
   readonly userAgent?: string;
   readonly respectSitemap?: boolean;
+  readonly renderEngine?: 'raw_html' | 'headless_browser';
+  readonly politenessDelayMs?: number;
   readonly safeFetchDependencies?: {
     resolver?: (hostname: string, options: { all: true; verbatim: true }) => Promise<Array<{ address: string; family: number }>>;
     requester?: (url: URL, address: string, family: number, init: RequestInit) => Promise<Response>;
@@ -387,6 +389,20 @@ export async function auditSinglePage(
       }
     }
 
+    // 11. Single Page Application (SPA) / Client-Side Hydration Detection
+    const hasSpaRoot = /<div\b[^>]*\bid=["'](?:root|app|__next|app-root)["'][^>]*>\s*<\/div>/i.test(html) ||
+                       /<div\b[^>]*\bid=["'](?:root|app)["'][^>]*>\s*<noscript/i.test(html);
+    const hasFrameworkBundle = /__NEXT_DATA__|webpackChunk|vite\/client|\/_next\/static|react-dom/i.test(html);
+    const spaDetected = Boolean((hasSpaRoot || hasFrameworkBundle) && wordCount < 60 && h1Count === 0);
+    if (spaDetected) {
+      issues.push({
+        code: 'SPA_CLIENT_RENDER_DETECTED',
+        severity: 'warning',
+        message: 'Client-rendered Single Page Application (SPA) detected with minimal initial HTML markup.',
+        recommendation: 'Implement Server-Side Rendering (SSR) or dynamic pre-rendering so search engine crawlers can index text and internal links without client-side JavaScript execution.',
+      });
+    }
+
     return {
       url,
       statusCode,
@@ -408,6 +424,8 @@ export async function auditSinglePage(
       compression,
       securityHeaders,
       issues,
+      spaDetected,
+      renderEngine: 'raw_html',
       provenance: PAGE_AUDIT_PROVENANCE,
     };
   } catch (err: unknown) {
@@ -524,6 +542,10 @@ export async function runSiteAudit(
       } catch {
         // ignore discovery error
       }
+    }
+
+    if (options.politenessDelayMs && options.politenessDelayMs > 0 && queue.length > 0) {
+      await new Promise(r => setTimeout(r, options.politenessDelayMs));
     }
   }
 

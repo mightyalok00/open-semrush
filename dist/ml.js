@@ -37,6 +37,22 @@ export function predictCtrPowerLaw(position, features) {
     const baseCtr = Number(Math.max(0.0005, Math.min(0.35, rawBaseCtr)).toFixed(4));
     let multiplier = 1.0;
     const modifiersApplied = [];
+    // Google AI Overview consumes prime viewport real estate above organic result #1
+    if (features?.hasAiOverview) {
+        if (position === 1) {
+            multiplier *= 0.65;
+            modifiersApplied.push('AI Overview prominent placement (-35% at pos 1)');
+        }
+        else if (position <= 3) {
+            multiplier *= 0.78;
+            modifiersApplied.push('AI Overview viewport displacement (-22% at pos 2-3)');
+        }
+    }
+    // Local 3-Pack draws immediate click-through for localized searches
+    if (features?.hasLocalPack && position <= 3) {
+        multiplier *= 0.80;
+        modifiersApplied.push('Local 3-Pack map diversion (-20% for top 3)');
+    }
     // Featured snippets absorb ~28% of organic clicks at rank 1, but slightly boost rank 2-3 visibility
     if (features?.hasFeaturedSnippet) {
         if (position === 1) {
@@ -69,6 +85,64 @@ export function predictCtrPowerLaw(position, features) {
         baseCtr,
         adjustedCtr,
         featureModifiersApplied: modifiersApplied,
+    };
+}
+/**
+ * Closed-Loop Calibration: fits empirical site-specific GSC telemetry to the power-law curve:
+ *   ln(CTR) = ln(alpha) - beta * ln(p)
+ * via Ordinary Least Squares (OLS) log-linear regression.
+ *
+ * @param empiricalPoints Array of observed { position, ctr } tuples from Google Search Console
+ * @returns Calibrated alpha, beta, and coefficient of determination (R^2)
+ */
+export function calibratePowerLawModel(empiricalPoints) {
+    const valid = empiricalPoints.filter(p => p.position > 0 && p.ctr > 0 && p.ctr <= 1.0);
+    if (valid.length < 3) {
+        return {
+            alpha: CTR_POWER_LAW_ALPHA,
+            beta: CTR_POWER_LAW_BETA,
+            rSquared: 1.0,
+            sampleSize: valid.length,
+        };
+    }
+    const n = valid.length;
+    let sumX = 0;
+    let sumY = 0;
+    let sumXY = 0;
+    let sumX2 = 0;
+    let sumY2 = 0;
+    for (const pt of valid) {
+        const x = Math.log(pt.position);
+        const y = Math.log(pt.ctr);
+        sumX += x;
+        sumY += y;
+        sumXY += x * y;
+        sumX2 += x * x;
+        sumY2 += y * y;
+    }
+    const denom = (n * sumX2 - sumX * sumX);
+    if (Math.abs(denom) < 1e-9) {
+        return {
+            alpha: CTR_POWER_LAW_ALPHA,
+            beta: CTR_POWER_LAW_BETA,
+            rSquared: 0,
+            sampleSize: n,
+        };
+    }
+    const slope = (n * sumXY - sumX * sumY) / denom;
+    const intercept = (sumY - slope * sumX) / n;
+    // Since ln(CTR) = ln(alpha) - beta * ln(p), slope = -beta => beta = -slope
+    const beta = Number(Math.max(0.1, Math.min(2.5, -slope)).toFixed(4));
+    const alpha = Number(Math.max(0.05, Math.min(0.95, Math.exp(intercept))).toFixed(4));
+    // R^2 calculation
+    const totalSS = sumY2 - (sumY * sumY) / n;
+    const regressionSS = slope * (sumXY - (sumX * sumY) / n);
+    const rSquared = totalSS > 0 ? Number(Math.max(0, Math.min(1.0, regressionSS / totalSS)).toFixed(4)) : 0;
+    return {
+        alpha,
+        beta,
+        rSquared,
+        sampleSize: n,
     };
 }
 // ---------------------------------------------------------------------------
