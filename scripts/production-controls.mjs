@@ -24,6 +24,8 @@ function clientKey(req) {
 
 /** Returns null on success or an HTTP response description on rejection. */
 export function checkProductionControls(req, pathname, now = Date.now()) {
+  // Keep container/orchestrator liveness probes available during application traffic spikes.
+  if (pathname === '/api/health') return null;
   const token = process.env.OPEN_SEMRUSH_API_TOKEN;
   const isProtected = protectedPath(req.method || 'GET', pathname);
   const key = clientKey(req);
