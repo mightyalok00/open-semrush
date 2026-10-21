@@ -42,7 +42,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Prepare environment
-        run: cp .env.example .env
+        run: |
+          cp .env.example .env
+          echo "OPEN_SEMRUSH_API_TOKEN=ci-load-test-token" >> "$GITHUB_ENV"
       - name: Build and start clean Compose stack
         run: docker compose up -d --build
       - name: Verify health and API
@@ -52,14 +54,44 @@ jobs:
           curl --fail 'http://localhost:3000/api/keyword?q=seo%20audit' | grep -q '"verified":false'
       - name: Verify audit API and persistent history across restart
         run: |
-          curl --fail --silent --show-error -X POST http://localhost:3000/api/audit -H 'Content-Type: application/json' -d '{"url":"https://example.com/","maxPages":1}' > audit-response.json
-          curl --fail http://localhost:3000/api/projects | grep -q 'example.com'
+          curl --fail --silent --show-error -X POST http://localhost:3000/api/audit -H 'Authorization: Bearer ci-load-test-token' -H 'Content-Type: application/json' -d '{"url":"https://example.com/","maxPages":1}' > audit-response.json
+          curl --fail -H 'Authorization: Bearer ci-load-test-token' http://localhost:3000/api/projects | grep -q 'example.com'
           docker compose restart
           for i in $(seq 1 30); do curl --fail --silent http://localhost:3000/api/health && break; sleep 2; done
-          curl --fail http://localhost:3000/api/projects | grep -q 'example.com'
+          curl --fail -H 'Authorization: Bearer ci-load-test-token' http://localhost:3000/api/projects | grep -q 'example.com'
       - name: Logs on failure
         if: failure()
         run: docker compose logs
       - name: Stop stack
         if: always()
         run: docker compose down -v
+
+  load-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies and build
+        run: |
+          npm install --no-audit --no-fund
+          npm run build
+      - name: Start local API
+        run: |
+          NODE_ENV=test PORT=3000 node scripts/semrush-server.mjs > server.log 2>&1 &
+          for i in $(seq 1 30); do curl --fail --silent http://127.0.0.1:3000/api/health && break; sleep 1; done
+          curl --fail http://127.0.0.1:3000/api/health
+      - name: Run reproducible concurrent HTTP smoke benchmark
+        run: |
+          LOAD_TEST_MODE=api LOAD_TEST_ITERATIONS=100 LOAD_TEST_CONCURRENCY=10 npm run benchmark:load > load-benchmark.json
+          cat load-benchmark.json
+      - name: Upload load benchmark evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: http-load-benchmark
+          path: |
+            load-benchmark.json
+            server.log
+          if-no-files-found: warn

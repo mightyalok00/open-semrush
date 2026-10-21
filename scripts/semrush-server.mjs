@@ -3,6 +3,7 @@ import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { checkProductionControls } from './production-controls.mjs';
 
 // Load .env if present
 try {
@@ -63,11 +64,15 @@ const MIME_TYPES = {
   '.png': 'image/png',
 };
 
-function sendJson(res, statusCode, data) {
+function sendJson(res, statusCode, data, extraHeaders = {}) {
   res.writeHead(statusCode, {
     'Content-Type': 'application/json; charset=utf-8',
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Cache-Control': 'no-store',
+    'X-Content-Type-Options': 'nosniff',
+    'Referrer-Policy': 'no-referrer',
+    ...extraHeaders,
   });
   res.end(JSON.stringify(data));
 }
@@ -137,6 +142,13 @@ const server = http.createServer(async (req, res) => {
   const pathname = reqUrl.pathname;
 
   try {
+    if (pathname.startsWith('/api/')) {
+      const rejection = checkProductionControls(req, pathname);
+      if (rejection) {
+        sendJson(res, rejection.status, rejection.body, rejection.headers);
+        return;
+      }
+    }
     // API Route: Health
     if (pathname === '/api/health') {
       sendJson(res, 200, { status: 'healthy', timestamp: new Date().toISOString() });

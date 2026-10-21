@@ -1,4 +1,30 @@
 /**
+ * Protected endpoints use a self-hosted bearer token. The token is requested only
+ * when needed and held in sessionStorage for this browser tab/session, never in source.
+ * For multi-user/public deployments, prefer an identity-aware reverse proxy or SSO.
+ */
+async function protectedFetch(url, init = {}) {
+  let token = sessionStorage.getItem('openSemrushApiToken') || '';
+  if (!token) {
+    token = window.prompt('This endpoint requires OPEN_SEMRUSH_API_TOKEN. Enter the API bearer token for this browser session:') || '';
+    if (token) sessionStorage.setItem('openSemrushApiToken', token);
+  }
+  const headers = new Headers(init.headers || {});
+  if (token) headers.set('Authorization', 'Bearer ' + token);
+  let response = await fetch(url, { ...init, headers });
+  if (response.status === 401 && token) {
+    sessionStorage.removeItem('openSemrushApiToken');
+    const replacement = window.prompt('The API token was rejected. Enter a valid bearer token:') || '';
+    if (replacement) {
+      sessionStorage.setItem('openSemrushApiToken', replacement);
+      headers.set('Authorization', 'Bearer ' + replacement);
+      response = await fetch(url, { ...init, headers });
+    }
+  }
+  return response;
+}
+
+/**
  * ==============================================================================
  * SEMRUSH STUDIO — CLIENT-SIDE CONTROLLER & DATA VISUALIZATION ENGINE
  * ==============================================================================
@@ -588,7 +614,7 @@ function setupSiteAudit() {
 
     try {
       // POST request to trigger multi-page asynchronous crawl
-      const res = await fetch('/api/audit', {
+      const res = await protectedFetch('/api/audit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url, maxPages }),
@@ -1087,7 +1113,7 @@ window.requestAiFix = async function(url, issueCode, originalVal, message) {
   modal.classList.remove('hidden');
 
   try {
-    const res = await fetch('/api/ai/fix', {
+    const res = await protectedFetch('/api/ai/fix', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -1134,7 +1160,7 @@ window.requestAiStrategy = async function(d1, d2, keyword) {
   modal.classList.remove('hidden');
 
   try {
-    const res = await fetch('/api/ai/strategy', {
+    const res = await protectedFetch('/api/ai/strategy', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -1296,7 +1322,7 @@ function setupSearchConsole() {
     const query = document.getElementById('gscQuery').value.trim();
     if (query) params.set('query', query);
     try {
-      const response = await fetch('/api/search-console?' + params.toString());
+      const response = await protectedFetch('/api/search-console?' + params.toString());
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Google Search Console request failed.');
       document.getElementById('gscClicks').textContent = Number(data.totals.clicks).toLocaleString();
