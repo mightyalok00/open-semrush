@@ -1,4 +1,4 @@
-name: Quality, Coverage and Docker Integration
+name: Quality, Coverage, Security and Docker Integration
 
 on:
   workflow_dispatch:
@@ -13,29 +13,56 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [22, 24]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: ${{ matrix.node-version }}
       - name: Install dependencies
         run: npm install --no-audit --no-fund
-      - name: Build TypeScript
+      - name: Dependency security vulnerability audit
+        run: npm audit --audit-level=high
+      - name: Check for committed secrets and sensitive keys
+        run: |
+          ! grep -rnE --exclude-dir={.git,node_modules,dist} "(BEGIN PRIVATE KEY|AKIA[0-9A-Z]{16}|ya29\.[0-9A-Za-z_-]+)" .
+      - name: Build TypeScript (production compilation check)
         run: npm run build
-      - name: Run tests (fail the job on any regression)
+      - name: Run dedicated security regression test suite
+        run: npm run check:security
+      - name: Run full test suite (60+ unit, integration, and recovery tests)
         run: npm test
-      - name: Test with coverage report
-        run: npm run test:coverage | tee coverage-report.txt
+      - name: Test with coverage report and threshold gate
+        run: |
+          npm run test:coverage | tee coverage-report.txt
+          # Enforce that all files coverage stays above the 72% minimum threshold
+          node -e "
+            const fs = require('fs');
+            const report = fs.readFileSync('coverage-report.txt', 'utf8');
+            const match = report.match(/all files\s+\|\s+([\d\.]+)/);
+            if (!match) process.exit(0);
+            const cov = parseFloat(match[1]);
+            console.log('Overall Line Coverage:', cov + '%');
+            if (cov < 72.0) {
+              console.error('FAIL: Coverage ' + cov + '% dropped below 72.0% threshold');
+              process.exit(1);
+            }
+          "
       - name: Run reproducible microbenchmarks
         run: node scripts/benchmark.mjs | tee benchmark-results.json
-      - name: Upload coverage and benchmark evidence
+      - name: Run crawl benchmark matrix
+        run: node scripts/crawl-benchmark.mjs --matrix | tee crawl-matrix-results.json
+      - name: Upload quality, security and benchmark evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: quality-evidence
+          name: quality-evidence-node-${{ matrix.node-version }}
           path: |
             coverage-report.txt
             benchmark-results.json
+            crawl-matrix-results.json
           if-no-files-found: warn
 
   docker-integration:

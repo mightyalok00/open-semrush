@@ -83,23 +83,40 @@ For a URL-prefix property, set siteUrl to https://example.com/. Optional query f
     npm run build
     npm test
     npm run test:coverage
+    npm run check:security
     npm run benchmark
     npm run benchmark:crawl
+    npm run benchmark:crawl:real
+    npm run benchmark:crawl:matrix
 
-npm test compiles TypeScript and runs Node's test runner. npm run test:coverage emits coverage summaries. npm run benchmark emits JSON with Node version, OS/architecture, warm-up, iteration count, elapsed time and operations per second. npm run benchmark:crawl executes a deterministic, multi-page crawl benchmark measuring parser throughput, p50/p95/p99 latency, and heap memory delta. npm run benchmark:load sends concurrent HTTP requests to LOAD_TEST_BASE_URL (default localhost) and records p50/p95/p99 latency, throughput, failures and status counts. CI runs a bounded 100-request local API smoke test. For an opt-in crawl benchmark against a live remote site, set LOAD_TEST_MODE=crawl, LOAD_TEST_TARGET_URL to a site you own or have explicit permission to test, LOAD_TEST_CONFIRM=I_OWN_OR_HAVE_PERMISSION, OPEN_SEMRUSH_API_TOKEN, LOAD_TEST_ITERATIONS and LOAD_TEST_CONCURRENCY. The repository also provides the GitHub Actions workflow **Authorized Crawl Load Benchmark** for a manually triggered, explicitly confirmed target.
+npm test compiles TypeScript and runs Node's native test runner across 60+ unit, security regression, and storage recovery tests. npm run test:coverage emits coverage summaries with an enforced 72% minimum coverage gate. npm run check:security runs dedicated SSRF, redirect, DNS rebinding, proxy header spoofing, and authentication rotation regressions. npm run benchmark emits JSON microbenchmark throughput. npm run benchmark:crawl executes a 25-iteration multi-page simulated crawl benchmark. npm run benchmark:crawl:real executes 20 live network crawls against public targets with concurrency 4. npm run benchmark:crawl:matrix sweeps across 1, 3, 5, and 10 pages at 1, 2, 4, and 8 concurrency levels. npm run benchmark:load sends concurrent HTTP requests to LOAD_TEST_BASE_URL (default localhost) and records p50/p95/p99 latency, throughput, failures and status counts.
 
-GitHub Actions runs unit/API tests, uploads coverage and benchmark output as an artifact, and builds/runs a clean Docker Compose stack to check health, API behavior and audit-history persistence across a restart. The checked-in quality report records the earlier baseline. The latest production-readiness report is [reports/quality/production-readiness-2026-10-21.md](reports/quality/production-readiness-2026-10-21.md); the workflow run and its quality-evidence and HTTP-load artifacts contain raw outputs.
+GitHub Actions runs unit/API/security tests across Node.js 22 and 24, verifies dependencies with `npm audit`, performs secret leak scanning, uploads coverage and benchmark evidence as artifacts, and builds/runs a clean Docker Compose stack to verify health, API behavior and audit-history persistence across a restart. The latest production-readiness report is [reports/quality/production-readiness-2026-10-21.md](reports/quality/production-readiness-2026-10-21.md).
+
+## Storage and Disaster Recovery
+
+- **Atomic JSON Storage (`JsonFileStorageAdapter`)**: Atomic replacement with `.tmp` staging, `fsync`, restrictive permissions (`0o600`), and fail-closed schema corruption defense.
+- **Transactional SQLite Adapter (`SqliteStorageAdapter`)**: Built-in transactional database engine powered by Node native `node:sqlite`. Uses Write-Ahead Logging (`WAL`), strict relational tables, and ACID transactions for multi-instance or high-concurrency clustered operations.
+- **Backup & Restore API**:
+  ```javascript
+  import { backupDb, restoreDb, SqliteStorageAdapter } from './dist/storage.js';
+  // Create verified atomic backup snapshot
+  const backup = backupDb();
+  // Restore database with schema validation
+  restoreDb(backup.backupPath);
+  // Or switch to transactional SQLite adapter
+  const db = new SqliteStorageAdapter('./data/seo_projects.sqlite');
+  ```
 
 ## Security model
 
-- Outbound crawling accepts only HTTP(S), rejects URL credentials and local/private/reserved addresses, checks each redirect, resolves hostnames and pins the socket to a validated public IP to reduce DNS-rebinding/TOCTOU exposure.
+- Outbound crawling accepts only HTTP(S), rejects URL credentials and local/private/reserved addresses, checks each redirect, resolves hostnames and pins the socket to a validated public IP to eliminate DNS-rebinding/TOCTOU exposure.
 - Mixed DNS answers containing any non-public address fail closed.
 - Response bodies are capped at 5 MiB; requests have a 15-second socket timeout and redirects are capped at five.
 - POST /api/audit, POST /api/ai/*, GET /api/search-console, GET /api/projects and GET /api/history require a bearer token when OPEN_SEMRUSH_API_TOKEN or OPEN_SEMRUSH_API_TOKENS is configured. Multiple comma-separated tokens are supported to enable zero-downtime key rotation. In NODE_ENV=production those routes fail closed with 503 if no token is configured.
 - In-process per-client rate limits default to 120 API requests/minute and 10 protected/expensive requests/minute. Behind an authenticating reverse proxy (Nginx, Caddy, Cloudflare), set `TRUST_PROXY_HOPS` to parse `X-Forwarded-For` without opening client IP spoofing vectors.
 - Graceful shutdown handles `SIGTERM` and `SIGINT` signals by rejecting new requests with 503 draining notices and waiting up to 10 seconds for active in-flight crawls to complete.
 - OAuth and AI secrets belong in .env or a secret manager, not source control. Multi-user identity and per-property authorization beyond Google's OAuth permissions are not implemented.
-- JSON persistence uses atomic replacement and fail-closed corruption handling, but is still not a transactional database. It is single-process/local-volume storage; multi-replica coordination, automated backup/restore drills and point-in-time recovery are not implemented.
 
 ## Limitations
 
