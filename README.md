@@ -34,7 +34,7 @@ Open http://localhost:3000. npm start compiles TypeScript before launching. Goog
     curl http://localhost:3000/api/health
     docker compose down
 
-Compose persists audit history in the named volume open-semrush-data. Running docker compose down -v deletes that volume. The image builds TypeScript source and runs as a non-root user.
+Compose persists audit history in the named volume open-semrush-data. Running docker compose down -v deletes that volume. The image builds TypeScript source and runs as a non-root user. Compose binds to 127.0.0.1 by default, drops Linux capabilities, enables no-new-privileges, uses a read-only container root filesystem (with writable data volume and /tmp), and applies CPU/memory limits. Set HOST_BIND_ADDRESS=0.0.0.0 only when a firewall/reverse proxy and deployment security controls are configured.
 
 ## Google Search Console
 
