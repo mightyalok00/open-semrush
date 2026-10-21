@@ -1,4 +1,4 @@
-name: Quality Checks
+name: Quality, Coverage and Docker Integration
 
 on:
   push:
@@ -13,15 +13,53 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
       - name: Install dependencies
         run: npm install --no-audit --no-fund
       - name: Build TypeScript
         run: npm run build
-      - name: Run tests
+      - name: Run tests (fail the job on any regression)
         run: npm test
+      - name: Test with coverage report
+        run: npm run test:coverage | tee coverage-report.txt
+      - name: Run reproducible microbenchmarks
+        run: node scripts/benchmark.mjs | tee benchmark-results.json
+      - name: Upload coverage and benchmark evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: quality-evidence
+          path: |
+            coverage-report.txt
+            benchmark-results.json
+          if-no-files-found: warn
+
+  docker-integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare environment
+        run: cp .env.example .env
+      - name: Build and start clean Compose stack
+        run: docker compose up -d --build
+      - name: Verify health and API
+        run: |
+          for i in $(seq 1 30); do curl --fail --silent http://localhost:3000/api/health && break; sleep 2; done
+          curl --fail http://localhost:3000/api/health
+          curl --fail 'http://localhost:3000/api/keyword?q=seo%20audit' | grep -q '"verified":false'
+      - name: Verify audit API and persistent history across restart
+        run: |
+          curl --fail --silent --show-error -X POST http://localhost:3000/api/audit -H 'Content-Type: application/json' -d '{"url":"https://example.com/","maxPages":1}' > audit-response.json
+          curl --fail http://localhost:3000/api/projects | grep -q 'example.com'
+          docker compose restart
+          for i in $(seq 1 30); do curl --fail --silent http://localhost:3000/api/health && break; sleep 2; done
+          curl --fail http://localhost:3000/api/projects | grep -q 'example.com'
+      - name: Logs on failure
+        if: failure()
+        run: docker compose logs
+      - name: Stop stack
+        if: always()
+        run: docker compose down -v

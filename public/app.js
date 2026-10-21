@@ -5,12 +5,12 @@
  * Architecture: Modular vanilla JS client interacting with Semrush Studio REST APIs.
  * Supports:
  *   - Domain Overview with 24-month historical trajectory area chart
- *   - Google Core Algorithm Update correlation pins
+ *   - Illustrative timeline markers; no causal correlation is calculated
  *   - Keyword Magic Tool with 12-month seasonality trends & SERP features
  *   - SERP preview (AI-generated/demo) analyzer with CTR curve & PAA questions
  *   - Technical Site Audit with crawler, TTFB latency, security headers & Schema.org
  *   - Multi-Competitor Keyword Gap matrix with interactive SVG Venn diagram
- *   - Backlink Analytics with PageRank, Penguin toxicity scoring & anchor taxonomy
+ *   - Backlink demonstration with synthetic link-risk heuristic and anchor taxonomy
  *   - Gemini / OpenRouter AI code remediation & Outrank content strategist
  *   - Data portability via CSV export & print-ready executive PDF reports
  * ==============================================================================
@@ -48,6 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupSiteAudit();
   setupKeywordGap();
   setupBacklinkAnalytics();
+  setupSearchConsole();
   setupModals();
   setupExportCsv();
   setupExportPdf();
@@ -104,7 +105,11 @@ function setupTabs() {
   const tabMeta = {
     domain: {
       title: 'Domain Overview',
-      desc: "Analyze any domain's organic traffic, keyword portfolio, and authority score."
+      desc: 'Explore modeled traffic and keyword estimates; use Search Console for verified first-party performance.'
+    },
+    'search-console': {
+      title: 'Google Search Console',
+      desc: 'First-party clicks, impressions, CTR and position for an authorized property.'
     },
     keywords: {
       title: 'Keyword Magic Tool',
@@ -120,7 +125,7 @@ function setupTabs() {
     },
     backlinks: {
       title: 'Backlink Analytics',
-      desc: 'Inspect graph PageRank, inbound link profiles, referring domains, and anchor text.'
+      desc: 'Inspect a synthetic link-profile demonstration; no live backlink index is queried.'
     }
   };
 
@@ -256,7 +261,7 @@ async function fetchDomainOverview(domain) {
 /**
  * Renders an interactive SVG area and line chart depicting 24 months of
  * organic search traffic fluctuations.
- * Calculates normalized coordinates and overlays Google Core Update milestone pins.
+ * Calculates normalized coordinates and overlays illustrative timeline markers.
  * 
  * @param {Array<{month: string, organicTraffic: number, googleUpdate?: string}>} history - 24-month timeline dataset
  */
@@ -292,7 +297,7 @@ function render24MonthTrafficChart(history) {
   // Polyline coordinate string for the stroke path
   const linePoints = points.map(p => `${p.x},${p.y}`).join(' ');
 
-  // Generate milestone pins for Google Core Updates & periodic month labels
+  // Generate illustrative timeline markers & periodic month labels
   let markersHtml = '';
   points.forEach((p, idx) => {
     if (p.m.googleUpdate) {
@@ -332,7 +337,7 @@ function render24MonthTrafficChart(history) {
       <polygon points="${polyPoints}" fill="url(#trafficGradient)"/>
       <!-- Trend Line -->
       <polyline points="${linePoints}" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round"/>
-      <!-- Google Core Update and Milestone Pins -->
+      <!-- Illustrative timeline markers, not causal correlation -->
       ${markersHtml}
     </svg>
   `;
@@ -362,7 +367,7 @@ function setupKeywordMagic() {
 /**
  * Asynchronously queries `/api/keyword` for search metrics, KD% index,
  * 12-month seasonality trend, and semantic long-tail variations.
- * Automatically chains a call to `fetchSerpData` to inspect real Google rankings.
+ * Loads a demo SERP preview; fallback results are not verified live Google rankings.
  * 
  * @param {string} query - Keyword search phrase (e.g. 'best seo tools')
  */
@@ -448,7 +453,7 @@ async function fetchKeywordData(query) {
 
 
 /* ========================================================================== */
-/* CELL 6: LIVE GOOGLE SERP TOP 10 & SERP FEATURES INSPECTOR                  */
+/* CELL 6: SERP DEMO PREVIEW & FEATURES INSPECTOR                              */
 /* ========================================================================== */
 
 /**
@@ -940,7 +945,7 @@ function setupBacklinkAnalytics() {
 /**
  * Asynchronously queries `/api/backlinks` to inspect link graph metrics,
  * referring domains, dofollow vs nofollow ratios, Google Penguin toxicity risk,
- * Semrush anchor category distribution (branded, exact, naked, generic), and live backlink feed.
+ * synthetic anchor category examples and generated sample links.
  * 
  * @param {string} domain - Target root domain (e.g. 'github.com')
  */
@@ -1264,4 +1269,55 @@ function escapeHtml(str) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
+}
+
+
+/* Provider-backed Google Search Console data only; no synthetic fallback. */
+function setupSearchConsole() {
+  const form = document.getElementById('searchConsoleForm');
+  if (!form) return;
+  const end = new Date();
+  const start = new Date(end);
+  start.setDate(start.getDate() - 28);
+  const toDate = (date) => date.toISOString().slice(0, 10);
+  document.getElementById('gscStartDate').value = toDate(start);
+  document.getElementById('gscEndDate').value = toDate(end);
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const status = document.getElementById('gscStatus');
+    const results = document.getElementById('gscResults');
+    status.textContent = 'Requesting Google Search Console data…';
+    results.classList.add('hidden');
+    const params = new URLSearchParams({
+      siteUrl: document.getElementById('gscSiteUrl').value.trim(),
+      startDate: document.getElementById('gscStartDate').value,
+      endDate: document.getElementById('gscEndDate').value
+    });
+    const query = document.getElementById('gscQuery').value.trim();
+    if (query) params.set('query', query);
+    try {
+      const response = await fetch('/api/search-console?' + params.toString());
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Google Search Console request failed.');
+      document.getElementById('gscClicks').textContent = Number(data.totals.clicks).toLocaleString();
+      document.getElementById('gscImpressions').textContent = Number(data.totals.impressions).toLocaleString();
+      document.getElementById('gscCtr').textContent = (Number(data.totals.ctr) * 100).toFixed(2) + '%';
+      document.getElementById('gscPosition').textContent = Number(data.totals.averagePosition).toFixed(2);
+      const tbody = document.getElementById('gscRows');
+      tbody.replaceChildren();
+      for (const row of data.rows) {
+        const tr = document.createElement('tr');
+        for (const value of [row.query, Number(row.clicks).toLocaleString(), Number(row.impressions).toLocaleString(), (Number(row.ctr) * 100).toFixed(2) + '%', Number(row.position).toFixed(2)]) {
+          const td = document.createElement('td');
+          td.textContent = String(value);
+          tr.appendChild(td);
+        }
+        tbody.appendChild(tr);
+      }
+      results.classList.remove('hidden');
+      status.textContent = 'Source: Google Search Console · property API response · ' + data.startDate + ' to ' + data.endDate;
+    } catch (error) {
+      status.textContent = error instanceof Error ? error.message : 'Unable to load Search Console data.';
+    }
+  });
 }

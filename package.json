@@ -1,7 +1,7 @@
 {
   "name": "open-semrush",
   "version": "1.0.0",
-  "description": "Self-hosted technical SEO audit prototype with modeled keyword metrics, SERP previews, competitor-gap exploration, and optional AI assistance.",
+  "description": "Self-hosted technical SEO audit prototype with optional first-party Google Search Console reporting and explicitly modeled fallback metrics.",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -11,13 +11,15 @@
   },
   "scripts": {
     "build": "tsc",
-    "start": "node scripts/semrush-server.mjs",
-    "dev": "node scripts/semrush-server.mjs",
+    "start": "npm run build && node scripts/semrush-server.mjs",
+    "dev": "npm run build && node scripts/semrush-server.mjs",
     "cli": "node scripts/semrush.mjs",
     "docker:build": "docker compose build",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
-    "test": "npm run build && node --test"
+    "test": "npm run build && node --test",
+    "test:coverage": "npm run build && node --experimental-test-coverage --test",
+    "benchmark": "npm run build && node scripts/benchmark.mjs"
   },
   "keywords": [
     "seo",

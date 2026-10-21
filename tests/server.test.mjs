@@ -25,7 +25,7 @@ before(async () => {
   const port = await getAvailablePort();
   baseUrl = `http://127.0.0.1:${port}`;
   serverProcess = spawn(process.execPath, ['scripts/semrush-server.mjs'], {
-    env: { ...process.env, PORT: String(port), NODE_ENV: 'test' },
+    env: { ...process.env, PORT: String(port), NODE_ENV: 'test', GOOGLE_SEARCH_CONSOLE_ACCESS_TOKEN: '', GOOGLE_OAUTH_CLIENT_ID: '', GOOGLE_OAUTH_CLIENT_SECRET: '', GOOGLE_OAUTH_REFRESH_TOKEN: '' },
     stdio: 'ignore',
   });
 
@@ -68,4 +68,11 @@ test('HTTP API rejects private audit targets and does not enable wildcard CORS',
   assert.equal(response.status, 400);
   assert.equal(response.headers.get('access-control-allow-origin'), null);
   assert.match((await response.json()).error, /Private or reserved IP/);
+});
+
+
+test('Search Console endpoint fails closed when provider credentials are absent', async () => {
+  const response = await fetch(baseUrl + '/api/search-console?siteUrl=sc-domain%3Aexample.com&startDate=2026-09-01&endDate=2026-09-30');
+  assert.equal(response.status, 503);
+  assert.match((await response.json()).error, /not configured/i);
 });

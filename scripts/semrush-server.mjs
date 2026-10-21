@@ -42,7 +42,8 @@ const {
   getDomainAuditHistory,
   fetchLiveSerp,
   compareMultiCompetitorGap,
-  assertPublicHttpUrl
+  assertPublicHttpUrl,
+  fetchSearchConsoleReport
 } = semrushModule;
 
 // Resolve public assets directory
@@ -157,6 +158,28 @@ const server = http.createServer(async (req, res) => {
       const metrics = analyzeKeyword(query);
       const variations = generateKeywordVariations(query);
       sendJson(res, 200, { metrics, variations, dataProvenance: { type: 'modeled', verified: false, note: 'Search volume, difficulty, CPC and seasonality are deterministic illustrative estimates, not provider data.' } });
+      return;
+    }
+
+
+    if (pathname === '/api/search-console' && req.method === 'GET') {
+      const siteUrl = reqUrl.searchParams.get('siteUrl') || process.env.GOOGLE_SEARCH_CONSOLE_SITE_URL || '';
+      const startDate = reqUrl.searchParams.get('startDate') || '';
+      const endDate = reqUrl.searchParams.get('endDate') || '';
+      const query = reqUrl.searchParams.get('query') || undefined;
+      const configured = Boolean(process.env.GOOGLE_SEARCH_CONSOLE_ACCESS_TOKEN ||
+        (process.env.GOOGLE_OAUTH_CLIENT_ID && process.env.GOOGLE_OAUTH_CLIENT_SECRET && process.env.GOOGLE_OAUTH_REFRESH_TOKEN));
+      if (!configured) { sendJson(res, 503, { error: 'Google Search Console is not configured. Add OAuth refresh-token credentials to .env.' }); return; }
+      try {
+        const report = await fetchSearchConsoleReport({ siteUrl, startDate, endDate, query,
+          accessToken: process.env.GOOGLE_SEARCH_CONSOLE_ACCESS_TOKEN,
+          clientId: process.env.GOOGLE_OAUTH_CLIENT_ID, clientSecret: process.env.GOOGLE_OAUTH_CLIENT_SECRET,
+          refreshToken: process.env.GOOGLE_OAUTH_REFRESH_TOKEN });
+        sendJson(res, 200, report);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Search Console request failed.';
+        sendJson(res, /valid YYYY-MM-DD|siteUrl must/.test(message) ? 400 : 502, { error: message });
+      }
       return;
     }
 
