@@ -25,6 +25,8 @@ function isPrivateIpv6(address) {
     if (/^fe[89ab]/.test(normalized))
         return true;
     const mappedIpv4 = normalized.match(/::ffff:(\d{1,3}(?:\.\d{1,3}){3})$/);
+    if (normalized.startsWith('::ffff:'))
+        return true;
     if (mappedIpv4?.[1])
         return isPrivateIpv4(mappedIpv4[1]);
     return false;
