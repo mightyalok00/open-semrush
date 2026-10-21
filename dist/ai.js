@@ -362,3 +362,17 @@ Generate a comprehensive content strategy outline to outrank the competitor in r
         ],
     };
 }
+/**
+ * Returns runtime operational telemetry for configured AI model cascades.
+ */
+export function getAiEngineStatus() {
+    return {
+        openRouterConfigured: Boolean(process.env.OPENROUTER_API_KEY?.trim()),
+        openRouterModelCount: OPENROUTER_FREE_MODELS.length,
+        openRouterModels: OPENROUTER_FREE_MODELS,
+        geminiConfigured: Boolean(process.env.GEMINI_API_KEY?.trim()),
+        geminiModelCount: GEMINI_WORKING_MODELS.length,
+        geminiModels: GEMINI_WORKING_MODELS,
+        totalInvalidatedKeys: invalidKeys.size,
+    };
+}

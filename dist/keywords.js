@@ -1,23 +1,10 @@
+import { classifySearchIntentProbabilities, predictCtrPowerLaw, calculateTrafficForecast, } from './ml.js';
 /**
- * Classifies search intent into Informational, Navigational, Commercial, or Transactional.
+ * Classifies search intent into Informational, Navigational, Commercial, or Transactional
+ * using a softmax probability distribution over lexical and structural signals.
  */
 export function classifySearchIntent(keyword) {
-    const lower = keyword.toLowerCase();
-    // Transactional signals
-    if (/\b(buy|purchase|pricing|price|cost|discount|coupon|deal|order|cheap|hire|quote)\b/i.test(lower)) {
-        return 'Transactional';
-    }
-    // Commercial signals
-    if (/\b(best|top|vs|versus|review|reviews|comparison|compare|alternative|alternatives|recommended)\b/i.test(lower)) {
-        return 'Commercial';
-    }
-    // Navigational signals
-    if (/\b(login|sign in|portal|dashboard|account|official|app download|website)\b/i.test(lower) ||
-        /\.(com|org|net|io|ai|co)\b/i.test(lower)) {
-        return 'Navigational';
-    }
-    // Default to Informational (how, what, why, guide, etc.)
-    return 'Informational';
+    return classifySearchIntentProbabilities(keyword).primaryIntent;
 }
 /**
  * Calculates Semrush-style Keyword Difficulty (KD%) on a 0-100 scale.
@@ -61,7 +48,8 @@ export function calculateKeywordDifficulty(query, topCompetitorAuthorityScores =
  * Generates modeled keyword metrics (volume, KD, intent, CPC, seasonality) for a query.
  */
 export function analyzeKeyword(keyword, options) {
-    const intent = classifySearchIntent(keyword);
+    const intentDist = classifySearchIntentProbabilities(keyword);
+    const intent = intentDist.primaryIntent;
     const kd = calculateKeywordDifficulty(keyword, options?.competitorAuthorityScores ?? [65, 72, 80, 58, 62, 75, 84, 50, 68, 70], options?.competitorRefDomains ?? [120, 350, 890, 80, 150, 420, 1200, 45, 230, 310]);
     // Deterministic seed simulation for volume and CPC based on keyword hash
     let hash = 0;
@@ -92,6 +80,9 @@ export function analyzeKeyword(keyword, options) {
         const variance = Math.round(Math.sin((m + (positiveHash % 6)) * (Math.PI / 6)) * 25);
         seasonalityTrend.push(Math.max(10, Math.min(100, baseSeason + variance)));
     }
+    // Empirical CTR expectation at rank 1 & 95% traffic forecast interval
+    const ctrPred = predictCtrPowerLaw(1);
+    const trafficForecast = calculateTrafficForecast(baseVol, ctrPred.adjustedCtr);
     return {
         keyword,
         searchVolume: baseVol,
@@ -100,6 +91,8 @@ export function analyzeKeyword(keyword, options) {
         cpcUsd: cpc,
         competitiveDensity,
         seasonalityTrend,
+        intentDistribution: intentDist,
+        trafficForecast,
     };
 }
 /**
