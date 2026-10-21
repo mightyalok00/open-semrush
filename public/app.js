@@ -10,7 +10,7 @@
  *   - SERP preview (AI-generated/demo) analyzer with CTR curve & PAA questions
  *   - Technical Site Audit with crawler, TTFB latency, security headers & Schema.org
  *   - Multi-Competitor Keyword Gap matrix with interactive SVG Venn diagram
- *   - Backlink Analytics with PageRank, Penguin toxicity scoring & anchor taxonomy
+ *   - Backlink demonstration with synthetic link-risk heuristic and anchor taxonomy
  *   - Gemini / OpenRouter AI code remediation & Outrank content strategist
  *   - Data portability via CSV export & print-ready executive PDF reports
  * ==============================================================================
@@ -261,7 +261,7 @@ async function fetchDomainOverview(domain) {
 /**
  * Renders an interactive SVG area and line chart depicting 24 months of
  * organic search traffic fluctuations.
- * Calculates normalized coordinates and overlays Google Core Update milestone pins.
+ * Calculates normalized coordinates and overlays illustrative timeline markers.
  * 
  * @param {Array<{month: string, organicTraffic: number, googleUpdate?: string}>} history - 24-month timeline dataset
  */
@@ -297,7 +297,7 @@ function render24MonthTrafficChart(history) {
   // Polyline coordinate string for the stroke path
   const linePoints = points.map(p => `${p.x},${p.y}`).join(' ');
 
-  // Generate milestone pins for Google Core Updates & periodic month labels
+  // Generate illustrative timeline markers & periodic month labels
   let markersHtml = '';
   points.forEach((p, idx) => {
     if (p.m.googleUpdate) {
@@ -337,7 +337,7 @@ function render24MonthTrafficChart(history) {
       <polygon points="${polyPoints}" fill="url(#trafficGradient)"/>
       <!-- Trend Line -->
       <polyline points="${linePoints}" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round"/>
-      <!-- Google Core Update and Milestone Pins -->
+      <!-- Illustrative timeline markers, not causal correlation -->
       ${markersHtml}
     </svg>
   `;
@@ -453,7 +453,7 @@ async function fetchKeywordData(query) {
 
 
 /* ========================================================================== */
-/* CELL 6: LIVE GOOGLE SERP TOP 10 & SERP FEATURES INSPECTOR                  */
+/* CELL 6: SERP DEMO PREVIEW & FEATURES INSPECTOR                              */
 /* ========================================================================== */
 
 /**
@@ -945,7 +945,7 @@ function setupBacklinkAnalytics() {
 /**
  * Asynchronously queries `/api/backlinks` to inspect link graph metrics,
  * referring domains, dofollow vs nofollow ratios, Google Penguin toxicity risk,
- * Semrush anchor category distribution (branded, exact, naked, generic), and live backlink feed.
+ * synthetic anchor category examples and generated sample links.
  * 
  * @param {string} domain - Target root domain (e.g. 'github.com')
  */
