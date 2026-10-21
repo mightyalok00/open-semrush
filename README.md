@@ -17,7 +17,7 @@ A self-hosted technical SEO audit prototype. It crawls public pages for on-page 
 
 ## Quick start
 
-Requirements: Node.js 22+ recommended; Docker Compose v2 for container use.
+Requirements: Node.js 22+ recommended; Docker Compose v2 for container use. The copied .env.example defaults to development mode for local `npm start`; Compose overrides this to production mode.
 
     git clone https://github.com/mightyalok00/open-semrush.git
     cd open-semrush
@@ -30,6 +30,9 @@ Open http://localhost:3000. npm start compiles TypeScript before launching. Goog
 ### Docker Compose
 
     cp .env.example .env
+
+Before starting Compose, set OPEN_SEMRUSH_API_TOKEN in .env to a unique secret (generate one with `openssl rand -hex 32`; never use a committed/default token). Compose runs with NODE_ENV=production and protected endpoints fail closed without it.
+
     docker compose up --build -d
     curl http://localhost:3000/api/health
     docker compose down
