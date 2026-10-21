@@ -55,7 +55,7 @@ jobs:
       - name: Verify audit API and persistent history across restart
         run: |
           curl --fail --silent --show-error -X POST http://localhost:3000/api/audit -H 'Authorization: Bearer ci-load-test-token' -H 'Content-Type: application/json' -d '{"url":"https://example.com/","maxPages":1}' > audit-response.json
-          curl --fail http://localhost:3000/api/projects | grep -q 'example.com'
+          curl --fail -H 'Authorization: Bearer ci-load-test-token' http://localhost:3000/api/projects | grep -q 'example.com'
           docker compose restart
           for i in $(seq 1 30); do curl --fail --silent http://localhost:3000/api/health && break; sleep 2; done
           curl --fail http://localhost:3000/api/projects | grep -q 'example.com'
