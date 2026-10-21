@@ -1,8 +1,12 @@
 import { createHash, timingSafeEqual } from 'node:crypto';
 
-const WINDOW_MS = Number(process.env.API_RATE_LIMIT_WINDOW_MS || 60_000);
-const MAX_REQUESTS = Number(process.env.API_RATE_LIMIT_MAX || 120);
-const MAX_EXPENSIVE_REQUESTS = Number(process.env.API_RATE_LIMIT_EXPENSIVE_MAX || 10);
+function boundedIntegerEnv(name, fallback, min, max) {
+  const value = Number(process.env[name] || fallback);
+  return Number.isSafeInteger(value) && value >= min && value <= max ? value : fallback;
+}
+const WINDOW_MS = boundedIntegerEnv('API_RATE_LIMIT_WINDOW_MS', 60_000, 1_000, 3_600_000);
+const MAX_REQUESTS = boundedIntegerEnv('API_RATE_LIMIT_MAX', 120, 1, 100_000);
+const MAX_EXPENSIVE_REQUESTS = boundedIntegerEnv('API_RATE_LIMIT_EXPENSIVE_MAX', 10, 1, 10_000);
 const MAX_TRACKED_CLIENTS = 10_000;
 const buckets = new Map();
 
