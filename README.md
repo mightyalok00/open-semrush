@@ -209,16 +209,20 @@ We actively seek feedback from external SEO practitioners, developers, and agenc
 ### How to Test
 
 1. **One-Line Docker Run**:
+
    ```bash
    git clone https://github.com/mightyalok00/open-semrush.git && cd open-semrush
    docker compose up -d
    ```
+
 2. **Execute an Audit on Your Target**:
+
    ```bash
    curl -X POST http://localhost:3000/api/audit \
      -H 'Content-Type: application/json' \
      -d '{"url":"https://your-website.com","depth":2,"maxPages":10}'
    ```
+
 3. **Submit Your Report**:
    - For crawl accuracy, false positives, or edge-case feedback, use the [External Tester Template](.github/ISSUE_TEMPLATE/external_feedback.md) on [GitHub Issues](https://github.com/mightyalok00/open-semrush/issues).
    - For bug reports with reproduction steps, use the [Bug Report Template](.github/ISSUE_TEMPLATE/bug_report.md).
