@@ -11,5 +11,9 @@ services:
     env_file:
       - .env
     environment:
-      - PORT=3000
-      - NODE_ENV=production
+      PORT: 3000
+      NODE_ENV: production
+    volumes:
+      - open-semrush-data:/app/data
+volumes:
+  open-semrush-data:
