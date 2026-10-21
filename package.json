@@ -1,0 +1,51 @@
+{
+  "name": "open-semrush",
+  "version": "1.0.0",
+  "description": "Open-Source Semrush & Ahrefs Alternative — SEO intelligence suite featuring Technical Site Audit, Live Google SERP Top 10, Multi-Competitor Keyword Gap, Backlink Analytics, and AI Outrank Strategist.",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "open-semrush": "scripts/semrush.mjs",
+    "open-semrush-server": "scripts/semrush-server.mjs"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node scripts/semrush-server.mjs",
+    "dev": "node scripts/semrush-server.mjs",
+    "cli": "node scripts/semrush.mjs",
+    "docker:build": "docker compose build",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down"
+  },
+  "keywords": [
+    "seo",
+    "semrush",
+    "ahrefs",
+    "keyword-research",
+    "site-audit",
+    "backlinks",
+    "serp-analysis",
+    "competitor-analysis",
+    "google-ranking",
+    "open-source",
+    "ai-seo"
+  ],
+  "author": "mightyalok00",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mightyalok00/open-semrush.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mightyalok00/open-semrush/issues"
+  },
+  "homepage": "https://github.com/mightyalok00/open-semrush#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0"
+  }
+}

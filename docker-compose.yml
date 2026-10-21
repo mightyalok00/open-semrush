@@ -1,0 +1,15 @@
+services:
+  open-semrush:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: open-semrush:latest
+    container_name: open-semrush-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      - PORT=3000
+      - NODE_ENV=production

@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Semrush Studio | Advanced SEO & Intelligence Platform</title>
+  <meta name="description" content="All-in-one SEO and competitive analysis dashboard built directly in REA.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="brand-header">
+        <div class="brand-logo">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#ff642d" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M2 17L12 22L22 17" stroke="#ff642d" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M2 12L12 17L22 12" stroke="#8b5cf6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="brand-title">
+          <span class="brand-name">SEMrush<span class="brand-dot">.</span></span>
+          <span class="brand-badge">PRO SUITE</span>
+        </div>
+      </div>
+
+      <nav class="nav-menu">
+        <div class="nav-section-label">CORE TOOLS</div>
+        <button class="nav-item active" data-tab="domain">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          <span>Domain Overview</span>
+        </button>
+
+        <button class="nav-item" data-tab="keywords">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21 21-6-6m2-5a7 7 0 1 1-14 0 7 7 0 0 1 14 0zM10 7v6M7 10h6"/></svg>
+          <span>Keyword Magic Tool</span>
+        </button>
+
+        <button class="nav-item" data-tab="audit">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          <span>Technical Site Audit</span>
+        </button>
+
+        <button class="nav-item" data-tab="gap">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="12" r="6"/><circle cx="15" cy="12" r="6"/></svg>
+          <span>Keyword Gap Analysis</span>
+        </button>
+
+        <button class="nav-item" data-tab="backlinks">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          <span>Backlink Analytics</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="engine-status">
+          <span class="status-indicator live"></span>
+          <span>REA Intelligence Engine</span>
+        </div>
+        <div class="engine-subtext">Port 3000 • Local Daemon</div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-viewport">
+      <!-- Top Navigation / Search Header -->
+      <header class="top-bar">
+        <div class="tab-heading">
+          <h1 id="currentTabTitle">Domain Overview</h1>
+          <p id="currentTabDescription">Analyze any domain's organic traffic, keyword portfolio, and authority.</p>
+        </div>
+        <div class="top-bar-stats">
+          <div class="region-select-wrapper">
+            <select id="globalCountrySelect" class="btn-secondary" style="font-weight: 600; cursor: pointer; padding: 6px 10px;">
+              <option value="us" selected>🇺🇸 US (United States)</option>
+              <option value="uk">🇬🇧 UK (United Kingdom)</option>
+              <option value="in">🇮🇳 IN (India)</option>
+              <option value="de">🇩🇪 DE (Germany)</option>
+              <option value="ca">🇨🇦 CA (Canada)</option>
+              <option value="au">🇦🇺 AU (Australia)</option>
+            </select>
+          </div>
+          <button id="exportCsvBtn" class="btn-secondary" title="Export current dataset to CSV">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            <span>Export CSV</span>
+          </button>
+          <button id="exportPdfBtn" class="btn-secondary" title="Export executive printable PDF report">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            <span>Executive PDF</span>
+          </button>
+          <div class="stat-pill">
+            <span class="label">AI Remediation:</span>
+            <span class="value accent">Gemini + OpenRouter Active</span>
+          </div>
+        </div>
+      </header>
+
+      <div class="content-scrollable">
+        <!-- TAB 1: DOMAIN OVERVIEW -->
+        <section id="tab-domain" class="tab-pane active">
+          <div class="query-card">
+            <form id="domainForm" class="search-form">
+              <div class="input-wrapper">
+                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                <input type="text" id="domainInput" placeholder="Enter target domain (e.g. github.com, shopify.com, stripe.com)" value="github.com" required>
+              </div>
+              <button type="submit" class="btn-primary">
+                <span>Analyze Domain</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </button>
+            </form>
+          </div>
+
+          <div id="domainLoading" class="loader-overlay hidden">
+            <div class="spinner"></div>
+            <p>Scanning SERP indexes and computing traffic distributions...</p>
+          </div>
+
+          <div id="domainResults" class="results-container">
+            <!-- Key Metric Cards -->
+            <div class="kpi-grid">
+              <div class="kpi-card">
+                <div class="kpi-label">Authority Score</div>
+                <div class="kpi-value-row">
+                  <span id="domainAs" class="kpi-value accent-as">74</span>
+                  <span class="kpi-badge badge-high">High Authority</span>
+                </div>
+                <div class="kpi-progress">
+                  <div id="domainAsBar" class="kpi-progress-fill" style="width: 74%;"></div>
+                </div>
+                <span class="kpi-sub">Composite link equity & quality</span>
+              </div>
+
+              <div class="kpi-card">
+                <div class="kpi-label">Est. Monthly Organic Traffic</div>
+                <div class="kpi-value-row">
+                  <span id="domainTraffic" class="kpi-value accent-traffic">232,123</span>
+                  <span class="kpi-badge badge-growth">+14.2%</span>
+                </div>
+                <span class="kpi-sub">Calculated via position CTR curve</span>
+              </div>
+
+              <div class="kpi-card">
+                <div class="kpi-label">Ranked Keywords</div>
+                <div class="kpi-value-row">
+                  <span id="domainKeywordsCount" class="kpi-value">7,184</span>
+                  <span class="kpi-badge">Top 100 SERP</span>
+                </div>
+                <span class="kpi-sub">Tracked across mobile & desktop</span>
+              </div>
+
+              <div class="kpi-card">
+                <div class="kpi-label">Top Competitors</div>
+                <div id="domainCompetitors" class="competitor-tags">
+                  <span class="tag">gitlab.com</span>
+                  <span class="tag">bitbucket.org</span>
+                  <span class="tag">sourcehut.org</span>
+                </div>
+                <span class="kpi-sub">High keyword overlap index</span>
+              </div>
+            </div>
+            <!-- 24-Month Historical Traffic & Google Updates Chart -->
+            <div class="panel-card" style="margin-bottom: 24px;">
+              <div class="panel-header" style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px;">
+                <div>
+                  <h3>📈 24-Month Historical Organic Traffic Trajectory</h3>
+                  <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 4px;">Long-term search visibility development, keyword acquisition velocity, and Google algorithm impact pins.</p>
+                </div>
+                <div class="serp-features-row" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                  <span class="kpi-badge badge-growth">📍 Google Core Updates Pinned</span>
+                </div>
+              </div>
+              <div id="history24MonthChart" style="min-height: 240px; margin-top: 16px; position: relative;"></div>
+            </div>
+
+            <!-- Top Organic Keywords Table -->
+            <div class="panel-card">
+              <div class="panel-header">
+                <h3>Top Organic Search Keywords</h3>
+                <span class="badge-count" id="kwCountBadge">10 keywords</span>
+              </div>
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th style="width: 70px;">Pos</th>
+                      <th>Keyword</th>
+                      <th style="width: 120px;">Search Volume</th>
+                      <th style="width: 120px;">Est. Traffic</th>
+                      <th style="width: 130px;">Intent</th>
+                    </tr>
+                  </thead>
+                  <tbody id="domainKeywordsTableBody">
+                    <!-- populated dynamically -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 2: KEYWORD MAGIC TOOL -->
+        <section id="tab-keywords" class="tab-pane">
+          <div class="query-card">
+            <form id="keywordForm" class="search-form">
+              <div class="input-wrapper">
+                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                <input type="text" id="keywordInput" placeholder="Enter seed keyword (e.g. best crm software, seo tools, ai coder)" value="best crm software" required>
+              </div>
+              <button type="submit" class="btn-primary">
+                <span>Explore Keyword</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </button>
+            </form>
+          </div>
+
+          <div id="keywordLoading" class="loader-overlay hidden">
+            <div class="spinner"></div>
+            <p>Analyzing search volume, intent patterns, and difficulty index...</p>
+          </div>
+
+          <div id="keywordResults" class="results-container">
+            <div class="kpi-grid">
+              <div class="kpi-card highlight-card">
+                <div class="kpi-label">Search Volume</div>
+                <div class="kpi-value-row">
+                  <span id="kwVolume" class="kpi-value">13,027</span>
+                  <span class="kpi-unit">/ month</span>
+                </div>
+                <span class="kpi-sub">Monthly query frequency</span>
+              </div>
+
+              <div class="kpi-card">
+                <div class="kpi-label">Keyword Difficulty (KD%)</div>
+                <div class="kpi-value-row">
+                  <span id="kwKd" class="kpi-value accent-kd">63%</span>
+                  <span id="kwKdBadge" class="kpi-badge badge-warning">Hard</span>
+                </div>
+                <div class="kpi-progress">
+                  <div id="kwKdBar" class="kpi-progress-fill kd-fill" style="width: 63%;"></div>
+                </div>
+                <span class="kpi-sub">Requires high authority & backlinks</span>
+              </div>
+
+              <div class="kpi-card">
+                <div class="kpi-label">Search Intent</div>
+                <div class="kpi-value-row">
+                  <span id="kwIntent" class="intent-badge intent-commercial">Commercial</span>
+                </div>
+                <span class="kpi-sub">Audience looking to compare options</span>
+              </div>
+
+              <div class="kpi-card">
+                <div class="kpi-label">CPC & Competitive Density</div>
+                <div class="kpi-value-row">
+                  <span id="kwCpc" class="kpi-value">$9.39</span>
+                  <span class="kpi-badge">Density: <span id="kwDensity">0.27</span></span>
+                </div>
+                <span class="kpi-sub">Estimated Google Ads CPC</span>
+              </div>
+            </div>
+
+            <!-- Seasonality Trend & Variations -->
+            <div class="grid-two-col">
+              <div class="panel-card">
+                <div class="panel-header">
+                  <h3>12-Month Relative Seasonality Trend</h3>
+                </div>
+                <div class="chart-container" id="seasonalityChart">
+                  <!-- SVG Bar Chart inserted by app.js -->
+                </div>
+              </div>
+
+              <div class="panel-card">
+                <div class="panel-header">
+                  <h3>Keyword Variations & Related Questions</h3>
+                </div>
+                <ul class="variation-list" id="kwVariationsList">
+                  <!-- items dynamically inserted -->
+                </ul>
+              </div>
+            </div>
+            <!-- Live SERP Top 10 & SERP Features Inspector -->
+            <div class="panel-card" style="margin-top: 24px;">
+              <div class="panel-header" style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px;">
+                <div>
+                  <h3>🌐 Live Google SERP Inspector (Top 10 Rankings & SERP Features)</h3>
+                  <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 4px;">Real-time organic search landscape, snippet previews, and CTR estimations.</p>
+                </div>
+                <div id="serpFeaturesBadges" class="serp-features-row" style="display: flex; gap: 8px; flex-wrap: wrap;"></div>
+              </div>
+
+              <!-- Featured Snippet Box -->
+              <div id="serpFeaturedSnippetBox" class="featured-snippet-container hidden" style="margin-top: 16px; background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px; padding: 16px;"></div>
+
+              <!-- People Also Ask Box -->
+              <div id="serpPaaBox" class="paa-container hidden" style="margin-top: 16px; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: 8px; padding: 16px;"></div>
+
+              <!-- Top 10 Ranked Results Table -->
+              <div class="table-responsive" style="margin-top: 16px;">
+                <table class="data-table" id="serpTable">
+                  <thead>
+                    <tr>
+                      <th style="width: 50px;">Pos</th>
+                      <th>Ranking Page & Snippet</th>
+                      <th style="width: 130px;">Authority</th>
+                      <th style="width: 100px;">Est. CTR</th>
+                      <th style="width: 130px;">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="serpTableBody">
+                    <tr><td colspan="5" style="text-align: center; color: var(--text-secondary); padding: 20px;">Search a keyword above to inspect the live SERP landscape.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 3: TECHNICAL SITE AUDIT -->
+        <section id="tab-audit" class="tab-pane">
+          <div class="query-card">
+            <form id="auditForm" class="search-form">
+              <div class="input-wrapper">
+                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                <input type="url" id="auditUrlInput" placeholder="Enter full URL to audit (e.g. https://example.com)" value="https://example.com" required>
+              </div>
+              <div class="page-select-wrapper">
+                <label for="auditPagesCount">Pages:</label>
+                <select id="auditPagesCount">
+                  <option value="1">1 page</option>
+                  <option value="3" selected>3 pages</option>
+                  <option value="5">5 pages</option>
+                </select>
+              </div>
+              <button type="submit" class="btn-primary">
+                <span>Start Site Audit</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </button>
+            </form>
+          </div>
+
+          <div id="auditLoading" class="loader-overlay hidden">
+            <div class="spinner"></div>
+            <p>Crawling target website, analyzing HTML tags, and checking technical SEO rules...</p>
+          </div>
+
+          <div id="auditResults" class="results-container">
+            <div class="kpi-grid">
+              <div class="kpi-card audit-score-card">
+                <div class="kpi-label">Site Health Score</div>
+                <div class="score-dial">
+                  <span id="auditHealthScore" class="score-number">91</span>
+                  <span class="score-max">/ 100</span>
+                </div>
+                <div class="kpi-progress">
+                  <div id="auditHealthBar" class="kpi-progress-fill" style="width: 91%;"></div>
+                </div>
+                <span class="kpi-sub">Overall technical crawl rating</span>
+              </div>
+
+              <div class="kpi-card">
+                <div class="kpi-label">Errors (High Priority)</div>
+                <div class="kpi-value-row">
+                  <span id="auditErrorsCount" class="kpi-value text-error">1</span>
+                  <span class="kpi-badge badge-error">Action Required</span>
+                </div>
+                <span class="kpi-sub">Broken tags, HTTP 4xx/5xx, missing H1</span>
+              </div>
+
+              <div class="kpi-card">
+                <div class="kpi-label">Warnings</div>
+                <div class="kpi-value-row">
+                  <span id="auditWarningsCount" class="kpi-value text-warning">3</span>
+                  <span class="kpi-badge badge-warning">Moderate</span>
+                </div>
+                <span class="kpi-sub">Title/meta length, missing alt text</span>
+              </div>
+
+              <div class="kpi-card">
+                <div class="kpi-label">Notices & Clean Status</div>
+                <div class="kpi-value-row">
+                  <span id="auditNoticesCount" class="kpi-value text-notice">1</span>
+                  <span class="kpi-badge badge-notice">Advisory</span>
+                </div>
+                <span class="kpi-sub">Missing canonicals, non-indexable</span>
+              </div>
+            </div>
+
+            <!-- Crawled Pages Breakdown -->
+            <div class="panel-card">
+              <div class="panel-header">
+                <h3>Crawled Pages & Technical SEO Issues</h3>
+                <span id="auditCrawledCount" class="badge-count">1 page scanned</span>
+              </div>
+              <div class="page-audit-accordion" id="auditPagesAccordion">
+                <!-- Page items dynamically created -->
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 4: KEYWORD GAP -->
+        <section id="tab-gap" class="tab-pane">
+          <div class="query-card">
+            <form id="gapForm" class="search-form multi-input-form" style="flex-wrap: wrap;">
+              <div class="input-wrapper" style="flex: 1; min-width: 180px;">
+                <span class="input-tag">You:</span>
+                <input type="text" id="gapDomainA" placeholder="Your domain (e.g. github.com)" value="github.com" required>
+              </div>
+              <div class="input-wrapper" style="flex: 1; min-width: 180px;">
+                <span class="input-tag">Competitor 1:</span>
+                <input type="text" id="gapDomainB" placeholder="Competitor 1 (e.g. gitlab.com)" value="gitlab.com" required>
+              </div>
+              <div class="input-wrapper" style="flex: 1; min-width: 180px;">
+                <span class="input-tag">Competitor 2:</span>
+                <input type="text" id="gapDomainC" placeholder="Competitor 2 (e.g. bitbucket.org)" value="bitbucket.org">
+              </div>
+              <button type="submit" class="btn-primary" style="height: 48px;">
+                <span>Compare Gap</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </button>
+            </form>
+          </div>
+
+          <div id="gapLoading" class="loader-overlay hidden">
+            <div class="spinner"></div>
+            <p>Intersecting keyword databases and computing cross-domain gap matrix...</p>
+          </div>
+
+          <div id="gapResults" class="results-container">
+            <div class="gap-grid">
+              <div class="panel-card">
+                <div class="panel-header">
+                  <h3 class="text-missing">Missing Opportunities (Ranked by Competitor)</h3>
+                  <span class="badge-count" id="gapMissingCount">0</span>
+                </div>
+                <ul class="gap-list" id="gapMissingList"></ul>
+              </div>
+
+              <div class="panel-card">
+                <div class="panel-header">
+                  <h3 class="text-shared">Shared Battleground Keywords</h3>
+                  <span class="badge-count" id="gapSharedCount">0</span>
+                </div>
+                <ul class="gap-list" id="gapSharedList"></ul>
+              </div>
+
+              <div class="panel-card">
+                <div class="panel-header">
+                  <h3 class="text-unique">Unique to Your Domain</h3>
+                  <span class="badge-count" id="gapUniqueCount">0</span>
+                </div>
+                <ul class="gap-list" id="gapUniqueList"></ul>
+              </div>
+            </div>
+
+            <!-- Interactive Visual Venn Diagram -->
+            <div class="panel-card" style="margin-top: 24px;">
+              <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                <div>
+                  <h3>⭕ Keyword Portfolio Intersection (Venn Diagram)</h3>
+                  <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 4px;">Visual competitive overlap between your domain and competitors.</p>
+                </div>
+              </div>
+              <div id="vennDiagramContainer" style="display: flex; justify-content: center; align-items: center; padding: 24px 0; min-height: 200px;"></div>
+            </div>
+
+            <!-- Multi-Competitor Ranking Matrix -->
+            <div class="panel-card" style="margin-top: 24px;">
+              <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                <div>
+                  <h3>⚔️ Multi-Competitor Keyword Gap Matrix</h3>
+                  <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 4px;">Direct position comparison across up to 5 competitors with highlighted leader rankings.</p>
+                </div>
+                <div class="badge-count" id="multiMatrixTotalCount">0 Keywords</div>
+              </div>
+              <div class="table-responsive" style="margin-top: 16px;">
+                <table class="data-table" id="multiGapTable">
+                  <thead id="multiGapTableHead">
+                    <tr>
+                      <th>Keyword</th>
+                      <th>Search Vol</th>
+                      <th>Intent</th>
+                      <th>KD%</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="multiGapTableBody">
+                    <tr><td colspan="5" style="text-align: center; color: var(--text-secondary); padding: 20px;">Run a gap comparison to view cross-domain ranking positions.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 5: BACKLINK ANALYTICS -->
+        <section id="tab-backlinks" class="tab-pane">
+          <div class="query-card">
+            <form id="backlinkForm" class="search-form">
+              <div class="input-wrapper">
+                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                <input type="text" id="backlinkInput" placeholder="Enter target domain (e.g. github.com)" value="github.com" required>
+              </div>
+              <button type="submit" class="btn-primary">
+                <span>Check Backlinks</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </button>
+            </form>
+          </div>
+
+          <div id="backlinkLoading" class="loader-overlay hidden">
+            <div class="spinner"></div>
+            <p>Traversing link graph, resolving edge attributes, and calculating Authority Score...</p>
+          </div>
+
+          <div id="backlinkResults" class="results-container">
+            <div class="kpi-grid">
+              <div class="kpi-card">
+                <div class="kpi-label">Authority Score</div>
+                <div class="kpi-value-row">
+                  <span id="blAuthority" class="kpi-value accent-as">68</span>
+                  <span class="kpi-badge badge-high">Strong</span>
+                </div>
+                <div class="kpi-progress">
+                  <div id="blAuthorityBar" class="kpi-progress-fill" style="width: 68%;"></div>
+                </div>
+                <span class="kpi-sub">Graph PageRank and referral trust</span>
+              </div>
+
+              <div class="kpi-card">
+                <div class="kpi-label">Total Backlinks</div>
+                <div class="kpi-value-row">
+                  <span id="blTotalCount" class="kpi-value">41,853</span>
+                </div>
+                <span class="kpi-sub">Discovered inbound hyperlink edges</span>
+              </div>
+
+              <div class="kpi-card">
+                <div class="kpi-label">Referring Domains</div>
+                <div class="kpi-value-row">
+                  <span id="blRefDomains" class="kpi-value">5,979</span>
+                </div>
+                <span class="kpi-sub">Unique root domain sources</span>
+              </div>
+
+              <div class="kpi-card">
+                <div class="kpi-label">Dofollow vs Nofollow</div>
+                <div class="kpi-value-row">
+                  <span id="blDofollowRatio" class="kpi-value accent-traffic">74%</span>
+                  <span class="kpi-badge">Dofollow</span>
+                </div>
+                <div class="kpi-progress">
+                  <div id="blDofollowBar" class="kpi-progress-fill" style="width: 74%;"></div>
+                </div>
+                <span class="kpi-sub">Healthy link profile distribution</span>
+              </div>
+
+              <div class="kpi-card">
+                <div class="kpi-label">Toxicity Score (Penguin Risk)</div>
+                <div class="kpi-value-row">
+                  <span id="blToxicity" class="kpi-value accent-kd">6%</span>
+                  <span id="blToxicityBadge" class="kpi-badge badge-growth">Low Risk</span>
+                </div>
+                <div class="kpi-progress">
+                  <div id="blToxicityBar" class="kpi-progress-fill kd-fill" style="width: 6%;"></div>
+                </div>
+                <span class="kpi-sub" id="blToxicCount">0 toxic links</span>
+              </div>
+            </div>
+
+            <!-- Anchor Category Progress Breakdown -->
+            <div class="panel-card" style="margin-bottom: 24px;">
+              <div class="panel-header">
+                <h3>Anchor Text Diversity Breakdown</h3>
+              </div>
+              <div class="anchor-breakdown-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 12px;">
+                <div class="stat-box" style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px;">
+                  <div style="font-size: 0.8rem; color: var(--text-secondary);">Branded Anchors</div>
+                  <div id="blAnchorBranded" style="font-size: 1.3rem; font-weight: 700; color: var(--accent-blue); margin-top: 4px;">45%</div>
+                  <span style="font-size: 0.75rem; color: var(--text-secondary);">Natural brand mentions</span>
+                </div>
+                <div class="stat-box" style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px;">
+                  <div style="font-size: 0.8rem; color: var(--text-secondary);">Exact Match / Commercial</div>
+                  <div id="blAnchorExact" style="font-size: 1.3rem; font-weight: 700; color: var(--accent-orange); margin-top: 4px;">24%</div>
+                  <span style="font-size: 0.75rem; color: var(--text-secondary);">Target search keywords</span>
+                </div>
+                <div class="stat-box" style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px;">
+                  <div style="font-size: 0.8rem; color: var(--text-secondary);">Naked URLs</div>
+                  <div id="blAnchorNaked" style="font-size: 1.3rem; font-weight: 700; color: var(--accent-purple); margin-top: 4px;">18%</div>
+                  <span style="font-size: 0.75rem; color: var(--text-secondary);">Direct domain/path links</span>
+                </div>
+                <div class="stat-box" style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px;">
+                  <div style="font-size: 0.8rem; color: var(--text-secondary);">Generic & Other</div>
+                  <div id="blAnchorGeneric" style="font-size: 1.3rem; font-weight: 700; color: var(--text-primary); margin-top: 4px;">13%</div>
+                  <span style="font-size: 0.75rem; color: var(--text-secondary);">"click here", "website"</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid-two-col">
+              <div class="panel-card">
+                <div class="panel-header">
+                  <h3>Top Anchor Text Distribution</h3>
+                </div>
+                <div class="table-responsive">
+                  <table class="data-table">
+                    <thead>
+                      <tr>
+                        <th>Anchor Text</th>
+                        <th style="width: 140px;">Backlink Count</th>
+                      </tr>
+                    </thead>
+                    <tbody id="blAnchorsTableBody"></tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div class="panel-card">
+                <div class="panel-header">
+                  <h3>Recent Inbound Backlink Samples</h3>
+                </div>
+                <div class="backlink-feed" id="blFeedList"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <!-- AI Fix Modal -->
+  <div id="aiFixModal" class="modal-backdrop hidden">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title-row">
+          <span class="ai-badge">✨ Gemini AI Fix</span>
+          <h2 id="aiFixTitle">Optimized Solution</h2>
+        </div>
+        <button id="closeAiFixModal" class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="fix-section">
+          <label>Proposed Optimization:</label>
+          <div id="aiFixDescription" class="fix-text"></div>
+        </div>
+        <div class="fix-section">
+          <div class="code-header">
+            <label>Ready-to-Deploy Code Snippet:</label>
+            <button id="copyFixBtn" class="btn-copy">Copy Code</button>
+          </div>
+          <pre><code id="aiFixCodeSnippet"></code></pre>
+        </div>
+        <div class="fix-section">
+          <label>SEO Impact Analysis:</label>
+          <div id="aiFixExplanation" class="explanation-text"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI Strategy Modal -->
+  <div id="aiStrategyModal" class="modal-backdrop hidden">
+    <div class="modal-box modal-wide">
+      <div class="modal-header">
+        <div class="modal-title-row">
+          <span class="ai-badge">⚡ AI Content Outrank Strategy</span>
+          <h2 id="aiStrategyTitle">Keyword Strategy</h2>
+        </div>
+        <button id="closeAiStrategyModal" class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body" id="aiStrategyBody">
+        <!-- populated dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
