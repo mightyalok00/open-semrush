@@ -25,19 +25,7 @@ function clientKey(req) {
 /** Returns null on success or an HTTP response description on rejection. */
 export function checkProductionControls(req, pathname, now = Date.now()) {
   const token = process.env.OPEN_SEMRUSH_API_TOKEN;
-  if (protectedPath(req.method || 'GET', pathname)) {
-    if (!token && process.env.NODE_ENV === 'production') {
-      return { status: 503, body: { error: 'Protected API routes are disabled until OPEN_SEMRUSH_API_TOKEN is configured.' } };
-    }
-    if (token) {
-      const header = String(req.headers?.authorization || '');
-      const provided = header.startsWith('Bearer ') ? header.slice(7).trim() : '';
-      if (!equalSecret(provided, token)) {
-        return { status: 401, headers: { 'WWW-Authenticate': 'Bearer realm="open-semrush"' }, body: { error: 'A valid bearer token is required for this endpoint.' } };
-      }
-    }
-  }
-
+  const isProtected = protectedPath(req.method || 'GET', pathname);
   const key = clientKey(req);
   let bucket = buckets.get(key);
   if (!bucket || now - bucket.start >= WINDOW_MS) {
@@ -64,6 +52,19 @@ export function checkProductionControls(req, pathname, now = Date.now()) {
   if (used > limit) {
     const retryAfter = Math.max(1, Math.ceil((bucket.start + WINDOW_MS - now) / 1000));
     return { status: 429, headers: { 'Retry-After': String(retryAfter), 'RateLimit-Limit': String(limit), 'RateLimit-Remaining': '0' }, body: { error: 'Request rate limit exceeded.', retryAfterSeconds: retryAfter } };
+  }
+
+  if (isProtected) {
+    if (!token && process.env.NODE_ENV === 'production') {
+      return { status: 503, body: { error: 'Protected API routes are disabled until OPEN_SEMRUSH_API_TOKEN is configured.' } };
+    }
+    if (token) {
+      const header = String(req.headers?.authorization || '');
+      const provided = header.startsWith('Bearer ') ? header.slice(7).trim() : '';
+      if (!equalSecret(provided, token)) {
+        return { status: 401, headers: { 'WWW-Authenticate': 'Bearer realm="open-semrush"' }, body: { error: 'A valid bearer token is required for this endpoint.' } };
+      }
+    }
   }
   return null;
 }
