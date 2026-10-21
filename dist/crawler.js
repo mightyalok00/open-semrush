@@ -407,8 +407,24 @@ export async function runSiteAudit(startUrl, options = {}) {
     // Step A: Inspect robots.txt
     const robotsInfo = await inspectRobotsTxt(startOrigin, userAgent);
     // Step B: Discover sitemap URLs if available
-    let sitemapTarget = robotsInfo.sitemaps[0] ?? `${startOrigin}/sitemap.xml`;
-    const discoveredSitemapUrls = await discoverSitemapUrls(sitemapTarget, userAgent, 30);
+    const sitemapCandidate = robotsInfo.sitemaps[0] ?? `${startOrigin}/sitemap.xml`;
+    let sitemapTarget = `${startOrigin}/sitemap.xml`;
+    try {
+        const candidateUrl = await assertPublicHttpUrl(sitemapCandidate);
+        if (candidateUrl.origin === startOrigin)
+            sitemapTarget = candidateUrl.href;
+    }
+    catch {
+        // Ignore unsafe sitemap declarations and use the target origin's default sitemap.
+    }
+    const discoveredSitemapUrls = (await discoverSitemapUrls(sitemapTarget, userAgent, 30)).filter((candidate) => {
+        try {
+            return new URL(candidate).origin === startOrigin;
+        }
+        catch {
+            return false;
+        }
+    });
     const hasSitemap = discoveredSitemapUrls.length > 0;
     // Step C: Initialize crawl queue
     const queue = [normalizedStartUrl];
