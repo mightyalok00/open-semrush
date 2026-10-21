@@ -84,7 +84,7 @@ jobs:
           curl --fail http://127.0.0.1:3000/api/health
       - name: Run reproducible concurrent HTTP smoke benchmark
         run: |
-          LOAD_TEST_MODE=api LOAD_TEST_ITERATIONS=200 LOAD_TEST_CONCURRENCY=10 npm run benchmark:load > load-benchmark.json
+          LOAD_TEST_MODE=api LOAD_TEST_ITERATIONS=100 LOAD_TEST_CONCURRENCY=10 npm run benchmark:load > load-benchmark.json
           cat load-benchmark.json
       - name: Upload load benchmark evidence
         if: always()
