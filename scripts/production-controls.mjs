@@ -12,6 +12,10 @@ const buckets = new Map();
 
 const protectedPath = (method, pathname) =>
   (method === 'POST' && (pathname === '/api/audit' || pathname.startsWith('/api/ai/'))) ||
+  (method === 'GET' && ['/api/search-console', '/api/projects', '/api/history'].includes(pathname));
+
+const expensivePath = (method, pathname) =>
+  (method === 'POST' && (pathname === '/api/audit' || pathname.startsWith('/api/ai/'))) ||
   (method === 'GET' && pathname === '/api/search-console');
 
 function equalSecret(provided, expected) {
@@ -40,7 +44,7 @@ export function checkProductionControls(req, pathname, now = Date.now()) {
   }
   bucket.total += 1;
   bucket.touched = now;
-  const expensive = protectedPath(req.method || 'GET', pathname);
+  const expensive = expensivePath(req.method || 'GET', pathname);
   if (expensive) bucket.expensive += 1;
 
   if (buckets.size > MAX_TRACKED_CLIENTS) {
