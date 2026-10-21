@@ -5,7 +5,7 @@
  * Architecture: Modular vanilla JS client interacting with Semrush Studio REST APIs.
  * Supports:
  *   - Domain Overview with 24-month historical trajectory area chart
- *   - Google Core Algorithm Update correlation pins
+ *   - Illustrative timeline markers; no causal correlation is calculated
  *   - Keyword Magic Tool with 12-month seasonality trends & SERP features
  *   - SERP preview (AI-generated/demo) analyzer with CTR curve & PAA questions
  *   - Technical Site Audit with crawler, TTFB latency, security headers & Schema.org
@@ -105,7 +105,7 @@ function setupTabs() {
   const tabMeta = {
     domain: {
       title: 'Domain Overview',
-      desc: "Analyze any domain's organic traffic, keyword portfolio, and authority score."
+      desc: 'Explore modeled traffic and keyword estimates; use Search Console for verified first-party performance.'
     },
     'search-console': {
       title: 'Google Search Console',
@@ -125,7 +125,7 @@ function setupTabs() {
     },
     backlinks: {
       title: 'Backlink Analytics',
-      desc: 'Inspect graph PageRank, inbound link profiles, referring domains, and anchor text.'
+      desc: 'Inspect a synthetic link-profile demonstration; no live backlink index is queried.'
     }
   };
 
@@ -367,7 +367,7 @@ function setupKeywordMagic() {
 /**
  * Asynchronously queries `/api/keyword` for search metrics, KD% index,
  * 12-month seasonality trend, and semantic long-tail variations.
- * Automatically chains a call to `fetchSerpData` to inspect real Google rankings.
+ * Loads a demo SERP preview; fallback results are not verified live Google rankings.
  * 
  * @param {string} query - Keyword search phrase (e.g. 'best seo tools')
  */
