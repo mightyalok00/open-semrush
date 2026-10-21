@@ -1,18 +1,14 @@
 # 🚀 Open Semrush
 
-<p align="center">
-  <strong>High-performance, self-hosted SEO intelligence & technical site audit suite.</strong><br>
-  Official Google Search Console telemetry, empirical machine learning rank curves, and autonomous multi-provider AI remediation.
-</p>
+**High-performance, self-hosted SEO intelligence & technical site audit suite.**  
+Official Google Search Console telemetry, empirical machine learning rank curves, and autonomous multi-provider AI remediation.
 
-<p align="center">
-  <a href="https://github.com/mightyalok00/open-semrush/actions/workflows/quality.yml"><img src="https://img.shields.io/badge/CI%20Quality-Passing-brightgreen?logo=github-actions" alt="CI Quality"></a>
-  <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/Node.js-%E2%89%A522.0.0-339933?logo=node.js&logoColor=white" alt="Node Version"></a>
-  <a href="#-tests-coverage-and-benchmarks"><img src="https://img.shields.io/badge/Tests-83%20Passing-success" alt="Tests"></a>
-  <a href="#-tests-coverage-and-benchmarks"><img src="https://img.shields.io/badge/Coverage-82.6%25-informational" alt="Coverage"></a>
-  <a href="reports/quality/production-readiness-2026-10-21.md"><img src="https://img.shields.io/badge/Security%20Score-9.5%2F10-blueviolet" alt="Security Score"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License"></a>
-</p>
+[![CI Quality](https://img.shields.io/badge/CI%20Quality-Passing-brightgreen?logo=github-actions)](https://github.com/mightyalok00/open-semrush/actions/workflows/quality.yml)
+[![Node.js](https://img.shields.io/badge/Node.js-%E2%89%A522.0.0-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
+[![Tests: 83 Passing](https://img.shields.io/badge/Tests-83%20Passing-success)](#-tests-coverage-and-benchmarks)
+[![Coverage: 82.6%](https://img.shields.io/badge/Coverage-82.6%25-informational)](#-tests-coverage-and-benchmarks)
+[![Security Score: 9.5/10](https://img.shields.io/badge/Security%20Score-9.5%2F10-blueviolet)](reports/quality/production-readiness-2026-10-21.md)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 ---
 
