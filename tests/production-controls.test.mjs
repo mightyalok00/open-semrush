@@ -50,3 +50,11 @@ test('health endpoint is not subject to bearer authentication', () => {
   assert.equal(checkProductionControls(request(), '/api/health', 5000), null);
   delete process.env.OPEN_SEMRUSH_API_TOKEN;
 });
+
+test('stored project and history endpoints require authentication', () => {
+  resetRateLimitsForTests();
+  process.env.OPEN_SEMRUSH_API_TOKEN = 'test-secret';
+  assert.equal(checkProductionControls(request({ method: 'GET' }), '/api/projects', 6000)?.status, 401);
+  assert.equal(checkProductionControls(request({ method: 'GET', authorization: 'Bearer test-secret' }), '/api/history', 6001), null);
+  delete process.env.OPEN_SEMRUSH_API_TOKEN;
+});
