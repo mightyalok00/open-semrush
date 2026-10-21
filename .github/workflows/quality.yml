@@ -21,6 +21,8 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Build TypeScript
         run: npm run build
+      - name: Run tests (fail the job on any regression)
+        run: npm test
       - name: Test with coverage report
         run: npm run test:coverage | tee coverage-report.txt
       - name: Run reproducible microbenchmarks
