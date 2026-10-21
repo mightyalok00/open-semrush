@@ -48,6 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupSiteAudit();
   setupKeywordGap();
   setupBacklinkAnalytics();
+  setupSearchConsole();
   setupModals();
   setupExportCsv();
   setupExportPdf();
@@ -105,6 +106,10 @@ function setupTabs() {
     domain: {
       title: 'Domain Overview',
       desc: "Analyze any domain's organic traffic, keyword portfolio, and authority score."
+    },
+    'search-console': {
+      title: 'Google Search Console',
+      desc: 'First-party clicks, impressions, CTR and position for an authorized property.'
     },
     keywords: {
       title: 'Keyword Magic Tool',
@@ -1264,4 +1269,55 @@ function escapeHtml(str) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
+}
+
+
+/* Provider-backed Google Search Console data only; no synthetic fallback. */
+function setupSearchConsole() {
+  const form = document.getElementById('searchConsoleForm');
+  if (!form) return;
+  const end = new Date();
+  const start = new Date(end);
+  start.setDate(start.getDate() - 28);
+  const toDate = (date) => date.toISOString().slice(0, 10);
+  document.getElementById('gscStartDate').value = toDate(start);
+  document.getElementById('gscEndDate').value = toDate(end);
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const status = document.getElementById('gscStatus');
+    const results = document.getElementById('gscResults');
+    status.textContent = 'Requesting Google Search Console data…';
+    results.classList.add('hidden');
+    const params = new URLSearchParams({
+      siteUrl: document.getElementById('gscSiteUrl').value.trim(),
+      startDate: document.getElementById('gscStartDate').value,
+      endDate: document.getElementById('gscEndDate').value
+    });
+    const query = document.getElementById('gscQuery').value.trim();
+    if (query) params.set('query', query);
+    try {
+      const response = await fetch('/api/search-console?' + params.toString());
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Google Search Console request failed.');
+      document.getElementById('gscClicks').textContent = Number(data.totals.clicks).toLocaleString();
+      document.getElementById('gscImpressions').textContent = Number(data.totals.impressions).toLocaleString();
+      document.getElementById('gscCtr').textContent = (Number(data.totals.ctr) * 100).toFixed(2) + '%';
+      document.getElementById('gscPosition').textContent = Number(data.totals.averagePosition).toFixed(2);
+      const tbody = document.getElementById('gscRows');
+      tbody.replaceChildren();
+      for (const row of data.rows) {
+        const tr = document.createElement('tr');
+        for (const value of [row.query, Number(row.clicks).toLocaleString(), Number(row.impressions).toLocaleString(), (Number(row.ctr) * 100).toFixed(2) + '%', Number(row.position).toFixed(2)]) {
+          const td = document.createElement('td');
+          td.textContent = String(value);
+          tr.appendChild(td);
+        }
+        tbody.appendChild(tr);
+      }
+      results.classList.remove('hidden');
+      status.textContent = 'Source: Google Search Console · property API response · ' + data.startDate + ' to ' + data.endDate;
+    } catch (error) {
+      status.textContent = error instanceof Error ? error.message : 'Unable to load Search Console data.';
+    }
+  });
 }
