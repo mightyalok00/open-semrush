@@ -41,6 +41,7 @@ Organic click distributions follow an empirical power-law decay with rank depth:
 $$\text{CTR}_{\text{base}}(p) = \alpha \cdot p^{-\beta}$$
 
 Where:
+
 - $p \in \mathbb{N}_{\ge 1}$ is the 1-indexed organic SERP rank.
 - $\alpha = 0.312$ corresponds to the empirical baseline click-through rate for Position 1 (~31.2%).
 - $\beta = 0.93$ represents the power decay parameter across search depth.
@@ -67,7 +68,7 @@ $$\text{CTR}_{\text{adj}}(p) = \text{CTR}_{\text{base}}(p) \cdot \prod_{k} \mu_k
 
 Rather than assigning rigid binary labels, `open-semrush` evaluates multi-dimensional logit features across four canonical search intents:
 
-$$\mathbf{z} = [z_{\text{Info}}, z_{\text{Comm}}, z_{\text{Nav}}, z_{\text{Trans}}] \in \mathbb{R}^4$$
+$$\mathbf{z} = (z_{\text{Info}}, z_{\text{Comm}}, z_{\text{Nav}}, z_{\text{Trans}}) \in \mathbb{R}^4$$
 
 The logit components combine lexical pattern detectors, syntactic interrogative markers, domain TLD anchors, and query token length priors:
 
@@ -110,7 +111,7 @@ Using the two-tailed standard normal critical value $z_{0.025} = 1.96$:
 
 $$\text{Margin of Error} = 1.96 \cdot \sigma_{\text{total}}$$
 
-$$I_{0.95} = \left[ \max(0, \hat{Y} - 1.96 \sigma_{\text{total}}), \; \hat{Y} + 1.96 \sigma_{\text{total}} \right]$$
+$$I_{0.95} = \hat{Y} \pm 1.96 \sigma_{\text{total}}$$
 
 ---
 
@@ -123,13 +124,15 @@ For query representations $Q_A$ and $Q_B$, character trigrams are extracted acro
 $$\text{Sim}(Q_A, Q_B) = \frac{|\mathcal{G}_3(Q_A) \cap \mathcal{G}_3(Q_B)|}{|\mathcal{G}_3(Q_A) \cup \mathcal{G}_3(Q_B)|}$$
 
 This metric provides:
+
 - Word order invariance for composite search terms.
 - Typographical noise and inflection tolerance without heavy lemmatizer overhead.
-- Symmetric and normalized bounded output in $[0.0, 1.0]$.
+- Symmetric and normalized bounded output in the interval $0.0 \le \text{Sim} \le 1.0$.
 
 ### Agglomerative Thematic Clustering
 
 The clustering engine aggregates related keyword opportunities into topical clusters using a greedy distance threshold $\tau = 0.35$. Each cluster emits:
+
 - Thematic anchor query.
 - Aggregated search volume.
 - Average keyword difficulty index.
@@ -140,7 +143,7 @@ The clustering engine aggregates related keyword opportunities into topical clus
 
 `open-semrush` incorporates an autonomous multi-tier inference cascade designed for high availability and zero operational downtime:
 
-```
+```text
 [Incoming AI Task]
         │
         ▼
@@ -171,4 +174,4 @@ The clustering engine aggregates related keyword opportunities into topical clus
 - **Circuit Breaking**: HTTP 401/403 credential rejections permanently invalidate the failed key in-memory for the process lifetime, preventing log spam and wasted round-trips.
 - **Strict 15-Second Timeout**: Every outgoing inference request enforces an `AbortController` timeout.
 - **Fail-Closed Privacy**: No crawler payload containing authenticated secrets, bearer headers, or internal IP space is ever forwarded to external inference providers.
-- **Structured JSON Repair**: Responses with markdown fences (````json ... ````) or extraneous commentary are parsed through regex bracket extraction.
+- **Structured JSON Repair**: Responses with markdown fences (`json`) or extraneous commentary are parsed through regex bracket extraction.

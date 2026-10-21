@@ -101,7 +101,7 @@ The analytical pipeline uses applied statistical models and multi-tier LLM casca
 
 - **Empirical CTR Power-Law Model**: Fits rank-decay curves using $CTR(p) = \alpha \cdot p^{-\beta}$ ($\alpha = 0.312, \beta = 0.93$) adjusted for SERP layout feature attenuation (featured snippet cannibalization, PAA accordion dampening, video carousels).
 - **Softmax Intent Probability Distribution**: Evaluates multi-class logit features ($z_{\text{Info}}, z_{\text{Comm}}, z_{\text{Nav}}, z_{\text{Trans}}$) normalized with numerically stable softmax $\sigma(\mathbf{z})$ to provide full probability distributions and confidence scores rather than hard-coded binary labels.
-- **Parametric Traffic Forecasting (95% CI)**: Estimates organic searcher visits $\hat{Y} = V \cdot CTR$ accompanied by 95% confidence intervals combining binomial sampling variance and seasonal volatility dispersion ($I_{0.95} = [\hat{Y} - 1.96\sigma, \hat{Y} + 1.96\sigma]$).
+- **Parametric Traffic Forecasting (95% CI)**: Estimates organic searcher visits $\hat{Y} = V \cdot CTR$ accompanied by 95% confidence intervals combining binomial sampling variance and seasonal volatility dispersion ($I_{0.95} = \hat{Y} \pm 1.96\sigma$).
 - **N-Gram Semantic Clustering**: Aggregates composite queries into topical clusters using character 3-gram Jaccard similarity matrices and greedy agglomerative clustering.
 - **Autonomous Multi-Tier LLM Cascade**: In-flight failover chain connecting OpenRouter free models (`minimax`, `gemma-4`, `lfm-2.5`, `nemotron-3.5`) and Google Gemini (`gemini-3.5-flash`, `gemini-3.1-flash-lite`, `gemini-flash-latest`) with deterministic air-gapped fallback.
 
