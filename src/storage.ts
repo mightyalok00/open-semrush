@@ -5,7 +5,10 @@ import type { TrackedProjectRecord } from './types.js';
 
 const DATA_DIR = path.resolve(process.env.OPEN_SEMRUSH_DATA_DIR || path.join(process.cwd(), 'data'));
 const DB_FILE = path.join(DATA_DIR, 'seo_projects.json');
-const MAX_HISTORY_ENTRIES = Math.max(100, Number(process.env.OPEN_SEMRUSH_MAX_HISTORY || 50000));
+const configuredMaxHistory = Number(process.env.OPEN_SEMRUSH_MAX_HISTORY || 50000);
+const MAX_HISTORY_ENTRIES = Number.isSafeInteger(configuredMaxHistory) && configuredMaxHistory >= 100 && configuredMaxHistory <= 1_000_000
+  ? configuredMaxHistory
+  : 50_000;
 
 export interface AuditHistoryEntry {
   readonly timestamp: string;
