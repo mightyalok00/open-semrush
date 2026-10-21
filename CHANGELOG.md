@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.2.0] - 2026-10-21
 
-### 🚀 Added
+### 🚀 Added in v1.2.0
 
 - **Data Provenance & Metric Labeling Architecture (`src/types.ts`)**:
   - Implemented 5-tier classification framework: `verified_provider`, `empirical_observation`, `provider_api`, `statistical_model`, and `synthetic_estimate`.
@@ -65,7 +65,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.1.0] - 2026-10-21
 
-### 🚀 Added
+### 🚀 Added in v1.1.0
 
 - **Empirical CTR Power-Law Regression (`src/ml.ts`)**:
   - Parametric power-law model ($CTR(p) = \alpha \cdot p^{-\beta}$) with $\alpha = 0.312$ and $\beta = 0.93$.
