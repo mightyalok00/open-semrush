@@ -13,6 +13,11 @@ services:
     environment:
       PORT: 3000
       NODE_ENV: production
+      OPEN_SEMRUSH_API_TOKEN: ${OPEN_SEMRUSH_API_TOKEN:-}
+      API_RATE_LIMIT_WINDOW_MS: ${API_RATE_LIMIT_WINDOW_MS:-60000}
+      API_RATE_LIMIT_MAX: ${API_RATE_LIMIT_MAX:-120}
+      API_RATE_LIMIT_EXPENSIVE_MAX: ${API_RATE_LIMIT_EXPENSIVE_MAX:-10}
+      OPEN_SEMRUSH_DATA_DIR: /app/data
     volumes:
       - open-semrush-data:/app/data
 volumes:
