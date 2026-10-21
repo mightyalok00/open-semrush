@@ -24,7 +24,7 @@ jobs:
       - name: Test with coverage report
         run: npm run test:coverage | tee coverage-report.txt
       - name: Run reproducible microbenchmarks
-        run: npm run benchmark | tee benchmark-results.json
+        run: node scripts/benchmark.mjs | tee benchmark-results.json
       - name: Upload coverage and benchmark evidence
         if: always()
         uses: actions/upload-artifact@v4
