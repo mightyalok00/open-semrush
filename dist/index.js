@@ -9,3 +9,4 @@ export * from './storage.js';
 export * from './url-safety.js';
 export * from './search-console.js';
 export * from './ml.js';
+export * from './rank-tracker.js';

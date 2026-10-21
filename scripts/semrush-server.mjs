@@ -45,10 +45,18 @@ const {
   compareMultiCompetitorGap,
   assertPublicHttpUrl,
   fetchSearchConsoleReport,
+  listSearchConsoleSites,
+  fetchRealKeywordResearch,
   getAiEngineStatus,
   predictCtrPowerLaw,
   calculateTrafficForecast,
   classifySearchIntentProbabilities,
+  addTrackedKeyword,
+  removeTrackedKeyword,
+  getTrackedKeywords,
+  runScheduledRankCheck,
+  getRankTrackingOverview,
+  getRankHistoryForKeyword,
 } = semrushModule;
 
 // Resolve public assets directory
@@ -211,29 +219,95 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
-    // API Route: Keyword Magic
+    // API Route: Keyword Magic (Heuristic / Statistical)
     if (pathname === '/api/keyword' && req.method === 'GET') {
       const query = reqUrl.searchParams.get('q') || 'seo tools';
       const metrics = analyzeKeyword(query);
       const variations = generateKeywordVariations(query);
-      sendJson(res, 200, { metrics, variations, dataProvenance: { type: 'modeled', verified: false, note: 'Search volume, difficulty, CPC and seasonality are deterministic illustrative estimates, not provider data.' } });
+      sendJson(res, 200, {
+        metrics,
+        variations,
+        provenance: metrics.provenance,
+        dataProvenance: {
+          type: 'modeled',
+          verified: false,
+          note: 'Search volume, difficulty, CPC and seasonality are deterministic illustrative estimates, not provider data.',
+        },
+      });
       return;
     }
 
+    // API Route: Real Keyword Research via Legitimate Data Providers (Google Suggest & DataForSEO)
+    if (pathname === '/api/keywords/real' && req.method === 'GET') {
+      const q = reqUrl.searchParams.get('q') || 'seo tools';
+      const provider = reqUrl.searchParams.get('provider') || 'auto';
+      const country = reqUrl.searchParams.get('country') || 'us';
+      try {
+        const report = await fetchRealKeywordResearch({ query: q, provider, country });
+        sendJson(res, 200, report);
+      } catch (error) {
+        sendJson(res, 500, { error: error instanceof Error ? error.message : 'Failed to fetch real keyword research' });
+      }
+      return;
+    }
 
+    // API Route: Google Search Console Properties List
+    if (pathname === '/api/search-console/sites' && req.method === 'GET') {
+      const configured = Boolean(process.env.GOOGLE_SEARCH_CONSOLE_ACCESS_TOKEN ||
+        (process.env.GOOGLE_OAUTH_CLIENT_ID && process.env.GOOGLE_OAUTH_CLIENT_SECRET && process.env.GOOGLE_OAUTH_REFRESH_TOKEN));
+      if (!configured) {
+        sendJson(res, 503, { error: 'Google Search Console is not configured. Add OAuth refresh-token credentials to .env.' });
+        return;
+      }
+      try {
+        const sites = await listSearchConsoleSites({
+          accessToken: process.env.GOOGLE_SEARCH_CONSOLE_ACCESS_TOKEN,
+          clientId: process.env.GOOGLE_OAUTH_CLIENT_ID,
+          clientSecret: process.env.GOOGLE_OAUTH_CLIENT_SECRET,
+          refreshToken: process.env.GOOGLE_OAUTH_REFRESH_TOKEN,
+        });
+        sendJson(res, 200, { sites, verified: true });
+      } catch (error) {
+        sendJson(res, 502, { error: error instanceof Error ? error.message : 'Failed to list Search Console properties.' });
+      }
+      return;
+    }
+
+    // API Route: Google Search Console Performance & Intelligence
     if (pathname === '/api/search-console' && req.method === 'GET') {
       const siteUrl = reqUrl.searchParams.get('siteUrl') || process.env.GOOGLE_SEARCH_CONSOLE_SITE_URL || '';
       const startDate = reqUrl.searchParams.get('startDate') || '';
       const endDate = reqUrl.searchParams.get('endDate') || '';
       const query = reqUrl.searchParams.get('query') || undefined;
+      const dimensionsParam = reqUrl.searchParams.get('dimensions');
+      const dimensions = dimensionsParam ? dimensionsParam.split(',').map(s => s.trim()).filter(Boolean) : undefined;
+      const pageFilter = reqUrl.searchParams.get('page') || undefined;
+      const countryFilter = reqUrl.searchParams.get('country') || undefined;
+      const deviceFilter = reqUrl.searchParams.get('device') || undefined;
+      const includeIntelligence = reqUrl.searchParams.get('intelligence') !== 'false';
+
       const configured = Boolean(process.env.GOOGLE_SEARCH_CONSOLE_ACCESS_TOKEN ||
         (process.env.GOOGLE_OAUTH_CLIENT_ID && process.env.GOOGLE_OAUTH_CLIENT_SECRET && process.env.GOOGLE_OAUTH_REFRESH_TOKEN));
-      if (!configured) { sendJson(res, 503, { error: 'Google Search Console is not configured. Add OAuth refresh-token credentials to .env.' }); return; }
+      if (!configured) {
+        sendJson(res, 503, { error: 'Google Search Console is not configured. Add OAuth refresh-token credentials to .env.' });
+        return;
+      }
       try {
-        const report = await fetchSearchConsoleReport({ siteUrl, startDate, endDate, query,
+        const report = await fetchSearchConsoleReport({
+          siteUrl,
+          startDate,
+          endDate,
+          query,
+          dimensions,
+          pageFilter,
+          countryFilter,
+          deviceFilter,
+          includeIntelligence,
           accessToken: process.env.GOOGLE_SEARCH_CONSOLE_ACCESS_TOKEN,
-          clientId: process.env.GOOGLE_OAUTH_CLIENT_ID, clientSecret: process.env.GOOGLE_OAUTH_CLIENT_SECRET,
-          refreshToken: process.env.GOOGLE_OAUTH_REFRESH_TOKEN });
+          clientId: process.env.GOOGLE_OAUTH_CLIENT_ID,
+          clientSecret: process.env.GOOGLE_OAUTH_CLIENT_SECRET,
+          refreshToken: process.env.GOOGLE_OAUTH_REFRESH_TOKEN,
+        });
         sendJson(res, 200, report);
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Search Console request failed.';
@@ -403,6 +477,75 @@ const server = http.createServer(async (req, res) => {
       const domain = reqUrl.searchParams.get('domain') || 'github.com';
       const profile = generateBacklinkReport(domain);
       sendJson(res, 200, { ...profile, dataProvenance: { type: 'synthetic', verified: false, note: 'Backlink counts, sources and toxicity are generated examples, not observed link data.' } });
+      return;
+    }
+
+    // API Route: Rank Tracker Overview
+    if (pathname === '/api/rank-tracker/overview' && req.method === 'GET') {
+      const domain = reqUrl.searchParams.get('domain') || 'github.com';
+      const overview = getRankTrackingOverview(domain);
+      sendJson(res, 200, overview);
+      return;
+    }
+
+    // API Route: Rank Tracker Keywords List
+    if (pathname === '/api/rank-tracker/keywords' && req.method === 'GET') {
+      const domain = reqUrl.searchParams.get('domain') || 'github.com';
+      const keywords = getTrackedKeywords(domain);
+      sendJson(res, 200, { domain, keywords });
+      return;
+    }
+
+    // API Route: Add Tracked Keyword
+    if (pathname === '/api/rank-tracker/keywords' && req.method === 'POST') {
+      const body = await parseJsonBody(req);
+      if (!body.domain || !body.keyword) {
+        sendJson(res, 400, { error: 'domain and keyword are required' });
+        return;
+      }
+      const item = addTrackedKeyword(body.domain, body.keyword, {
+        targetUrl: body.targetUrl,
+        tags: Array.isArray(body.tags) ? body.tags : [],
+      });
+      sendJson(res, 201, item);
+      return;
+    }
+
+    // API Route: Delete Tracked Keyword
+    if (pathname === '/api/rank-tracker/keywords' && req.method === 'DELETE') {
+      const body = await parseJsonBody(req);
+      if (!body.domain || !body.keywordId) {
+        sendJson(res, 400, { error: 'domain and keywordId are required' });
+        return;
+      }
+      const ok = removeTrackedKeyword(body.domain, body.keywordId);
+      sendJson(res, ok ? 200 : 404, { success: ok });
+      return;
+    }
+
+    // API Route: Run Scheduled Rank Check
+    if (pathname === '/api/rank-tracker/check' && req.method === 'POST') {
+      const body = await parseJsonBody(req);
+      const domain = body.domain;
+      if (!domain) {
+        sendJson(res, 400, { error: 'domain is required' });
+        return;
+      }
+      const snapshots = await runScheduledRankCheck(domain);
+      const overview = getRankTrackingOverview(domain);
+      sendJson(res, 200, { message: `Completed rank check for ${snapshots.length} keywords`, snapshots, overview });
+      return;
+    }
+
+    // API Route: Rank Snapshot History for Keyword
+    if (pathname === '/api/rank-tracker/history' && req.method === 'GET') {
+      const keywordId = reqUrl.searchParams.get('keywordId');
+      if (!keywordId) {
+        sendJson(res, 400, { error: 'keywordId is required' });
+        return;
+      }
+      const history = getRankHistoryForKeyword(keywordId);
+      sendJson(res, 200, { keywordId, history });
       return;
     }
 

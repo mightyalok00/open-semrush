@@ -11,6 +11,25 @@ export interface SeoIssue {
   readonly recommendation: string;
 }
 
+/**
+ * Data provenance classification hierarchy to distinguish verified telemetry from estimates.
+ */
+export type DataProvenanceTier =
+  | 'verified_provider'     // Direct verified telemetry (e.g. Google Search Console API)
+  | 'empirical_observation' // Active crawl observation (HTTP status, headers, HTML markup)
+  | 'statistical_model'    // Calibrated mathematical regressions (CTR power law, 95% traffic CI, Softmax intent)
+  | 'provider_api'         // Third-party data provider (DataForSEO, Google Suggest, SerpApi)
+  | 'synthetic_estimate';  // Heuristic / illustrative simulations (when no external provider is connected)
+
+export interface ProvenanceMetadata {
+  readonly tier: DataProvenanceTier;
+  readonly isFactual: boolean;
+  readonly dataSource: string;
+  readonly methodology: string;
+  readonly confidence: 'exact' | 'high' | 'modeled' | 'illustrative';
+  readonly warning?: string;
+}
+
 export interface PageAuditResult {
   readonly url: string;
   readonly statusCode: number;
@@ -37,6 +56,7 @@ export interface PageAuditResult {
     readonly xContentTypeOptions: boolean;
   };
   readonly issues: readonly SeoIssue[];
+  readonly provenance?: ProvenanceMetadata;
 }
 
 export interface SiteAuditReport {
@@ -51,6 +71,7 @@ export interface SiteAuditReport {
   readonly discoveredSitemapUrlsCount: number;
   readonly pages: readonly PageAuditResult[];
   readonly crawlDurationMs: number;
+  readonly provenance?: ProvenanceMetadata;
 }
 
 export type SearchIntent = 'Informational' | 'Navigational' | 'Commercial' | 'Transactional';
@@ -85,6 +106,7 @@ export interface KeywordMetrics {
   readonly seasonalityTrend: readonly number[]; // 12 months relative interest (0 - 100)
   readonly intentDistribution?: IntentProbabilityDistribution;
   readonly trafficForecast?: TrafficForecastInterval;
+  readonly provenance?: ProvenanceMetadata;
 }
 
 export interface SerpRankingItem {
@@ -110,6 +132,7 @@ export interface SerpReport {
   readonly device: 'desktop' | 'mobile';
   readonly features: SerpFeatureSummary;
   readonly rankings: readonly SerpRankingItem[];
+  readonly provenance?: ProvenanceMetadata;
 }
 
 export interface DomainKeywordRanking {
@@ -136,6 +159,7 @@ export interface DomainOverviewReport {
   readonly topOrganicKeywords: readonly DomainKeywordRanking[];
   readonly topCompetitors: readonly string[];
   readonly history24Months: readonly HistoricalTrafficMonth[];
+  readonly provenance?: ProvenanceMetadata;
 }
 
 export interface KeywordGapComparison {
@@ -171,6 +195,7 @@ export interface BacklinkProfileReport {
   };
   readonly topAnchors: readonly { readonly text: string; readonly count: number }[];
   readonly recentBacklinks: readonly BacklinkNode[];
+  readonly provenance?: ProvenanceMetadata;
 }
 
 export interface MultiCompetitorGapReport {
@@ -185,6 +210,7 @@ export interface MultiCompetitorGapReport {
     readonly bestDomain: string | null;
   }[];
   readonly sharedOpportunities: readonly string[];
+  readonly provenance?: ProvenanceMetadata;
 }
 
 export interface LiveSerpResult {
@@ -212,6 +238,7 @@ export interface LiveSerpResult {
     readonly estimatedCtr: number;
     readonly authorityScore: number;
   }[];
+  readonly provenance?: ProvenanceMetadata;
 }
 
 export interface AiFixRecommendation {
@@ -241,4 +268,162 @@ export interface TrackedProjectRecord {
   readonly createdAt: string;
   readonly lastAuditScore: number;
   readonly trackedKeywords: readonly string[];
+}
+
+/* =========================================================================
+ * Google Search Console Intelligence Types
+ * ========================================================================= */
+
+export interface SearchConsoleRow {
+  readonly query?: string;
+  readonly page?: string;
+  readonly device?: string;
+  readonly country?: string;
+  readonly date?: string;
+  readonly clicks: number;
+  readonly impressions: number;
+  readonly ctr: number;
+  readonly position: number;
+}
+
+export interface StrikingDistanceQuery {
+  readonly query: string;
+  readonly impressions: number;
+  readonly clicks: number;
+  readonly ctr: number;
+  readonly position: number;
+  readonly page?: string;
+  readonly opportunityScore: number;
+}
+
+export interface CannibalizationIssue {
+  readonly query: string;
+  readonly competingPages: readonly {
+    readonly page: string;
+    readonly clicks: number;
+    readonly impressions: number;
+    readonly averagePosition: number;
+  }[];
+  readonly totalClicks: number;
+  readonly totalImpressions: number;
+}
+
+export interface CtrOpportunity {
+  readonly query: string;
+  readonly page?: string;
+  readonly impressions: number;
+  readonly actualCtr: number;
+  readonly expectedCtr: number;
+  readonly ctrGap: number;
+  readonly potentialExtraClicks: number;
+}
+
+export interface SearchConsoleIntelligence {
+  readonly strikingDistanceQueries: readonly StrikingDistanceQuery[];
+  readonly cannibalizationIssues: readonly CannibalizationIssue[];
+  readonly ctrOpportunities: readonly CtrOpportunity[];
+}
+
+export interface SearchConsoleSite {
+  readonly siteUrl: string;
+  readonly permissionLevel: string;
+}
+
+export interface SearchConsoleReport {
+  readonly provider: 'google-search-console';
+  readonly verified: true;
+  readonly siteUrl: string;
+  readonly startDate: string;
+  readonly endDate: string;
+  readonly dimensions?: readonly string[];
+  readonly rows: readonly SearchConsoleRow[];
+  readonly totals: {
+    readonly clicks: number;
+    readonly impressions: number;
+    readonly ctr: number;
+    readonly averagePosition: number;
+  };
+  readonly intelligence?: SearchConsoleIntelligence;
+  readonly provenance: ProvenanceMetadata;
+}
+
+/* =========================================================================
+ * Real Keyword Research & Provider Types
+ * ========================================================================= */
+
+export interface RealKeywordSuggestion {
+  readonly keyword: string;
+  readonly source: 'google-suggest' | 'gsc-queries' | 'dataforseo' | 'heuristic';
+  readonly searchVolume?: number;
+  readonly cpcUsd?: number;
+  readonly keywordDifficulty?: number;
+  readonly intent: SearchIntent;
+  readonly category: 'question' | 'comparison' | 'long-tail' | 'autocomplete';
+}
+
+export interface RealKeywordResearchReport {
+  readonly seedKeyword: string;
+  readonly provider: string;
+  readonly suggestions: readonly RealKeywordSuggestion[];
+  readonly totalSuggestions: number;
+  readonly provenance: ProvenanceMetadata;
+}
+
+/* =========================================================================
+ * Scheduled Rank Tracking Types
+ * ========================================================================= */
+
+export interface TrackedKeywordItem {
+  readonly id: string;
+  readonly domain: string;
+  readonly keyword: string;
+  readonly targetUrl?: string;
+  readonly tags: readonly string[];
+  readonly active: boolean;
+  readonly createdAt: string;
+  readonly latestPosition?: number | null;
+  readonly previousPosition?: number | null;
+  readonly positionDelta?: number;
+  readonly lastCheckedAt?: string;
+}
+
+export interface RankSnapshotRecord {
+  readonly id: string;
+  readonly keywordId: string;
+  readonly domain: string;
+  readonly keyword: string;
+  readonly timestamp: string;
+  readonly position: number | null; // null if unranked (not in top 100)
+  readonly foundUrl?: string;
+  readonly pageTitle?: string;
+  readonly serpFeatures?: readonly string[];
+}
+
+export interface RankTrackingOverview {
+  readonly domain: string;
+  readonly totalTrackedKeywords: number;
+  readonly averagePosition: number;
+  readonly visibilityScore: number; // 0 to 100 weighted visibility
+  readonly distribution: {
+    readonly top3: number;
+    readonly top10: number;
+    readonly top20: number;
+    readonly top100: number;
+    readonly unranked: number;
+  };
+  readonly winners: readonly {
+    readonly keyword: string;
+    readonly currentPosition: number;
+    readonly previousPosition: number;
+    readonly delta: number;
+  }[];
+  readonly losers: readonly {
+    readonly keyword: string;
+    readonly currentPosition: number;
+    readonly previousPosition: number;
+    readonly delta: number;
+  }[];
+  readonly keywords: readonly TrackedKeywordItem[];
+  readonly lastUpdated: string;
+  readonly provenance: ProvenanceMetadata;
 }

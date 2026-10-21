@@ -1,4 +1,4 @@
-import type { BacklinkNode, BacklinkProfileReport } from './types.js';
+import type { BacklinkNode, BacklinkProfileReport, ProvenanceMetadata } from './types.js';
 
 export interface GraphEdge {
   readonly from: string;
@@ -163,6 +163,15 @@ export function generateBacklinkReport(targetDomain: string): BacklinkProfileRep
   const toxicityScore = Math.min(100, Math.max(1, Math.round(baseToxicity + overOptimizationPenalty + lowAuthorityPenalty * 0.5)));
   const toxicLinksCount = Math.round(totalBacklinks * (toxicityScore / 400));
 
+  const provenance: ProvenanceMetadata = {
+    tier: 'synthetic_estimate',
+    isFactual: false,
+    dataSource: 'Synthetic Link Graph & Heuristic Graph Simulation',
+    methodology: 'Iterative PageRank simulation over deterministic domain hash seed',
+    confidence: 'illustrative',
+    warning: 'Synthetic preview data. No commercial third-party backlink provider (Ahrefs/Majestic/Common Crawl) is currently connected.',
+  };
+
   return {
     targetDomain: cleanDomain,
     authorityScore,
@@ -174,5 +183,6 @@ export function generateBacklinkReport(targetDomain: string): BacklinkProfileRep
     anchorDistribution,
     topAnchors,
     recentBacklinks,
+    provenance,
   };
 }

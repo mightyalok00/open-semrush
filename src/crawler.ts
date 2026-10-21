@@ -1,4 +1,4 @@
-import type { PageAuditResult, SeoIssue, SiteAuditReport } from './types.js';
+import type { PageAuditResult, ProvenanceMetadata, SeoIssue, SiteAuditReport } from './types.js';
 import { assertPublicHttpUrl, safeFetch } from './url-safety.js';
 
 export interface CrawlerOptions {
@@ -13,6 +13,22 @@ export interface CrawlerOptions {
 }
 
 const DEFAULT_USER_AGENT = 'Mozilla/5.0 (compatible; REA-SemrushBot/2.0; +https://rea.tools)';
+
+const PAGE_AUDIT_PROVENANCE: ProvenanceMetadata = {
+  tier: 'empirical_observation',
+  isFactual: true,
+  dataSource: 'Active HTTP crawl and DOM inspection',
+  methodology: 'Direct socket fetch with IP pinning, response header parsing, and HTML semantic extraction',
+  confidence: 'exact',
+};
+
+const SITE_AUDIT_PROVENANCE: ProvenanceMetadata = {
+  tier: 'empirical_observation',
+  isFactual: true,
+  dataSource: 'Multi-page HTTP crawl session with robots.txt & sitemap discovery',
+  methodology: 'Bounded asynchronous crawling, link graph traversal, and heuristic health score penalty weighting',
+  confidence: 'high',
+};
 
 /**
  * Checks for robots.txt and extracts sitemap directives.
@@ -392,6 +408,7 @@ export async function auditSinglePage(
       compression,
       securityHeaders,
       issues,
+      provenance: PAGE_AUDIT_PROVENANCE,
     };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
@@ -423,6 +440,7 @@ export async function auditSinglePage(
       compression: null,
       securityHeaders: { hsts: false, csp: false, xFrameOptions: false, xContentTypeOptions: false },
       issues,
+      provenance: PAGE_AUDIT_PROVENANCE,
     };
   }
 }
@@ -537,5 +555,6 @@ export async function runSiteAudit(
     discoveredSitemapUrlsCount: discoveredSitemapUrls.length,
     pages: pageResults,
     crawlDurationMs: Date.now() - startTime,
+    provenance: SITE_AUDIT_PROVENANCE,
   };
 }

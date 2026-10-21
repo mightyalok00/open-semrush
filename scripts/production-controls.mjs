@@ -52,12 +52,13 @@ export class MemoryRateLimiterStore {
 export const defaultRateLimiterStore = new MemoryRateLimiterStore(MAX_TRACKED_CLIENTS, WINDOW_MS);
 
 const protectedPath = (method, pathname) =>
-  (method === 'POST' && (pathname === '/api/audit' || pathname.startsWith('/api/ai/'))) ||
-  (method === 'GET' && ['/api/search-console', '/api/projects', '/api/history'].includes(pathname));
+  (method === 'POST' && (pathname === '/api/audit' || pathname.startsWith('/api/ai/') || pathname.startsWith('/api/rank-tracker/'))) ||
+  (method === 'DELETE' && pathname.startsWith('/api/rank-tracker/')) ||
+  (method === 'GET' && (['/api/projects', '/api/history'].includes(pathname) || pathname.startsWith('/api/search-console') || pathname.startsWith('/api/rank-tracker')));
 
 const expensivePath = (method, pathname) =>
-  (method === 'POST' && (pathname === '/api/audit' || pathname.startsWith('/api/ai/'))) ||
-  (method === 'GET' && pathname === '/api/search-console');
+  (method === 'POST' && (pathname === '/api/audit' || pathname.startsWith('/api/ai/') || pathname === '/api/rank-tracker/check')) ||
+  (method === 'GET' && pathname.startsWith('/api/search-console'));
 
 function equalSecret(provided, expected) {
   if (!provided || !expected) return false;

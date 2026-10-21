@@ -2,7 +2,32 @@ import { calculateCtrByPosition } from './serp.js';
 import { analyzeKeyword } from './keywords.js';
 import { analyzeDomainWithAi } from './ai.js';
 import { safeFetch } from './url-safety.js';
-import type { DomainKeywordRanking, DomainOverviewReport, HistoricalTrafficMonth, KeywordGapComparison, MultiCompetitorGapReport } from './types.js';
+import type {
+  DomainKeywordRanking,
+  DomainOverviewReport,
+  HistoricalTrafficMonth,
+  KeywordGapComparison,
+  MultiCompetitorGapReport,
+  ProvenanceMetadata,
+} from './types.js';
+
+const DOMAIN_OVERVIEW_PROVENANCE: ProvenanceMetadata = {
+  tier: 'synthetic_estimate',
+  isFactual: false,
+  dataSource: 'Modeled Domain Intelligence Engine',
+  methodology: 'Simulated rank distribution and deterministic traffic curve based on domain authority hash',
+  confidence: 'illustrative',
+  warning: 'Modeled estimate. For factual search performance telemetry, connect Google Search Console.',
+};
+
+const GAP_MATRIX_PROVENANCE: ProvenanceMetadata = {
+  tier: 'synthetic_estimate',
+  isFactual: false,
+  dataSource: 'Comparative Domain Overlap Model',
+  methodology: 'Multi-domain intersection of modeled keyword portfolios',
+  confidence: 'illustrative',
+  warning: 'Modeled comparative estimates. Requires live keyword data provider for factual competitive audits.',
+};
 
 interface CuratedDomainData {
   readonly authorityScore: number;
@@ -350,6 +375,7 @@ export async function generateDomainOverview(
     topOrganicKeywords,
     topCompetitors,
     history24Months: generate24MonthTrendline(estimatedMonthlyOrganicTraffic, totalRankedKeywords, positiveHash),
+    provenance: DOMAIN_OVERVIEW_PROVENANCE,
   };
 }
 
@@ -480,5 +506,6 @@ export async function compareMultiCompetitorGap(
     allKeywordsCount: matrixRows.length,
     matrix: matrixRows,
     sharedOpportunities,
+    provenance: GAP_MATRIX_PROVENANCE,
   };
 }
