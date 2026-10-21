@@ -70,7 +70,7 @@
     <!-- Main Content Area -->
     <main class="main-viewport">
       <aside role="note" aria-label="Data quality notice" style="margin: 12px 24px; padding: 12px 16px; border: 1px solid #d97706; border-radius: 10px; background: #fff7ed; color: #7c2d12; font-size: 13px; line-height: 1.5;">
-        <strong>Data-quality notice:</strong> Keyword volume, traffic history, authority and backlink figures are modeled or synthetic. SERP previews may be AI-generated or fallback examples, not verified live Google results. Only technical page-audit findings come from fetching the target page.
+        <strong>Data-quality notice:</strong> Keyword volume, traffic history, authority and backlink figures are modeled or synthetic. SERP previews may be AI-generated or fallback examples, not verified live Google results. Technical audits inspect fetched pages; the Search Console tab shows provider-backed data only when configured.
       </aside>
       <!-- Top Navigation / Search Header -->
       <header class="top-bar">
@@ -172,11 +172,11 @@
             <div class="panel-card" style="margin-bottom: 24px;">
               <div class="panel-header" style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px;">
                 <div>
-                  <h3>📈 24-Month Historical Organic Traffic Trajectory</h3>
+                  <h3>📈 Illustrative 24-Month Traffic Trajectory (Modeled)</h3>
                   <p style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 4px;">Long-term search visibility development, keyword acquisition velocity, and Google algorithm impact pins.</p>
                 </div>
                 <div class="serp-features-row" style="display: flex; gap: 8px; flex-wrap: wrap;">
-                  <span class="kpi-badge badge-growth">📍 Google Core Updates Pinned</span>
+                  <span class="kpi-badge badge-growth">Illustrative update markers (not correlation)</span>
                 </div>
               </div>
               <div id="history24MonthChart" style="min-height: 240px; margin-top: 16px; position: relative;"></div>
@@ -545,7 +545,7 @@
 
           <div id="backlinkLoading" class="loader-overlay hidden">
             <div class="spinner"></div>
-            <p>Traversing link graph, resolving edge attributes, and calculating Authority Score...</p>
+            <p>Loading synthetic backlink examples; no live backlink index is queried...</p>
           </div>
 
           <div id="backlinkResults" class="results-container">
@@ -559,7 +559,7 @@
                 <div class="kpi-progress">
                   <div id="blAuthorityBar" class="kpi-progress-fill" style="width: 68%;"></div>
                 </div>
-                <span class="kpi-sub">Graph PageRank and referral trust</span>
+                <span class="kpi-sub">Illustrative link-graph heuristic (not a live PageRank score)</span>
               </div>
 
               <div class="kpi-card">
@@ -587,7 +587,7 @@
                 <div class="kpi-progress">
                   <div id="blDofollowBar" class="kpi-progress-fill" style="width: 74%;"></div>
                 </div>
-                <span class="kpi-sub">Healthy link profile distribution</span>
+                <span class="kpi-sub">Synthetic example distribution</span>
               </div>
 
               <div class="kpi-card">
