@@ -11,14 +11,14 @@
   },
   "scripts": {
     "build": "tsc",
-    "start": "node scripts/semrush-server.mjs",
-    "dev": "node scripts/semrush-server.mjs",
+    "start": "npm run build && node scripts/semrush-server.mjs",
+    "dev": "npm run build && node scripts/semrush-server.mjs",
     "cli": "node scripts/semrush.mjs",
     "docker:build": "docker compose build",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
     "test": "npm run build && node --test",
-    "test:coverage": "node --experimental-test-coverage --test",
+    "test:coverage": "npm run build && node --experimental-test-coverage --test",
     "benchmark": "npm run build && node scripts/benchmark.mjs"
   },
   "keywords": [
