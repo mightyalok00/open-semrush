@@ -1,3 +1,4 @@
+import { safeFetch } from './url-safety.js';
 import { calculateCtrByPosition } from './serp.js';
 import { analyzeKeyword } from './keywords.js';
 import { analyzeDomainWithAi } from './ai.js';
@@ -111,7 +112,7 @@ async function inspectLiveDomainTopics(domain) {
     try {
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 3500);
-        const res = await fetch(`https://${domain}`, {
+        const res = await safeFetch(`https://${domain}`, {
             headers: { 'User-Agent': 'Mozilla/5.0 (compatible; REA-Bot/1.0)' },
             signal: controller.signal,
         });
