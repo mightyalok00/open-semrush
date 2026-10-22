@@ -8,8 +8,32 @@ export interface AiDomainAnalysis {
   readonly topOrganicKeywords: readonly DomainKeywordRanking[];
 }
 
+import fs from 'node:fs';
+import path from 'node:path';
+
 // In-memory set of API keys that failed authentication (401/403) to avoid repeated failed network calls
 const invalidKeys = new Set<string>();
+
+function loadProjectEnv(): Record<string, string> {
+  const result: Record<string, string> = {};
+  const envPath = path.resolve(process.cwd(), '.env');
+  if (fs.existsSync(envPath)) {
+    try {
+      const content = fs.readFileSync(envPath, 'utf8');
+      for (const line of content.split(/\r?\n/)) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith('#')) continue;
+        const eqIdx = trimmed.indexOf('=');
+        if (eqIdx > 0) {
+          const key = trimmed.slice(0, eqIdx).trim();
+          const val = trimmed.slice(eqIdx + 1).trim();
+          result[key] = val;
+        }
+      }
+    } catch {}
+  }
+  return result;
+}
 
 export const OPENROUTER_FREE_MODELS: readonly string[] = [
   'minimax/minimax-m3.1-flash:free',
@@ -50,22 +74,21 @@ export async function queryAiJson<T>(
     return null;
   }
 
-  // Load .env explicitly if available to pick up project configuration
-  try {
-    process.loadEnvFile();
-  } catch {}
-
+  const projectEnv = loadProjectEnv();
   const openRouterKey = preferredApiKey?.startsWith('sk-or-')
     ? preferredApiKey.trim()
-    : process.env.OPENROUTER_API_KEY?.trim();
+    : (projectEnv.OPENROUTER_API_KEY?.trim() || process.env.OPENROUTER_API_KEY?.trim());
   const geminiKey = preferredApiKey && !preferredApiKey.startsWith('sk-or-')
     ? preferredApiKey.trim()
-    : process.env.GEMINI_API_KEY?.trim();
+    : (projectEnv.GEMINI_API_KEY?.trim() || process.env.GEMINI_API_KEY?.trim());
+
+  const configuredOpenRouterModel = projectEnv.OPENROUTER_MODEL || process.env.OPENROUTER_MODEL;
+  const configuredGeminiModel = projectEnv.GEMINI_MODEL || process.env.GEMINI_MODEL;
 
   // 1. Try OpenRouter first across active and free models
   if (openRouterKey && !invalidKeys.has(openRouterKey)) {
-    const candidateModels = process.env.OPENROUTER_MODEL
-      ? [process.env.OPENROUTER_MODEL, ...OPENROUTER_FREE_MODELS.filter(m => m !== process.env.OPENROUTER_MODEL)]
+    const candidateModels = configuredOpenRouterModel
+      ? [configuredOpenRouterModel, ...OPENROUTER_FREE_MODELS.filter(m => m !== configuredOpenRouterModel)]
       : OPENROUTER_FREE_MODELS;
 
     for (const model of candidateModels) {
@@ -126,8 +149,8 @@ export async function queryAiJson<T>(
 
   // 2. Direct Google Gemini API fallback across working models
   if (geminiKey && !invalidKeys.has(geminiKey)) {
-    const candidateModels = process.env.GEMINI_MODEL
-      ? [process.env.GEMINI_MODEL, ...GEMINI_WORKING_MODELS.filter(m => m !== process.env.GEMINI_MODEL)]
+    const candidateModels = configuredGeminiModel
+      ? [configuredGeminiModel, ...GEMINI_WORKING_MODELS.filter(m => m !== configuredGeminiModel)]
       : GEMINI_WORKING_MODELS;
 
     for (const model of candidateModels) {
