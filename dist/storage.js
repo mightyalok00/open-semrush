@@ -9,13 +9,54 @@ const MAX_HISTORY_ENTRIES = Number.isSafeInteger(configuredMaxHistory) && config
     ? configuredMaxHistory
     : 50_000;
 function emptyDb() {
-    return { projects: [], history: [] };
+    return { projects: [], history: [], forecasts: [] };
 }
 function isSafeIntegerNonNegative(val) {
     return typeof val === 'number' && Number.isSafeInteger(val) && val >= 0;
 }
 function isValidScore(val) {
     return typeof val === 'number' && Number.isSafeInteger(val) && val >= 0 && val <= 100;
+}
+function validateForecastRecord(f) {
+    if (!f || typeof f !== 'object' || Array.isArray(f)) {
+        throw new Error('Stored forecast record must be an object.');
+    }
+    const r = f;
+    if (typeof r.id !== 'string' || !r.id.trim())
+        throw new Error('Forecast record id must be a string.');
+    if (typeof r.domain !== 'string' || !r.domain.trim())
+        throw new Error('Forecast record domain must be a string.');
+    if (typeof r.modelVersion !== 'string')
+        throw new Error('Forecast record modelVersion must be a string.');
+    if (typeof r.generatedAt !== 'string')
+        throw new Error('Forecast record generatedAt must be a string.');
+    if (r.horizonDays !== 30 && r.horizonDays !== 90 && r.horizonDays !== 180) {
+        throw new Error('Forecast record horizonDays must be 30, 90, or 180.');
+    }
+    if (typeof r.targetEndDate !== 'string')
+        throw new Error('Forecast record targetEndDate must be a string.');
+    if (typeof r.expectedTotalClicks !== 'number' || Number.isNaN(r.expectedTotalClicks)) {
+        throw new Error('Forecast record expectedTotalClicks must be a number.');
+    }
+    if (typeof r.lower95TotalClicks !== 'number' || Number.isNaN(r.lower95TotalClicks)) {
+        throw new Error('Forecast record lower95TotalClicks must be a number.');
+    }
+    if (typeof r.upper95TotalClicks !== 'number' || Number.isNaN(r.upper95TotalClicks)) {
+        throw new Error('Forecast record upper95TotalClicks must be a number.');
+    }
+    return {
+        id: r.id.trim(),
+        domain: r.domain.trim().toLowerCase(),
+        modelVersion: r.modelVersion,
+        generatedAt: r.generatedAt,
+        horizonDays: r.horizonDays,
+        targetEndDate: r.targetEndDate,
+        expectedTotalClicks: r.expectedTotalClicks,
+        lower95TotalClicks: r.lower95TotalClicks,
+        upper95TotalClicks: r.upper95TotalClicks,
+        ...(typeof r.actualOutcomeClicks === 'number' ? { actualOutcomeClicks: r.actualOutcomeClicks } : {}),
+        ...(typeof r.evaluatedAt === 'string' ? { evaluatedAt: r.evaluatedAt } : {}),
+    };
 }
 function validateProject(p) {
     if (!p || typeof p !== 'object' || Array.isArray(p)) {
@@ -76,7 +117,10 @@ export function validateDb(value) {
     }
     const projects = candidate.projects.map(validateProject);
     const history = candidate.history.map(validateHistoryEntry);
-    return { projects, history };
+    const forecasts = Array.isArray(candidate.forecasts)
+        ? candidate.forecasts.map(validateForecastRecord)
+        : [];
+    return { projects, history, forecasts };
 }
 function ensureDbFile() {
     fs.mkdirSync(DATA_DIR, { recursive: true, mode: 0o700 });
@@ -221,6 +265,33 @@ export function restoreDb(backupPath) {
         historyCount: validated.history.length,
     };
 }
+/** Records a forecast in persistent storage. */
+export function recordForecast(record) {
+    const db = ensureDbFile();
+    if (!db.forecasts)
+        db.forecasts = [];
+    db.forecasts.push(record);
+    saveDb(db);
+}
+/** Retrieves forecasts for a domain. */
+export function getForecastsForDomain(domain) {
+    const clean = domain.toLowerCase().trim();
+    const db = ensureDbFile();
+    return (db.forecasts || []).filter(f => f.domain === clean).map(f => ({ ...f }));
+}
+/** Records an actual outcome for a previously stored forecast. */
+export function recordForecastOutcome(forecastId, actualOutcomeClicks) {
+    const db = ensureDbFile();
+    if (!db.forecasts)
+        return;
+    const match = db.forecasts.find(f => f.id === forecastId);
+    if (match) {
+        const mutable = match;
+        mutable.actualOutcomeClicks = actualOutcomeClicks;
+        mutable.evaluatedAt = new Date().toISOString();
+        saveDb(db);
+    }
+}
 /** Standard file-based JSON persistence engine conforming to StorageAdapter interface. */
 export class JsonFileStorageAdapter {
     name = 'json-file';
@@ -232,6 +303,15 @@ export class JsonFileStorageAdapter {
     }
     recordAuditInHistory(domain, healthScore, errors, warnings, notices) {
         recordAuditInHistory(domain, healthScore, errors, warnings, notices);
+    }
+    recordForecast(record) {
+        recordForecast(record);
+    }
+    getForecastsForDomain(domain) {
+        return getForecastsForDomain(domain);
+    }
+    recordForecastOutcome(forecastId, actualOutcomeClicks) {
+        recordForecastOutcome(forecastId, actualOutcomeClicks);
     }
     backup(destinationPath) {
         return backupDb(destinationPath);
@@ -282,6 +362,20 @@ export class SqliteStorageAdapter {
         notices INTEGER NOT NULL
       );
       CREATE INDEX IF NOT EXISTS idx_history_domain ON audit_history(domain);
+      CREATE TABLE IF NOT EXISTS forecasts (
+        id TEXT PRIMARY KEY,
+        domain TEXT NOT NULL,
+        model_version TEXT NOT NULL,
+        generated_at TEXT NOT NULL,
+        horizon_days INTEGER NOT NULL,
+        target_end_date TEXT NOT NULL,
+        expected_total_clicks REAL NOT NULL,
+        lower95_total_clicks REAL NOT NULL,
+        upper95_total_clicks REAL NOT NULL,
+        actual_outcome_clicks REAL,
+        evaluated_at TEXT
+      );
+      CREATE INDEX IF NOT EXISTS idx_forecasts_domain ON forecasts(domain);
     `);
     }
     getAllProjects() {
@@ -359,6 +453,52 @@ export class SqliteStorageAdapter {
     `);
         insert.run(entry.timestamp, entry.domain.toLowerCase().trim(), entry.healthScore, entry.errors, entry.warnings, entry.notices);
     }
+    recordForecast(record) {
+        const insert = this.db.prepare(`
+      INSERT INTO forecasts (
+        id, domain, model_version, generated_at, horizon_days,
+        target_end_date, expected_total_clicks, lower95_total_clicks, upper95_total_clicks,
+        actual_outcome_clicks, evaluated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET
+        actual_outcome_clicks = excluded.actual_outcome_clicks,
+        evaluated_at = excluded.evaluated_at;
+    `);
+        insert.run(record.id, record.domain.toLowerCase().trim(), record.modelVersion, record.generatedAt, record.horizonDays, record.targetEndDate, record.expectedTotalClicks, record.lower95TotalClicks, record.upper95TotalClicks, record.actualOutcomeClicks ?? null, record.evaluatedAt ?? null);
+    }
+    getForecastsForDomain(domain) {
+        const clean = domain.toLowerCase().trim();
+        const stmt = this.db.prepare(`
+      SELECT id, domain, model_version, generated_at, horizon_days, target_end_date,
+             expected_total_clicks, lower95_total_clicks, upper95_total_clicks,
+             actual_outcome_clicks, evaluated_at
+      FROM forecasts
+      WHERE domain = ?
+      ORDER BY generated_at DESC;
+    `);
+        const rows = stmt.all(clean);
+        return rows.map(r => ({
+            id: r.id,
+            domain: r.domain,
+            modelVersion: r.model_version,
+            generatedAt: r.generated_at,
+            horizonDays: r.horizon_days,
+            targetEndDate: r.target_end_date,
+            expectedTotalClicks: r.expected_total_clicks,
+            lower95TotalClicks: r.lower95_total_clicks,
+            upper95TotalClicks: r.upper95_total_clicks,
+            ...(r.actual_outcome_clicks !== null ? { actualOutcomeClicks: r.actual_outcome_clicks } : {}),
+            ...(r.evaluated_at !== null ? { evaluatedAt: r.evaluated_at } : {}),
+        }));
+    }
+    recordForecastOutcome(forecastId, actualOutcomeClicks) {
+        const stmt = this.db.prepare(`
+      UPDATE forecasts
+      SET actual_outcome_clicks = ?, evaluated_at = ?
+      WHERE id = ?;
+    `);
+        stmt.run(actualOutcomeClicks, new Date().toISOString(), forecastId);
+    }
     close() {
         try {
             this.db.close();
@@ -380,6 +520,9 @@ export function migrateJsonToSqlite(jsonDbPath = DB_FILE, sqliteDbPath = path.jo
         }
         for (const entry of parsed.history) {
             adapter.insertHistoryEntry(entry);
+        }
+        for (const forecast of parsed.forecasts || []) {
+            adapter.recordForecast(forecast);
         }
     }
     finally {

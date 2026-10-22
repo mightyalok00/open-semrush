@@ -39,6 +39,97 @@ export interface SemanticCluster {
 const CTR_POWER_LAW_ALPHA = 0.312;
 const CTR_POWER_LAW_BETA = 0.93;
 
+export interface CalibratedCtrModel {
+  readonly alpha: number;
+  readonly beta: number;
+  readonly rSquared?: number;
+  readonly sampleSize?: number;
+}
+
+/**
+ * Computes empirical CTR prediction using a site-calibrated or custom power-law model.
+ */
+export function predictCtrCalibrated(
+  position: number,
+  model: CalibratedCtrModel,
+  features?: {
+    readonly hasFeaturedSnippet?: boolean;
+    readonly hasPeopleAlsoAsk?: boolean;
+    readonly hasVideoCarousel?: boolean;
+    readonly hasKnowledgePanel?: boolean;
+    readonly hasAiOverview?: boolean;
+    readonly hasLocalPack?: boolean;
+  }
+): CtrPowerLawPrediction {
+  const safePos = Number.isFinite(position) ? Math.floor(position) : 0;
+  if (safePos <= 0) {
+    return {
+      position: safePos,
+      baseCtr: 0,
+      adjustedCtr: 0,
+      featureModifiersApplied: [],
+    };
+  }
+
+  const alpha = Number.isFinite(model.alpha) && model.alpha > 0 ? model.alpha : CTR_POWER_LAW_ALPHA;
+  const beta = Number.isFinite(model.beta) && model.beta > 0 ? model.beta : CTR_POWER_LAW_BETA;
+
+  const rawBaseCtr = alpha * Math.pow(safePos, -beta);
+  const baseCtr = Number(Math.max(0.0001, Math.min(0.95, rawBaseCtr)).toFixed(4));
+
+  let multiplier = 1.0;
+  const modifiersApplied: string[] = [];
+
+  if (features?.hasAiOverview) {
+    if (safePos === 1) {
+      multiplier *= 0.65;
+      modifiersApplied.push('AI Overview prominent placement (-35% at pos 1)');
+    } else if (safePos <= 3) {
+      multiplier *= 0.78;
+      modifiersApplied.push('AI Overview viewport displacement (-22% at pos 2-3)');
+    }
+  }
+
+  if (features?.hasLocalPack && safePos <= 3) {
+    multiplier *= 0.80;
+    modifiersApplied.push('Local 3-Pack map diversion (-20% for top 3)');
+  }
+
+  if (features?.hasFeaturedSnippet) {
+    if (safePos === 1) {
+      multiplier *= 0.72;
+      modifiersApplied.push('Featured Snippet cannibalization (-28% at pos 1)');
+    } else if (safePos === 2) {
+      multiplier *= 0.88;
+      modifiersApplied.push('Featured Snippet secondary dampening (-12% at pos 2)');
+    }
+  }
+
+  if (features?.hasVideoCarousel && safePos >= 3) {
+    multiplier *= 0.85;
+    modifiersApplied.push('Video Carousel visual diversion (-15% below pos 2)');
+  }
+
+  if (features?.hasKnowledgePanel && safePos >= 2) {
+    multiplier *= 0.90;
+    modifiersApplied.push('Knowledge Panel query satisfaction (-10%)');
+  }
+
+  if (features?.hasPeopleAlsoAsk && safePos >= 3 && safePos <= 6) {
+    multiplier *= 0.92;
+    modifiersApplied.push('PAA Accordion mid-page dampening (-8%)');
+  }
+
+  const adjustedCtr = Number(Math.max(0.0001, Math.min(0.95, baseCtr * multiplier)).toFixed(4));
+
+  return {
+    position: safePos,
+    baseCtr,
+    adjustedCtr,
+    featureModifiersApplied: modifiersApplied,
+  };
+}
+
 /**
  * Computes empirical CTR prediction for a given organic rank position with
  * SERP feature layout attenuation factors.
@@ -57,9 +148,10 @@ export function predictCtrPowerLaw(
     readonly hasLocalPack?: boolean;
   }
 ): CtrPowerLawPrediction {
-  if (position <= 0) {
+  const safePos = Number.isFinite(position) ? Math.floor(position) : 0;
+  if (safePos <= 0) {
     return {
-      position,
+      position: safePos,
       baseCtr: 0,
       adjustedCtr: 0,
       featureModifiersApplied: [],
@@ -67,7 +159,7 @@ export function predictCtrPowerLaw(
   }
 
   // Pure power-law model
-  const rawBaseCtr = CTR_POWER_LAW_ALPHA * Math.pow(position, -CTR_POWER_LAW_BETA);
+  const rawBaseCtr = CTR_POWER_LAW_ALPHA * Math.pow(safePos, -CTR_POWER_LAW_BETA);
   const baseCtr = Number(Math.max(0.0005, Math.min(0.35, rawBaseCtr)).toFixed(4));
 
   let multiplier = 1.0;

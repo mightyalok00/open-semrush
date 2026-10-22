@@ -11,4 +11,4 @@ export * from './search-console.js';
 export * from './ml.js';
 export * from './rank-tracker.js';
 export * from './nlp.js';
-
+export * from './forecast.js';

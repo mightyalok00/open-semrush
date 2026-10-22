@@ -355,6 +355,13 @@ export async function generateDomainOverview(
       shareOfVoice,
       organicKeywordsDistribution,
       competitorOverlap,
+      isSyntheticExample: true,
+      dataLimitations: [
+        'Curated calibration benchmark; not measured site analytics.',
+        'Simulated rank distribution and deterministic traffic curve based on catalog seed.',
+        'Connect Google Search Console for verified first-party impressions, clicks, and average position telemetry.',
+      ],
+      provenance: DOMAIN_OVERVIEW_PROVENANCE,
     };
   }
 
@@ -389,6 +396,13 @@ export async function generateDomainOverview(
         shareOfVoice: calculateShareOfVoice(aiResult.authorityScore, competitorOverlap.map(c => c.authorityScore)),
         organicKeywordsDistribution,
         competitorOverlap,
+        isSyntheticExample: true,
+        dataLimitations: [
+          'LLM-assisted generative estimate; not measured website traffic or first-party analytics.',
+          'Rankings and volumes are modeled approximations based on web crawl entities.',
+          'Connect Google Search Console for verified first-party impressions, clicks, and average position telemetry.',
+        ],
+        provenance: DOMAIN_OVERVIEW_PROVENANCE,
       };
     }
   }
@@ -480,6 +494,12 @@ export async function generateDomainOverview(
     shareOfVoice,
     organicKeywordsDistribution,
     competitorOverlap,
+    isSyntheticExample: true,
+    dataLimitations: [
+      'Heuristic approximation based on domain authority hash; not measured first-party analytics.',
+      'Rankings and volumes are modeled approximations derived without direct search console telemetry.',
+      'Connect Google Search Console for verified first-party impressions, clicks, and average position telemetry.',
+    ],
     provenance: DOMAIN_OVERVIEW_PROVENANCE,
   };
 }

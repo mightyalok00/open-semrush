@@ -77,6 +77,7 @@ const {
   addTrackedCompetitor,
   getTrackedCompetitors,
   getRankingAlerts,
+  generateTrafficForecast,
 } = semrushModule;
 
 // Resolve public assets directory
@@ -738,6 +739,27 @@ const server = http.createServer(async (req, res) => {
           confidence: 'exact',
         },
       });
+      return;
+    }
+
+    // API Route: SEO Traffic Forecasting & Rolling-Origin Backtesting
+    if (pathname === '/api/forecast' && req.method === 'POST') {
+      const body = await parseJsonBody(req);
+      const domain = typeof body.domain === 'string' ? body.domain.trim() : '';
+      if (!domain) {
+        sendJson(res, 400, { error: 'domain is required' });
+        return;
+      }
+
+      const observations = Array.isArray(body.observations) ? body.observations : [];
+      const options = {
+        minObservations: typeof body.minObservations === 'number' ? body.minObservations : 30,
+        minClicksThreshold: typeof body.minClicksThreshold === 'number' ? body.minClicksThreshold : 50,
+        backtestFolds: typeof body.backtestFolds === 'number' ? body.backtestFolds : 4,
+      };
+
+      const report = generateTrafficForecast(domain, observations, options);
+      sendJson(res, 200, report);
       return;
     }
 

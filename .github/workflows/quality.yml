@@ -98,7 +98,10 @@ jobs:
             const fs = require('fs');
             const report = fs.readFileSync('coverage-report.txt', 'utf8');
             const match = report.match(/all files\s+\|\s+([\d\.]+)/);
-            if (!match) process.exit(0);
+            if (!match) {
+              console.error('FAIL: Could not parse coverage output from coverage-report.txt');
+              process.exit(1);
+            }
             const cov = parseFloat(match[1]);
             console.log('Overall Line Coverage:', cov + '%');
             if (cov < 72.0) {

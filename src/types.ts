@@ -282,6 +282,8 @@ export interface DomainOverviewReport {
     readonly top100: number;
   };
   readonly competitorOverlap?: readonly CompetitorOverlapItem[];
+  readonly isSyntheticExample?: boolean;
+  readonly dataLimitations?: readonly string[];
   readonly provenance?: ProvenanceMetadata;
 }
 
@@ -624,4 +626,89 @@ export interface RankTrackingOverview {
   readonly alerts?: readonly RankingAlert[];
   readonly competitorComparisons?: readonly CompetitorRankComparisonItem[];
   readonly provenance: ProvenanceMetadata;
+}
+
+/* =========================================================================
+ * SEO Time-Series Forecasting & Rolling Backtest Evaluation Types
+ * ========================================================================= */
+
+export type ForecastHorizon = 30 | 90 | 180;
+export type ForecastStatus = 'completed' | 'insufficient_evidence' | 'stale';
+
+export interface DailyObservation {
+  readonly date: string; // YYYY-MM-DD
+  readonly clicks: number;
+  readonly impressions: number;
+  readonly averagePosition: number;
+  readonly ctr: number;
+}
+
+export interface ForecastPoint {
+  readonly date: string; // YYYY-MM-DD
+  readonly predictedClicks: number;
+  readonly lower95: number;
+  readonly upper95: number;
+  readonly baselineNaive: number;
+  readonly baselineMean: number;
+}
+
+export interface HorizonForecast {
+  readonly horizonDays: ForecastHorizon;
+  readonly targetEndDate: string;
+  readonly expectedTotalClicks: number;
+  readonly lower95TotalClicks: number;
+  readonly upper95TotalClicks: number;
+  readonly points: readonly ForecastPoint[];
+}
+
+export interface BacktestErrorMetrics {
+  readonly horizonDays: ForecastHorizon;
+  readonly mae: number;
+  readonly rmse: number;
+  readonly mape: number;
+  readonly bias: number;
+  readonly coverage95: number; // Fraction (0.0 to 1.0) of actuals within 95% CI
+  readonly sampleSize: number;
+  readonly naiveMae: number;
+  readonly meanMae: number;
+  readonly modelImprovementPercent: number; // Relative to naive baseline
+}
+
+export interface BacktestEvaluationReport {
+  readonly rollingOriginSplits: number;
+  readonly metrics: Record<ForecastHorizon, BacktestErrorMetrics | null>;
+  readonly dataLeakageFree: boolean;
+  readonly lowVolumeWarning?: string;
+}
+
+export interface TrafficForecastReport {
+  readonly domain: string;
+  readonly status: ForecastStatus;
+  readonly reason?: string;
+  readonly modelVersion: string;
+  readonly generatedAt: string;
+  readonly observationWindow: {
+    readonly startDate: string;
+    readonly endDate: string;
+    readonly totalDays: number;
+    readonly totalObservedClicks: number;
+  };
+  readonly horizons: Record<ForecastHorizon, HorizonForecast | null>;
+  readonly backtestEvaluation?: BacktestEvaluationReport;
+  readonly dataLimitations: readonly string[];
+  readonly provenance: ProvenanceMetadata;
+}
+
+export interface StoredForecastRecord {
+  readonly id: string;
+  readonly domain: string;
+  readonly modelVersion: string;
+  readonly generatedAt: string;
+  readonly horizonDays: ForecastHorizon;
+  readonly targetEndDate: string;
+  readonly expectedTotalClicks: number;
+  readonly lower95TotalClicks: number;
+  readonly upper95TotalClicks: number;
+  readonly actualOutcomeClicks?: number;
+  readonly evaluatedAt?: string;
 }

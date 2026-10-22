@@ -258,3 +258,40 @@ export async function fetchSearchConsoleReport(o) {
         provenance,
     };
 }
+/**
+ * Extracts normalized, chronologically sorted daily observations from a SearchConsoleReport
+ * that was fetched with 'date' in its dimensions.
+ */
+export function extractDailyObservations(report) {
+    const dims = report.dimensions ?? [];
+    const dateDimIdx = dims.indexOf('date');
+    if (dateDimIdx === -1 && !report.rows.some(r => r.date)) {
+        return [];
+    }
+    const byDate = new Map();
+    for (const row of report.rows) {
+        const rawKeys = row.keys;
+        const d = row.date ?? (Array.isArray(rawKeys) && dateDimIdx >= 0 ? rawKeys[dateDimIdx] : undefined);
+        if (!d || !validDate(d))
+            continue;
+        const existing = byDate.get(d) ?? { clicks: 0, impressions: 0, positionSum: 0, count: 0 };
+        existing.clicks += row.clicks;
+        existing.impressions += row.impressions;
+        existing.positionSum += row.position * (row.impressions || 1);
+        existing.count += row.impressions || 1;
+        byDate.set(d, existing);
+    }
+    const result = [];
+    for (const [date, acc] of byDate.entries()) {
+        const ctr = acc.impressions > 0 ? Number((acc.clicks / acc.impressions).toFixed(4)) : 0;
+        const avgPos = acc.count > 0 ? Number((acc.positionSum / acc.count).toFixed(2)) : 0;
+        result.push({
+            date,
+            clicks: acc.clicks,
+            impressions: acc.impressions,
+            ctr,
+            averagePosition: avgPos,
+        });
+    }
+    return result.sort((a, b) => a.date.localeCompare(b.date));
+}
