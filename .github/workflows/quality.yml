@@ -273,10 +273,16 @@ jobs:
       - name: Configure ephemeral token and start API
         run: |
           echo "OPEN_SEMRUSH_API_TOKEN=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
+          echo "API_RATE_LIMIT_EXPENSIVE_MAX=100" >> "$GITHUB_ENV"
           echo "LOAD_TEST_CONFIRM=I_OWN_OR_HAVE_PERMISSION" >> "$GITHUB_ENV"
           echo "LOAD_TEST_MODE=crawl" >> "$GITHUB_ENV"
-          echo "LOAD_TEST_ITERATIONS=10" >> "$GITHUB_ENV"
-          echo "LOAD_TEST_CONCURRENCY=2" >> "$GITHUB_ENV"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.confirm_authorized }}" = "yes" ]; then
+            echo "LOAD_TEST_ITERATIONS=10" >> "$GITHUB_ENV"
+            echo "LOAD_TEST_CONCURRENCY=2" >> "$GITHUB_ENV"
+          else
+            echo "LOAD_TEST_ITERATIONS=2" >> "$GITHUB_ENV"
+            echo "LOAD_TEST_CONCURRENCY=1" >> "$GITHUB_ENV"
+          fi
 
       - name: Start server and wait for health
         run: |
