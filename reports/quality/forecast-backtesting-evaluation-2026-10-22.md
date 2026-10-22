@@ -57,7 +57,7 @@ All 133 unit, NLP, capability, backtesting, and storage recovery tests pass dete
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | **30-Day** | 150 points | **9.11 clicks** | 38.67 clicks | 43.40 clicks | **+76.43%** | 10.73 | 5.13% | +6.17 | 64.0% |
 | **90-Day** | 180 points | **17.40 clicks** | 54.02 clicks | 47.05 clicks | **+67.78%** | 18.72 | 9.55% | +17.40 | 18.9% (Expanding holdout) |
-| **180-Day**| Requires >=210 days history for out-of-sample holdout | — | — | — | — | — | — | — | Returns parametric bounds |
+| **180-Day** | Requires >=210 days history for out-of-sample holdout | — | — | — | — | — | — | — | Returns parametric bounds |
 
 ---
 
