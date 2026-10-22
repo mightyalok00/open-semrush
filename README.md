@@ -12,6 +12,10 @@ Official Google Search Console telemetry, empirical machine learning rank curves
 
 ---
 
+[⚡ Quick Start](#-quick-start) • [✨ Capabilities](#-key-platform-capabilities) • [🏛️ Architecture](#-system-architecture) • [🔧 Configuration](#-configuration--environment-variables) • [📡 REST API](#-rest-api-reference) • [🧪 Tests & Benchmarks](#-tests-coverage-and-benchmarks) • [🧠 AI & Forecasting](#-applied-ai--machine-learning-architecture) • [🛡️ Security](#-security-model--production-hardening) • [📖 Documentation](#-documentation-index)
+
+---
+
 > ⚠️ **Data Integrity & Provenance Disclosure**:
 >
 > Open Semrush enforces a strict **Data Provenance Contract** on every API response and metric. Facts and estimates are never conflated:
@@ -21,7 +25,37 @@ Official Google Search Console telemetry, empirical machine learning rank curves
 > - `provider_api`: Live search data from external search providers (Google Suggest Autocomplete, DataForSEO Labs).
 > - `statistical_model`: Bounded mathematical regressions (Empirical CTR power-law curve, Softmax intent probability distribution, 8-vector toxicity audit, Share of Voice, 6-tier KD calibration).
 > - `synthetic_estimate`: Modeled preview simulations for initial competitor domain approximations (clearly labeled).
->
+
+---
+
+## 🏛️ System Architecture
+
+```mermaid
+graph TD
+    Client["Client / Browser / Agent / CLI"] --> Gate["Security Perimeter (Rate Limiting, Auth, SSRF IP Pinning)"]
+    
+    subgraph "Application Engine Layer"
+        Gate --> Crawler["Async Technical Crawler & Link Graph"]
+        Gate --> GSC["Search Console Analytics & Intelligence"]
+        Gate --> RankTrack["Rank Tracker & Volatility Monitor"]
+        Gate --> NLP["Local-First NLP Engine (Intent, Stems, N-Grams)"]
+        Gate --> Forecaster["Rolling-Origin Traffic Forecaster (95% CI)"]
+        Gate --> Toxicity["8-Vector Backlink Toxicity & Disavow Engine"]
+    end
+    
+    subgraph "Storage & Resilience Layer"
+        Crawler --> Store["Dual Storage Adapter (Atomic JSON / SQLite WAL)"]
+        RankTrack --> Store
+        Forecaster --> Store
+    end
+
+    subgraph "External Providers & Intelligence Cascade"
+        GSC --> GoogleGSC["Google Search Console API (OAuth 2.0)"]
+        Crawler --> AICascade["AI Cascade (OpenRouter Free -> Gemini -> Deterministic)"]
+    end
+```
+
+See the complete architectural design and safety specifications in [docs/architecture.md](docs/architecture.md).
 
 ---
 
@@ -111,7 +145,35 @@ curl 'http://localhost:3000/api/search-console?siteUrl=sc-domain%3Aexample.com&s
 
 ---
 
+## 🔧 Configuration & Environment Variables
+
+Copy `.env.example` to `.env` to configure your instance. All options fail closed with safe defaults:
+
+| Variable | Default | Purpose & Production Best Practices |
+| :--- | :--- | :--- |
+| `PORT` | `3000` | HTTP port for the API server and web UI. |
+| `HOST_BIND_ADDRESS` | `127.0.0.1` | Network interface to bind. Keep `127.0.0.1` unless behind a dedicated reverse proxy. |
+| `NODE_ENV` | `development` | In `production`, protected routes strictly require valid bearer tokens and fail closed. |
+| `OPEN_SEMRUSH_API_TOKEN` | *empty* | Single Bearer secret protecting audit, storage, and AI endpoints. Generate via `openssl rand -hex 32`. |
+| `OPEN_SEMRUSH_API_TOKENS` | *empty* | Comma-separated token list enabling **zero-downtime secret rotation** without downtime. |
+| `TRUST_PROXY_HOPS` | `0` | Number of trusted upstream proxies (e.g. `1` for Cloudflare or Nginx) to securely extract `X-Forwarded-For`. |
+| `API_RATE_LIMIT_WINDOW_MS` | `60000` | Rate limiting sliding window duration in milliseconds (1 minute). |
+| `API_RATE_LIMIT_MAX` | `120` | Maximum requests allowed per IP per window for standard endpoints. |
+| `API_RATE_LIMIT_EXPENSIVE_MAX` | `10` | Maximum requests allowed per IP per window for resource-heavy endpoints (`/api/audit`, `/api/ai/*`). |
+| `OPEN_SEMRUSH_DATA_DIR` | `./data` | Filepath directory for persisted JSON databases and backup snapshots. |
+| `OPEN_SEMRUSH_MAX_HISTORY` | `50000` | Maximum historical audit snapshots retained before oldest entries are pruned. |
+| `GEMINI_API_KEY` | *empty* | Google Gemini API key for high-throughput AI code fixes and strategy outlines. |
+| `OPENROUTER_API_KEY` | *empty* | OpenRouter API key powering free-tier model cascades (`minimax`, `gemma-4`, `lfm`, `nemotron`). |
+| `GOOGLE_OAUTH_CLIENT_ID` | *empty* | Google Cloud OAuth Client ID for verified Google Search Console telemetry. |
+| `GOOGLE_OAUTH_CLIENT_SECRET` | *empty* | Google Cloud OAuth Client Secret. |
+| `GOOGLE_OAUTH_REFRESH_TOKEN` | *empty* | Long-lived refresh token authorized with `https://www.googleapis.com/auth/webmasters.readonly`. |
+| `GOOGLE_SEARCH_CONSOLE_SITE_URL` | *empty* | Default property identifier (e.g. `sc-domain:example.com`). |
+
+---
+
 ## 📡 REST API Reference
+
+> 📚 **Complete API Specification**: See [docs/api-reference.md](docs/api-reference.md) for detailed request schemas, curl examples, error responses, and complete payload structures across all 22 endpoint groups.
 
 | Method | Endpoint | Auth | Provenance Contract |
 | --- | --- | --- | --- |
@@ -145,6 +207,184 @@ curl 'http://localhost:3000/api/search-console?siteUrl=sc-domain%3Aexample.com&s
 | `POST` | `/api/ai/strategy` | 🔒 Token | Autonomous AI outrank content blueprint |
 | `GET` | `/api/projects` | 🔒 Token | Persisted audit project registry |
 | `GET` | `/api/history?domain=...` | 🔒 Token | Persisted domain audit score history |
+
+---
+
+## 💡 Practical Workflow Examples
+
+### 1. Technical Site Audit & Autonomous AI Fix
+
+Audit an external public domain across up to 100 pages, with socket-pinned SSRF defense:
+
+```bash
+# 1. Trigger asynchronous multi-page audit
+curl -X POST http://localhost:3000/api/audit \
+  -H "Authorization: Bearer $OPEN_SEMRUSH_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://example.com", "maxPages": 5}'
+```
+
+```json
+{
+  "startUrl": "https://example.com",
+  "pagesAudited": 5,
+  "healthScore": 94,
+  "totalErrors": 0,
+  "totalWarnings": 2,
+  "issues": [
+    {
+      "code": "MISSING_CANONICAL",
+      "severity": "warning",
+      "url": "https://example.com/pricing",
+      "message": "Page is missing a rel=canonical link tag."
+    }
+  ]
+}
+```
+
+Dispatch an autonomous remediation request to generate a production-ready fix:
+
+```bash
+# 2. Generate code remediation via multi-tier AI cascade
+curl -X POST http://localhost:3000/api/ai/fix \
+  -H "Authorization: Bearer $OPEN_SEMRUSH_API_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "url": "https://example.com/pricing",
+    "issueCode": "MISSING_CANONICAL",
+    "message": "Page is missing a rel=canonical link tag."
+  }'
+```
+
+```json
+{
+  "issueCode": "MISSING_CANONICAL",
+  "suggestedCode": "<link rel=\"canonical\" href=\"https://example.com/pricing\" />",
+  "explanation": "Insert this tag into the <head> block of /pricing to consolidate link signals and prevent duplicate content penalties.",
+  "engineUsed": "openrouter:minimax/minimax-01"
+}
+```
+
+---
+
+### 2. Google Search Console Striking Distance Intelligence
+
+Query official verified first-party Search Console data with automated detection of high-opportunity ranking queries:
+
+```bash
+curl "http://localhost:3000/api/search-console?siteUrl=sc-domain%3Aexample.com&startDate=2026-09-01&endDate=2026-09-30&dimensions=query,page" \
+  -H "Authorization: Bearer $OPEN_SEMRUSH_API_TOKEN"
+```
+
+```json
+{
+  "siteUrl": "sc-domain:example.com",
+  "totalClicks": 18450,
+  "totalImpressions": 340200,
+  "averageCtr": 0.0542,
+  "strikingDistanceKeywords": [
+    {
+      "query": "cloud infrastructure audit",
+      "clicks": 58,
+      "impressions": 12400,
+      "ctr": 0.0047,
+      "position": 12.3,
+      "expectedClicksPosition3": 1393,
+      "potentialGain": 1335
+    }
+  ],
+  "cannibalizationConflicts": [
+    {
+      "query": "saas security checklist",
+      "competingPages": [
+        { "page": "https://example.com/blog/security-checklist", "clicks": 140, "position": 7.2 },
+        { "page": "https://example.com/whitepapers/security", "clicks": 95, "position": 11.4 }
+      ]
+    }
+  ]
+}
+```
+
+---
+
+### 3. Parametric Traffic Forecasting (95% Confidence Intervals)
+
+Model projected organic clicks using the calibrated power-law curve adjusted for SERP layout features (e.g. Featured Snippets):
+
+```bash
+curl "http://localhost:3000/api/ml/forecast?q=saas+audit&volume=15000&position=3&hasFeaturedSnippet=true"
+```
+
+```json
+{
+  "query": "saas audit",
+  "position": 3,
+  "monthlySearchVolume": 15000,
+  "intentDistribution": {
+    "informational": 0.18,
+    "commercial": 0.72,
+    "navigational": 0.05,
+    "transactional": 0.05
+  },
+  "ctrPrediction": {
+    "baseCtr": 0.1124,
+    "adjustedCtr": 0.0989,
+    "attenuationFactors": [
+      { "feature": "featured_snippet", "multiplier": 0.88, "impact": "-12% click suppression" }
+    ]
+  },
+  "trafficForecast": {
+    "expectedMonthlyVisits": 1484,
+    "confidenceInterval95": {
+      "lower": 1409,
+      "upper": 1559,
+      "marginOfError": 75
+    }
+  }
+}
+```
+
+---
+
+### 4. 8-Vector Backlink Toxicity Audit & Disavow Generator
+
+Perform a deterministic 8-vector audit on candidate backlinks to detect manipulative links and generate an immediate Google Disavow file:
+
+```bash
+curl -X POST http://localhost:3000/api/backlinks/toxicity \
+  -H "Content-Type: application/json" \
+  -d '{
+    "domain": "example.com",
+    "links": [
+      {
+        "sourceUrl": "http://spammed-directory-archive.top/links.html",
+        "targetUrl": "https://example.com",
+        "anchorText": "best casino games free"
+      }
+    ]
+  }'
+```
+
+```json
+{
+  "domain": "example.com",
+  "overallToxicityScore": 82,
+  "riskTier": "Toxic",
+  "disavowCandidateCount": 1,
+  "disavowFileContent": "# Open Semrush Generated Disavow File\n# Domain: example.com\n# Date: 2026-10-22\ndomain:spammed-directory-archive.top\n",
+  "flaggedLinks": [
+    {
+      "sourceUrl": "http://spammed-directory-archive.top/links.html",
+      "toxicityScore": 90,
+      "triggeredVectors": [
+        "SUSPICIOUS_TLD",
+        "INSECURE_HTTP_TRANSPORT",
+        "COMMERCIAL_ANCHOR_MISMATCH"
+      ]
+    }
+  ]
+}
+```
 
 ---
 
@@ -261,6 +501,21 @@ We actively seek feedback from external SEO practitioners, developers, and agenc
    - For crawl accuracy, false positives, or edge-case feedback, use the [External Tester Template](https://github.com/mightyalok00/open-semrush/issues/new?template=external_feedback.md) on [GitHub Issues](https://github.com/mightyalok00/open-semrush/issues).
    - For bug reports with reproduction steps, use the [Bug Report Template](https://github.com/mightyalok00/open-semrush/issues/new?template=bug_report.md).
    - For feature requests and new SEO metrics, submit a [Feature Request](https://github.com/mightyalok00/open-semrush/issues/new?template=feature_request.md).
+
+---
+
+## 📖 Documentation Index
+
+| Topic | Document | Purpose & Scope |
+| :--- | :--- | :--- |
+| **System Architecture** | [docs/architecture.md](docs/architecture.md) | Component pipelines, zero-trust SSRF socket IP pinning, and storage adapters. |
+| **REST API Reference** | [docs/api-reference.md](docs/api-reference.md) | Full schemas, curl commands, and payloads for all 22 endpoint groups. |
+| **Applied AI & ML Math** | [docs/ai-ml-architecture.md](docs/ai-ml-architecture.md) | Power-law derivations, softmax intent math, and 95% variance intervals. |
+| **Forecast Verification** | [forecast-backtesting-evaluation-2026-10-22.md](reports/quality/forecast-backtesting-evaluation-2026-10-22.md) | 180-day GSC backtest results, rolling-origin leakage proofs, and error bounds. |
+| **Production Readiness** | [production-readiness-2026-10-21.md](reports/quality/production-readiness-2026-10-21.md) | Multi-page crawl throughput, load benchmarks, and crash resilience. |
+| **Ground-Truth Evaluation** | [reproducible-evaluation-2026-10-21.md](reports/quality/reproducible-evaluation-2026-10-21.md) | Real-world domain audits against live web targets and test assertions. |
+| **Disaster Recovery** | [disaster-recovery-runbook.md](reports/quality/disaster-recovery-runbook.md) | Atomic staging, corruption rejection drills, and point-in-time restores. |
+| **Security Review** | [security-review-2026-10-21.md](reports/security/security-review-2026-10-21.md) | Independent threat model, CodeQL audits, and regression testing. |
 
 ---
 
