@@ -59,6 +59,88 @@ export interface PageAuditResult {
   readonly spaDetected?: boolean;
   readonly renderEngine?: 'raw_html' | 'headless_browser';
   readonly provenance?: ProvenanceMetadata;
+  readonly entities?: readonly ExtractedEntity[];
+  readonly contentQuality?: ContentQualityMetrics;
+  readonly intentProfile?: PageIntentProfile;
+  readonly questionsAnswered?: readonly ExtractedQuestion[];
+}
+
+export type EntityType = 'organization' | 'product' | 'technology' | 'concept' | 'person' | 'location';
+
+export interface ExtractedEntity {
+  readonly name: string;
+  readonly type: EntityType;
+  readonly salience: number; // 0.0 to 1.0
+  readonly frequency: number;
+}
+
+export interface ExtractedQuestion {
+  readonly question: string;
+  readonly headingContext?: string;
+  readonly frequency: number;
+}
+
+export interface ContentQualityMetrics {
+  readonly wordCount: number;
+  readonly uniqueWordCount: number;
+  readonly lexicalDiversity: number; // Root Type-Token Ratio
+  readonly repetitionEntropy: number; // 0.0 to 1.0
+  readonly isKeywordStuffed: boolean;
+  readonly stuffedTerms: readonly { readonly term: string; readonly density: number }[];
+  readonly qualityGrade: 'excellent' | 'good' | 'moderate' | 'thin' | 'poor';
+}
+
+export interface PageIntentProfile {
+  readonly primaryIntent: SearchIntent;
+  readonly confidence: number;
+  readonly probabilities: {
+    readonly Informational: number;
+    readonly Commercial: number;
+    readonly Navigational: number;
+    readonly Transactional: number;
+  };
+  readonly intentSignals: readonly string[];
+}
+
+export interface IntentAlignmentAudit {
+  readonly query: string;
+  readonly targetUrl: string;
+  readonly queryIntent: SearchIntent;
+  readonly pageIntent: SearchIntent;
+  readonly alignmentScore: number; // 0 to 100
+  readonly isAligned: boolean;
+  readonly mismatchReasons: readonly string[];
+  readonly recommendations: readonly string[];
+  readonly queryIntentDistribution: IntentProbabilityDistribution;
+  readonly pageIntentProfile: PageIntentProfile;
+  readonly provenance: ProvenanceMetadata;
+}
+
+export interface SemanticContentGapResult {
+  readonly targetUrl: string;
+  readonly competitorUrl: string;
+  readonly topicalCoverageScore: number; // 0 to 100
+  readonly sharedConcepts: readonly string[];
+  readonly missingSubtopics: readonly string[];
+  readonly unansweredQuestions: readonly string[];
+  readonly targetConceptCount: number;
+  readonly competitorConceptCount: number;
+  readonly provenance: ProvenanceMetadata;
+}
+
+export interface SemanticTopicCluster {
+  readonly clusterTheme: string;
+  readonly keywords: readonly string[];
+  readonly primaryIntent: SearchIntent;
+  readonly intentDistribution: {
+    readonly Informational: number;
+    readonly Commercial: number;
+    readonly Navigational: number;
+    readonly Transactional: number;
+  };
+  readonly averageDifficulty: number;
+  readonly totalVolume: number;
+  readonly subtopics: readonly string[];
 }
 
 export type ApiUserRole = 'admin' | 'analyst' | 'viewer';

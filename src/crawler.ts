@@ -1,5 +1,11 @@
 import type { PageAuditResult, ProvenanceMetadata, SeoIssue, SiteAuditReport } from './types.js';
 import { assertPublicHttpUrl, safeFetch } from './url-safety.js';
+import {
+  evaluateContentQuality,
+  extractEntities,
+  profilePageIntent,
+  extractQuestions,
+} from './nlp.js';
 
 export interface CrawlerOptions {
   readonly maxPages?: number;
@@ -403,6 +409,24 @@ export async function auditSinglePage(
       });
     }
 
+    // 12. NLP Content Quality, Entity & Question Extraction, and Intent Profiling
+    const contentQuality = evaluateContentQuality(strippedText);
+    const headings = Array.from(html.matchAll(/<h[1-6][^>]*>([\s\S]*?)<\/h[1-6]>/gi))
+      .map(m => m[1]?.replace(/<[^>]+>/g, '').trim())
+      .filter((h): h is string => Boolean(h));
+    const questionsAnswered = extractQuestions(strippedText, headings);
+    const entities = extractEntities(strippedText, html);
+    const intentProfile = profilePageIntent(html, strippedText);
+
+    if (contentQuality.isKeywordStuffed && contentQuality.stuffedTerms[0]) {
+      issues.push({
+        code: 'KEYWORD_STUFFING',
+        severity: 'notice',
+        message: `High keyword density detected: "${contentQuality.stuffedTerms[0].term}" has ${(contentQuality.stuffedTerms[0].density * 100).toFixed(1)}% frequency`,
+        recommendation: 'Ensure natural keyword distribution and avoid repetitive phrases.',
+      });
+    }
+
     return {
       url,
       statusCode,
@@ -427,6 +451,10 @@ export async function auditSinglePage(
       spaDetected,
       renderEngine: 'raw_html',
       provenance: PAGE_AUDIT_PROVENANCE,
+      entities,
+      contentQuality,
+      intentProfile,
+      questionsAnswered,
     };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);

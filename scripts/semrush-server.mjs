@@ -57,6 +57,14 @@ const {
   runScheduledRankCheck,
   getRankTrackingOverview,
   getRankHistoryForKeyword,
+  clusterKeywordsSemantically,
+  auditIntentAlignment,
+  analyzeSemanticContentGap,
+  evaluateContentQuality,
+  extractEntities,
+  extractQuestions,
+  profilePageIntent,
+  cleanHtmlToText,
 } = semrushModule;
 
 // Resolve public assets directory
@@ -546,6 +554,104 @@ const server = http.createServer(async (req, res) => {
       }
       const history = getRankHistoryForKeyword(keywordId);
       sendJson(res, 200, { keywordId, history });
+      return;
+    }
+
+    // API Route: NLP Semantic Keyword Clustering
+    if (pathname === '/api/nlp/cluster' && req.method === 'POST') {
+      const body = await parseJsonBody(req);
+      const rawKeywords = body.keywords;
+      if (!Array.isArray(rawKeywords) || rawKeywords.length === 0) {
+        sendJson(res, 400, { error: 'keywords array is required' });
+        return;
+      }
+      const formatted = rawKeywords.map(k => {
+        if (typeof k === 'string') return { keyword: k, searchVolume: 1000, difficulty: 50 };
+        return {
+          keyword: String(k.keyword || ''),
+          searchVolume: Number(k.searchVolume) || 1000,
+          difficulty: Number(k.difficulty) || 50,
+        };
+      }).filter(k => k.keyword.trim().length > 0);
+
+      const threshold = typeof body.threshold === 'number' ? body.threshold : 0.35;
+      const clusters = clusterKeywordsSemantically(formatted, threshold);
+      sendJson(res, 200, {
+        totalKeywords: formatted.length,
+        totalClusters: clusters.length,
+        clusters,
+        provenance: {
+          tier: 'statistical_model',
+          isFactual: false,
+          dataSource: 'Open Semrush Local NLP Semantic Clusterer',
+          methodology: 'Hybrid stem overlap + character 3-gram vector similarity with intent distribution',
+          confidence: 'modeled',
+        },
+      });
+      return;
+    }
+
+    // API Route: NLP Intent Alignment Audit
+    if (pathname === '/api/nlp/intent-alignment' && req.method === 'POST') {
+      const body = await parseJsonBody(req);
+      const query = body.query;
+      if (!query || typeof query !== 'string') {
+        sendJson(res, 400, { error: 'query string is required' });
+        return;
+      }
+      const pageHtml = typeof body.html === 'string' ? body.html : '';
+      const pageText = typeof body.text === 'string' ? body.text : (pageHtml ? cleanHtmlToText(pageHtml) : query);
+      const targetUrl = typeof body.url === 'string' ? body.url : '';
+
+      const audit = auditIntentAlignment(query, pageHtml, pageText, targetUrl);
+      sendJson(res, 200, audit);
+      return;
+    }
+
+    // API Route: NLP Semantic Content Gap Analysis
+    if (pathname === '/api/nlp/content-gap' && req.method === 'POST') {
+      const body = await parseJsonBody(req);
+      const target = body.targetText || body.targetHtml || '';
+      const competitor = body.competitorText || body.competitorHtml || '';
+      if (!target || !competitor) {
+        sendJson(res, 400, { error: 'targetText (or targetHtml) and competitorText (or competitorHtml) are required' });
+        return;
+      }
+      const targetUrl = typeof body.targetUrl === 'string' ? body.targetUrl : 'target-page';
+      const competitorUrl = typeof body.competitorUrl === 'string' ? body.competitorUrl : 'competitor-page';
+
+      const gapReport = analyzeSemanticContentGap(target, competitor, targetUrl, competitorUrl);
+      sendJson(res, 200, gapReport);
+      return;
+    }
+
+    // API Route: NLP Entity Extraction & Content Quality Evaluation
+    if (pathname === '/api/nlp/extract-entities' && req.method === 'POST') {
+      const body = await parseJsonBody(req);
+      const html = typeof body.html === 'string' ? body.html : '';
+      const text = typeof body.text === 'string' ? body.text : (html ? cleanHtmlToText(html) : '');
+      if (!text && !html) {
+        sendJson(res, 400, { error: 'text or html is required' });
+        return;
+      }
+      const entities = extractEntities(text, html);
+      const contentQuality = evaluateContentQuality(text);
+      const questions = extractQuestions(text);
+      const intentProfile = profilePageIntent(html, text);
+
+      sendJson(res, 200, {
+        entities,
+        contentQuality,
+        questions,
+        intentProfile,
+        provenance: {
+          tier: 'empirical_observation',
+          isFactual: true,
+          dataSource: 'Local-first NLP Entity, Quality, and Intent Inspector',
+          methodology: 'Root Type-Token Ratio lexical diversity, 3-gram repetition entropy, and token classification',
+          confidence: 'exact',
+        },
+      });
       return;
     }
 

@@ -1,4 +1,5 @@
 import { assertPublicHttpUrl, safeFetch } from './url-safety.js';
+import { evaluateContentQuality, extractEntities, profilePageIntent, extractQuestions, } from './nlp.js';
 const DEFAULT_USER_AGENT = 'Mozilla/5.0 (compatible; REA-SemrushBot/2.0; +https://rea.tools)';
 const PAGE_AUDIT_PROVENANCE = {
     tier: 'empirical_observation',
@@ -365,6 +366,22 @@ export async function auditSinglePage(url, timeoutMs = 10000, userAgent = DEFAUL
                 recommendation: 'Implement Server-Side Rendering (SSR) or dynamic pre-rendering so search engine crawlers can index text and internal links without client-side JavaScript execution.',
             });
         }
+        // 12. NLP Content Quality, Entity & Question Extraction, and Intent Profiling
+        const contentQuality = evaluateContentQuality(strippedText);
+        const headings = Array.from(html.matchAll(/<h[1-6][^>]*>([\s\S]*?)<\/h[1-6]>/gi))
+            .map(m => m[1]?.replace(/<[^>]+>/g, '').trim())
+            .filter((h) => Boolean(h));
+        const questionsAnswered = extractQuestions(strippedText, headings);
+        const entities = extractEntities(strippedText, html);
+        const intentProfile = profilePageIntent(html, strippedText);
+        if (contentQuality.isKeywordStuffed && contentQuality.stuffedTerms[0]) {
+            issues.push({
+                code: 'KEYWORD_STUFFING',
+                severity: 'notice',
+                message: `High keyword density detected: "${contentQuality.stuffedTerms[0].term}" has ${(contentQuality.stuffedTerms[0].density * 100).toFixed(1)}% frequency`,
+                recommendation: 'Ensure natural keyword distribution and avoid repetitive phrases.',
+            });
+        }
         return {
             url,
             statusCode,
@@ -389,6 +406,10 @@ export async function auditSinglePage(url, timeoutMs = 10000, userAgent = DEFAUL
             spaDetected,
             renderEngine: 'raw_html',
             provenance: PAGE_AUDIT_PROVENANCE,
+            entities,
+            contentQuality,
+            intentProfile,
+            questionsAnswered,
         };
     }
     catch (err) {

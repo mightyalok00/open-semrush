@@ -120,3 +120,61 @@ test('HTTP API serves static files and returns 404 for missing paths', async () 
   assert.equal(missing.status, 404);
 });
 
+test('HTTP API NLP endpoints handle clustering, intent alignment, content gap, and entity extraction', async () => {
+  // 1. Semantic Clustering
+  const clusterRes = await fetch(`${baseUrl}/api/nlp/cluster`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      keywords: ['buy running shoes online', 'cheap sneakers discount', 'learn python coding', 'python programming tutorial'],
+    }),
+  });
+  assert.equal(clusterRes.status, 200);
+  const clusterData = await clusterRes.json();
+  assert.ok(clusterData.totalClusters >= 2);
+  assert.equal(clusterData.provenance.tier, 'statistical_model');
+
+  // 2. Intent Alignment
+  const alignRes = await fetch(`${baseUrl}/api/nlp/intent-alignment`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      query: 'buy mechanical keyboard',
+      html: '<html><body><h1>Store</h1><button>Add to Cart</button><button>Checkout</button></body></html>',
+    }),
+  });
+  assert.equal(alignRes.status, 200);
+  const alignData = await alignRes.json();
+  assert.equal(alignData.queryIntent, 'Transactional');
+  assert.equal(alignData.pageIntent, 'Transactional');
+  assert.ok(alignData.alignmentScore >= 80);
+
+  // 3. Content Gap
+  const gapRes = await fetch(`${baseUrl}/api/nlp/content-gap`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      targetText: 'Basic Docker deployment instructions for nodejs apps.',
+      competitorText: 'Advanced Docker deployment: Kubernetes ingress, rootless security, multi-stage builds.',
+    }),
+  });
+  assert.equal(gapRes.status, 200);
+  const gapData = await gapRes.json();
+  assert.ok(gapData.missingSubtopics.length > 0);
+  assert.equal(gapData.provenance.tier, 'statistical_model');
+
+  // 4. Entity Extraction
+  const entityRes = await fetch(`${baseUrl}/api/nlp/extract-entities`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      text: 'Google and Cloudflare leverage TypeScript, Docker, and PostgreSQL for high reliability web services.',
+    }),
+  });
+  assert.equal(entityRes.status, 200);
+  const entityData = await entityRes.json();
+  assert.ok(entityData.entities.length > 0);
+  assert.ok(entityData.contentQuality.lexicalDiversity > 0);
+  assert.equal(entityData.provenance.tier, 'empirical_observation');
+});
+
