@@ -47,6 +47,9 @@ jobs:
       - name: Build TypeScript
         run: npm run build
 
+      - name: Verify independent forecast accuracy & rolling-origin backtests (historical GSC data)
+        run: node scripts/verify-forecast-accuracy.mjs
+
       - name: Dedicated security regression test suite (SSRF, DNS Rebinding, Auth)
         run: npm run check:security
 

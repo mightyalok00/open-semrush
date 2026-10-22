@@ -151,11 +151,14 @@ curl 'http://localhost:3000/api/search-console?siteUrl=sc-domain%3Aexample.com&s
 ## 🧪 Tests, Coverage and Benchmarks
 
 ```bash
-# Run full 127-test suite across 18 test suites (Unit, ML, NLP, Capabilities, GSC Intelligence, Rank Tracker, Security, Storage)
+# Run full 133-test suite across 10 test suites (Unit, ML, NLP, Capabilities, GSC Intelligence, Rank Tracker, Security, Storage, Forecast Backtesting)
 npm test
 
-# Run test coverage with enforced minimum threshold gate (84.3% achieved)
+# Run test coverage with enforced minimum threshold gate (85.74% achieved)
 npm run test:coverage
+
+# Run independent forecast accuracy & backtest verification on authorized GSC data
+npm run verify:forecast
 
 # Run dedicated security regression test suite
 npm run check:security
@@ -183,6 +186,7 @@ CI workflows verify Node.js 22 and 24, validate dependencies via `npm audit`, pe
 
 - Detailed audit and benchmark data: [production-readiness-2026-10-21.md](https://github.com/mightyalok00/open-semrush/blob/main/reports/quality/production-readiness-2026-10-21.md)
 - Product validation against ground-truth sites & live web: [reproducible-evaluation-2026-10-21.md](https://github.com/mightyalok00/open-semrush/blob/main/reports/quality/reproducible-evaluation-2026-10-21.md)
+- Reproducible forecast accuracy & rolling-origin backtesting evaluation: [forecast-backtesting-evaluation-2026-10-22.md](https://github.com/mightyalok00/open-semrush/blob/main/reports/quality/forecast-backtesting-evaluation-2026-10-22.md)
 
 ---
 

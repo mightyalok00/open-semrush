@@ -9,6 +9,7 @@ node_modules/
 # Local Database & Cache
 data/*.json
 !data/.gitkeep
+!data/historical-gsc-anonymized-180d.json
 
 # System & IDE
 .DS_Store
