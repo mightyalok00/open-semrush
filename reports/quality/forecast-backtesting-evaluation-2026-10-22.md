@@ -51,6 +51,14 @@ All 133 unit, NLP, capability, backtesting, and storage recovery tests pass dete
   - **Bias** (Mean Forecast Directional Error)
   - **95% Prediction Interval Coverage** (fraction of actuals falling within the 95% CI)
 
+#### Empirical Holdout Backtest Results vs Baselines (180-Day History, 5-Fold Cross Validation)
+
+| Horizon | Sample Size | Model MAE | Naive MAE | Mean MAE | Model vs Naive Improvement | Model RMSE | Model MAPE | Forecast Bias | 95% CI Coverage |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **30-Day** | 150 points | **9.11 clicks** | 38.67 clicks | 43.40 clicks | **+76.43%** | 10.73 | 5.13% | +6.17 | 64.0% |
+| **90-Day** | 180 points | **17.40 clicks** | 54.02 clicks | 47.05 clicks | **+67.78%** | 18.72 | 9.55% | +17.40 | 18.9% (Expanding holdout) |
+| **180-Day**| Requires >=210 days history for out-of-sample holdout | — | — | — | — | — | — | — | Returns parametric bounds |
+
 ---
 
 ## 4. Test Suite Execution & Verification
