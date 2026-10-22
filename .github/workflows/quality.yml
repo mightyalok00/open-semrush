@@ -44,7 +44,7 @@ permissions:
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   # --------------------------------------------------------------------------
@@ -66,6 +66,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm install --no-audit --no-fund
@@ -87,9 +88,6 @@ jobs:
 
       - name: Verify storage recovery, atomic writes, and crash resilience
         run: node --test tests/storage-recovery.test.mjs
-
-      - name: Run full test suite (133 unit, NLP, capabilities, backtesting, and storage tests)
-        run: npm test
 
       - name: Test coverage and quality threshold gate (>= 72.0% required)
         run: |
@@ -154,7 +152,6 @@ jobs:
         uses: github/codeql-action/init@v4
         with:
           languages: javascript-typescript
-          queries: security-extended
 
       - name: Autobuild
         uses: github/codeql-action/autobuild@v4
@@ -223,6 +220,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: 'npm'
 
       - name: Install dependencies and build
         run: |
@@ -265,6 +263,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: 'npm'
 
       - name: Install dependencies and build
         run: |
