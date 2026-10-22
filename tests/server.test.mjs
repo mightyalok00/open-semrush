@@ -178,3 +178,52 @@ test('HTTP API NLP endpoints handle clustering, intent alignment, content gap, a
   assert.equal(entityData.provenance.tier, 'empirical_observation');
 });
 
+test('HTTP API Phase 5 endpoints: toxicity, keyword expansion, KD calibrator, alerts, competitors', async () => {
+  // 1. Backlink Toxicity Audit
+  const toxRes = await fetch(`${baseUrl}/api/backlinks/toxicity?domain=github.com`);
+  assert.equal(toxRes.status, 200);
+  const toxData = await toxRes.json();
+  assert.equal(typeof toxData.toxicityScore, 'number');
+  assert.ok(Array.isArray(toxData.vectors));
+  assert.equal(toxData.vectors.length, 8);
+
+  // 2. Keyword Expansion
+  const expandRes = await fetch(`${baseUrl}/api/keywords/expand`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ keyword: 'keyword ranking software' }),
+  });
+  assert.equal(expandRes.status, 200);
+  const expandData = await expandRes.json();
+  assert.equal(expandData.keyword, 'keyword ranking software');
+  assert.equal(expandData.provenance.tier, 'statistical_model');
+
+  // 3. KD Tier Calibrator
+  const kdRes = await fetch(`${baseUrl}/api/keywords/kd?score=65`);
+  assert.equal(kdRes.status, 200);
+  const kdData = await kdRes.json();
+  assert.equal(kdData.tier, 'Hard');
+  assert.equal(typeof kdData.minReferringDomainsNeeded, 'number');
+
+  // 4. Rank Volatility Alerts
+  const alertsRes = await fetch(`${baseUrl}/api/rank-tracker/alerts?domain=github.com`);
+  assert.equal(alertsRes.status, 200);
+  const alertsData = await alertsRes.json();
+  assert.equal(alertsData.domain, 'github.com');
+  assert.ok(Array.isArray(alertsData.alerts));
+
+  // 5. Tracked Competitors (POST & GET)
+  const compPostRes = await fetch(`${baseUrl}/api/rank-tracker/competitors`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ domain: 'github.com', competitorDomain: 'gitlab.com' }),
+  });
+  assert.equal(compPostRes.status, 201);
+
+  const compGetRes = await fetch(`${baseUrl}/api/rank-tracker/competitors?domain=github.com`);
+  assert.equal(compGetRes.status, 200);
+  const compGetData = await compGetRes.json();
+  assert.equal(compGetData.domain, 'github.com');
+  assert.ok(compGetData.competitors.includes('gitlab.com'));
+});
+

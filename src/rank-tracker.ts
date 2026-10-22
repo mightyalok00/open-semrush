@@ -6,6 +6,8 @@ import type {
   RankSnapshotRecord,
   RankTrackingOverview,
   ProvenanceMetadata,
+  RankingAlert,
+  CompetitorRankComparisonItem,
 } from './types.js';
 import { fetchLiveSerp } from './serp.js';
 
@@ -15,10 +17,12 @@ const RANK_TRACKER_FILE = path.join(DATA_DIR, 'rank_tracker.json');
 interface RankTrackerDatabaseSchema {
   trackedKeywords: TrackedKeywordItem[];
   snapshots: RankSnapshotRecord[];
+  alerts?: RankingAlert[];
+  competitors?: Record<string, string[]>;
 }
 
 function emptyRankTrackerDb(): RankTrackerDatabaseSchema {
-  return { trackedKeywords: [], snapshots: [] };
+  return { trackedKeywords: [], snapshots: [], alerts: [], competitors: {} };
 }
 
 function ensureDataDir(): void {
@@ -41,6 +45,8 @@ function readRankTrackerDb(filePath = RANK_TRACKER_FILE): RankTrackerDatabaseSch
     return {
       trackedKeywords: Array.isArray(parsed.trackedKeywords) ? parsed.trackedKeywords : [],
       snapshots: Array.isArray(parsed.snapshots) ? parsed.snapshots : [],
+      alerts: Array.isArray(parsed.alerts) ? parsed.alerts : [],
+      competitors: parsed.competitors && typeof parsed.competitors === 'object' ? parsed.competitors : {},
     };
   } catch {
     return emptyRankTrackerDb();
@@ -166,6 +172,40 @@ export function getTrackedKeywords(domain: string, dbPath?: string): readonly Tr
 }
 
 /**
+ * Adds a competitor domain to track against a target domain.
+ */
+export function addTrackedCompetitor(domain: string, competitorDomain: string, dbPath?: string): void {
+  const cleanDomain = normalizeDomain(domain);
+  const cleanComp = normalizeDomain(competitorDomain);
+  const db = readRankTrackerDb(dbPath);
+  if (!db.competitors) db.competitors = {};
+  const list = db.competitors[cleanDomain] || [];
+  if (!list.includes(cleanComp)) {
+    list.push(cleanComp);
+    db.competitors[cleanDomain] = list;
+    writeRankTrackerDb(db, dbPath);
+  }
+}
+
+/**
+ * Returns all competitors tracked against a domain.
+ */
+export function getTrackedCompetitors(domain: string, dbPath?: string): string[] {
+  const cleanDomain = normalizeDomain(domain);
+  const db = readRankTrackerDb(dbPath);
+  return db.competitors?.[cleanDomain] || [];
+}
+
+/**
+ * Returns automated ranking volatility alerts for a domain.
+ */
+export function getRankingAlerts(domain: string, dbPath?: string): readonly RankingAlert[] {
+  const cleanDomain = normalizeDomain(domain);
+  const db = readRankTrackerDb(dbPath);
+  return (db.alerts || []).filter(a => a.domain === cleanDomain).reverse();
+}
+
+/**
  * Polls the current live SERP ranking position for a keyword against a target domain.
  */
 export async function pollKeywordRank(
@@ -177,6 +217,8 @@ export async function pollKeywordRank(
   foundUrl?: string;
   pageTitle?: string;
   serpFeatures: string[];
+  ownsFeaturedSnippet: boolean;
+  ownsSiteLinks: boolean;
 }> {
   const cleanDomain = normalizeDomain(domain);
   const fetchSerp = options.fetchSerpImpl ?? fetchLiveSerp;
@@ -188,6 +230,12 @@ export async function pollKeywordRank(
   if (serpReport.features.hasVideoPack) serpFeatures.push('video_pack');
   if (serpReport.features.hasKnowledgePanel) serpFeatures.push('knowledge_panel');
 
+  const ownsFeaturedSnippet = Boolean(
+    serpReport.features.hasFeaturedSnippet &&
+    serpReport.features.featuredSnippet &&
+    normalizeDomain(serpReport.features.featuredSnippet.sourceDomain) === cleanDomain
+  );
+
   for (const item of serpReport.topRankings) {
     const itemDomain = normalizeDomain(item.domain || item.url);
     if (itemDomain === cleanDomain || itemDomain.endsWith(`.${cleanDomain}`)) {
@@ -196,6 +244,8 @@ export async function pollKeywordRank(
         foundUrl: item.url,
         pageTitle: item.title,
         serpFeatures,
+        ownsFeaturedSnippet,
+        ownsSiteLinks: item.position === 1,
       };
     }
   }
@@ -203,6 +253,8 @@ export async function pollKeywordRank(
   return {
     position: null,
     serpFeatures,
+    ownsFeaturedSnippet,
+    ownsSiteLinks: false,
   };
 }
 
@@ -221,6 +273,7 @@ export async function runScheduledRankCheck(
 
   const timestamp = new Date().toISOString();
   const createdSnapshots: RankSnapshotRecord[] = [];
+  if (!db.alerts) db.alerts = [];
 
   for (const kw of domainKeywords) {
     const rankResult = await pollKeywordRank(kw.keyword, cleanDomain, { fetchSerpImpl: options.fetchSerpImpl });
@@ -234,6 +287,8 @@ export async function runScheduledRankCheck(
       foundUrl: rankResult.foundUrl,
       pageTitle: rankResult.pageTitle,
       serpFeatures: rankResult.serpFeatures,
+      ownsFeaturedSnippet: rankResult.ownsFeaturedSnippet,
+      ownsSiteLinks: rankResult.ownsSiteLinks,
     };
     createdSnapshots.push(snapshot);
     db.snapshots.push(snapshot);
@@ -243,6 +298,63 @@ export async function runScheduledRankCheck(
     const positionDelta = (previousPosition !== undefined && previousPosition !== null && rankResult.position !== null)
       ? previousPosition - rankResult.position // Positive delta means improved ranking!
       : 0;
+
+    // Generate automated volatility alerts
+    if (previousPosition !== undefined && previousPosition !== null && rankResult.position !== null) {
+      if (positionDelta <= -5) {
+        db.alerts.push({
+          id: randomUUID(),
+          type: 'CRITICAL_DROP',
+          domain: cleanDomain,
+          keyword: kw.keyword,
+          previousPosition,
+          currentPosition: rankResult.position,
+          delta: positionDelta,
+          message: `Rank dropped ${Math.abs(positionDelta)} spots from #${previousPosition} to #${rankResult.position}`,
+          severity: 'critical',
+          timestamp,
+        });
+      } else if (previousPosition > 10 && rankResult.position <= 10) {
+        db.alerts.push({
+          id: randomUUID(),
+          type: 'PAGE_ONE_ENTRY',
+          domain: cleanDomain,
+          keyword: kw.keyword,
+          previousPosition,
+          currentPosition: rankResult.position,
+          delta: positionDelta,
+          message: `Breakthrough to Page 1! Entered at rank #${rankResult.position}`,
+          severity: 'success',
+          timestamp,
+        });
+      } else if (rankResult.position === 1 && previousPosition !== 1) {
+        db.alerts.push({
+          id: randomUUID(),
+          type: 'RANK_ONE_GAINED',
+          domain: cleanDomain,
+          keyword: kw.keyword,
+          previousPosition,
+          currentPosition: 1,
+          delta: positionDelta,
+          message: `Rank #1 achieved for "${kw.keyword}"!`,
+          severity: 'success',
+          timestamp,
+        });
+      }
+    } else if (previousPosition !== undefined && previousPosition !== null && rankResult.position === null) {
+      db.alerts.push({
+        id: randomUUID(),
+        type: 'OUT_OF_INDEX',
+        domain: cleanDomain,
+        keyword: kw.keyword,
+        previousPosition,
+        currentPosition: null,
+        delta: -100,
+        message: `Dropped out of Top 100 search results`,
+        severity: 'warning',
+        timestamp,
+      });
+    }
 
     const idx = db.trackedKeywords.findIndex(k => k.id === kw.id);
     if (idx !== -1 && db.trackedKeywords[idx]) {
@@ -329,6 +441,44 @@ export function getRankTrackingOverview(domain: string, dbPath?: string): RankTr
     .sort()
     .reverse()[0] || new Date().toISOString();
 
+  const domainAlerts = (db.alerts || []).filter(a => a.domain === cleanDomain).slice(-20);
+
+  // Competitor Head-to-Head Comparison
+  const trackedComps = db.competitors?.[cleanDomain] || [];
+  const competitorComparisons: CompetitorRankComparisonItem[] = [];
+
+  for (const comp of trackedComps) {
+    const compKeywords = db.trackedKeywords.filter(k => k.domain === comp);
+    let targetHigher = 0;
+    let compHigher = 0;
+    let tied = 0;
+
+    for (const kw of keywords) {
+      const compKw = compKeywords.find(ck => ck.keyword.toLowerCase() === kw.keyword.toLowerCase());
+      if (!compKw || kw.latestPosition === null || kw.latestPosition === undefined) continue;
+      if (compKw.latestPosition === null || compKw.latestPosition === undefined) {
+        targetHigher++;
+      } else if (kw.latestPosition < compKw.latestPosition) {
+        targetHigher++;
+      } else if (kw.latestPosition > compKw.latestPosition) {
+        compHigher++;
+      } else {
+        tied++;
+      }
+    }
+
+    const totalCompared = targetHigher + compHigher + tied;
+    const winRate = totalCompared > 0 ? Number((targetHigher / totalCompared).toFixed(2)) : 0.5;
+
+    competitorComparisons.push({
+      competitorDomain: comp,
+      winRate,
+      targetHigherCount: targetHigher,
+      competitorHigherCount: compHigher,
+      tiedCount: tied,
+    });
+  }
+
   return {
     domain: cleanDomain,
     totalTrackedKeywords: keywords.length,
@@ -339,6 +489,8 @@ export function getRankTrackingOverview(domain: string, dbPath?: string): RankTr
     losers,
     keywords,
     lastUpdated: latestChecked,
+    alerts: domainAlerts,
+    competitorComparisons,
     provenance: RANK_TRACKING_PROVENANCE,
   };
 }

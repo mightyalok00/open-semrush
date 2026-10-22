@@ -2,6 +2,7 @@ import { calculateCtrByPosition } from './serp.js';
 import { analyzeKeyword } from './keywords.js';
 import { analyzeDomainWithAi } from './ai.js';
 import { safeFetch } from './url-safety.js';
+import { predictCtrPowerLaw } from './ml.js';
 import type {
   DomainKeywordRanking,
   DomainOverviewReport,
@@ -136,17 +137,59 @@ const KNOWN_DOMAINS: Record<string, CuratedDomainData> = {
 };
 
 /**
- * Estimates monthly organic traffic based on an array of ranked keywords and their positions.
+ * Estimates monthly organic traffic based on an array of ranked keywords and their positions
+ * using the empirical power-law CTR model.
  */
 export function estimateMonthlyOrganicTraffic(
   rankings: readonly { readonly searchVolume: number; readonly position: number; readonly hasFeaturedSnippet?: boolean }[]
 ): number {
   let totalTraffic = 0;
   for (const item of rankings) {
-    const ctr = calculateCtrByPosition(item.position, item.hasFeaturedSnippet ?? false);
-    totalTraffic += item.searchVolume * ctr;
+    const ctrPred = predictCtrPowerLaw(item.position, { hasFeaturedSnippet: item.hasFeaturedSnippet ?? false });
+    totalTraffic += item.searchVolume * ctrPred.adjustedCtr;
   }
   return Math.round(totalTraffic);
+}
+
+/**
+ * Calculates domain Share of Voice (SOV) as a percentage (0 - 100%) within a competitor group.
+ */
+export function calculateShareOfVoice(
+  targetVisibility: number,
+  competitorVisibilities: readonly number[]
+): number {
+  const sum = targetVisibility + competitorVisibilities.reduce((a, b) => a + b, 0);
+  if (sum <= 0) return 0;
+  return Number(((targetVisibility / sum) * 100).toFixed(1));
+}
+
+/**
+ * Classifies a keyword's competitive standing against rival domains.
+ */
+export function classifyCompetitiveKeywordPositions(
+  targetPos: number | null,
+  competitorPositions: Record<string, number | null>
+): 'missing' | 'weak' | 'strong' | 'shared' | 'unique' {
+  const compValues = Object.values(competitorPositions).filter((p): p is number => p !== null && p > 0);
+  const minCompPos = compValues.length > 0 ? Math.min(...compValues) : null;
+
+  if (targetPos === null || targetPos <= 0 || targetPos > 100) {
+    return compValues.length > 0 && minCompPos !== null && minCompPos <= 10 ? 'missing' : 'unique';
+  }
+
+  if (minCompPos === null) {
+    return 'unique';
+  }
+
+  if (targetPos <= 10 && minCompPos <= 10) {
+    return 'shared';
+  }
+
+  if (targetPos < minCompPos) {
+    return 'strong';
+  }
+
+  return 'weak';
 }
 
 /**
@@ -280,6 +323,26 @@ export async function generateDomainOverview(
     const scaledTraffic = Math.round(curated.estimatedMonthlyOrganicTraffic * cMult);
     const scaledKeywords = Math.round(curated.totalRankedKeywords * Math.min(1.0, cMult * 1.1));
 
+    const organicKeywordsDistribution = {
+      top3: topKeywords.filter(k => k.position <= 3).length,
+      top10: topKeywords.filter(k => k.position <= 10).length,
+      top20: topKeywords.filter(k => k.position <= 20).length,
+      top100: topKeywords.filter(k => k.position <= 100).length,
+    };
+
+    const competitorOverlap = curated.topCompetitors.map((comp, idx) => ({
+      domain: comp,
+      overlapScore: Math.max(30, 85 - idx * 12),
+      commonKeywordsCount: Math.max(100, Math.round(scaledKeywords * (0.32 - idx * 0.05))),
+      estimatedTraffic: Math.round(scaledTraffic * (0.75 - idx * 0.12)),
+      authorityScore: Math.min(96, Math.max(30, curated.authorityScore + (idx % 2 === 0 ? 3 : -5))),
+    }));
+
+    const shareOfVoice = calculateShareOfVoice(
+      curated.authorityScore,
+      competitorOverlap.map(c => c.authorityScore)
+    );
+
     return {
       domain: cleanDomain,
       countryCode: cCode,
@@ -289,6 +352,9 @@ export async function generateDomainOverview(
       topOrganicKeywords: topKeywords,
       topCompetitors: curated.topCompetitors,
       history24Months: generate24MonthTrendline(scaledTraffic, scaledKeywords, positiveHash),
+      shareOfVoice,
+      organicKeywordsDistribution,
+      competitorOverlap,
     };
   }
 
@@ -298,6 +364,19 @@ export async function generateDomainOverview(
     if (aiResult) {
       const scaledTraffic = Math.round(aiResult.estimatedMonthlyOrganicTraffic * cMult);
       const scaledKeywords = Math.round(aiResult.totalRankedKeywords * Math.min(1.0, cMult * 1.1));
+      const organicKeywordsDistribution = {
+        top3: aiResult.topOrganicKeywords.filter(k => k.position <= 3).length,
+        top10: aiResult.topOrganicKeywords.filter(k => k.position <= 10).length,
+        top20: aiResult.topOrganicKeywords.filter(k => k.position <= 20).length,
+        top100: aiResult.topOrganicKeywords.filter(k => k.position <= 100).length,
+      };
+      const competitorOverlap = aiResult.topCompetitors.map((comp, idx) => ({
+        domain: comp,
+        overlapScore: Math.max(30, 75 - idx * 10),
+        commonKeywordsCount: Math.max(80, Math.round(scaledKeywords * (0.28 - idx * 0.05))),
+        estimatedTraffic: Math.round(scaledTraffic * (0.70 - idx * 0.10)),
+        authorityScore: Math.min(90, Math.max(25, aiResult.authorityScore - idx * 3)),
+      }));
       return {
         domain: cleanDomain,
         countryCode: cCode,
@@ -307,6 +386,9 @@ export async function generateDomainOverview(
         topOrganicKeywords: aiResult.topOrganicKeywords,
         topCompetitors: aiResult.topCompetitors,
         history24Months: generate24MonthTrendline(scaledTraffic, scaledKeywords, positiveHash),
+        shareOfVoice: calculateShareOfVoice(aiResult.authorityScore, competitorOverlap.map(c => c.authorityScore)),
+        organicKeywordsDistribution,
+        competitorOverlap,
       };
     }
   }
@@ -345,8 +427,8 @@ export async function generateDomainOverview(
     const kwText = i % 2 === 0 ? `${brandName} ${topic}` : topic;
     const m = analyzeKeyword(kwText);
     const pos = i + 2;
-    const ctr = calculateCtrByPosition(pos, false);
-    const traffic = Math.round(m.searchVolume * ctr);
+    const ctrPred = predictCtrPowerLaw(pos);
+    const traffic = Math.round(m.searchVolume * ctrPred.adjustedCtr);
 
     topOrganicKeywords.push({
       keyword: kwText,
@@ -366,6 +448,26 @@ export async function generateDomainOverview(
     `best-${brandName}-alternative.org`,
   ];
 
+  const organicKeywordsDistribution = {
+    top3: topOrganicKeywords.filter(k => k.position <= 3).length,
+    top10: topOrganicKeywords.filter(k => k.position <= 10).length,
+    top20: topOrganicKeywords.filter(k => k.position <= 20).length,
+    top100: topOrganicKeywords.filter(k => k.position <= 100).length,
+  };
+
+  const competitorOverlap = topCompetitors.map((comp, idx) => ({
+    domain: comp,
+    overlapScore: Math.max(25, 70 - idx * 15),
+    commonKeywordsCount: Math.max(30, Math.round(totalRankedKeywords * (0.20 - idx * 0.05))),
+    estimatedTraffic: Math.round(estimatedMonthlyOrganicTraffic * (0.65 - idx * 0.12)),
+    authorityScore: Math.min(85, Math.max(20, authorityScore + (idx % 2 === 0 ? 5 : -7))),
+  }));
+
+  const shareOfVoice = calculateShareOfVoice(
+    authorityScore,
+    competitorOverlap.map(c => c.authorityScore)
+  );
+
   return {
     domain: cleanDomain,
     countryCode: cCode,
@@ -375,6 +477,9 @@ export async function generateDomainOverview(
     topOrganicKeywords,
     topCompetitors,
     history24Months: generate24MonthTrendline(estimatedMonthlyOrganicTraffic, totalRankedKeywords, positiveHash),
+    shareOfVoice,
+    organicKeywordsDistribution,
+    competitorOverlap,
     provenance: DOMAIN_OVERVIEW_PROVENANCE,
   };
 }

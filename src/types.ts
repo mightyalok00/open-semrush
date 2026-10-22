@@ -187,6 +187,20 @@ export interface TrafficForecastInterval {
   readonly confidenceLevel: number;
 }
 
+export interface KdTierInfo {
+  readonly tier: 'Very Easy' | 'Easy' | 'Possible' | 'Hard' | 'Very Hard' | 'Super Hard';
+  readonly range: string;
+  readonly description: string;
+  readonly minReferringDomainsNeeded: number;
+}
+
+export interface SerpFeatureOpportunities {
+  readonly snippetOpportunity: 'high' | 'medium' | 'low';
+  readonly paaOpportunity: 'high' | 'medium' | 'low';
+  readonly videoOpportunity: 'high' | 'medium' | 'low';
+  readonly localPackOpportunity: 'high' | 'medium' | 'low';
+}
+
 export interface KeywordMetrics {
   readonly keyword: string;
   readonly searchVolume: number;
@@ -197,6 +211,8 @@ export interface KeywordMetrics {
   readonly seasonalityTrend: readonly number[]; // 12 months relative interest (0 - 100)
   readonly intentDistribution?: IntentProbabilityDistribution;
   readonly trafficForecast?: TrafficForecastInterval;
+  readonly kdTier?: KdTierInfo;
+  readonly serpFeatureOpportunities?: SerpFeatureOpportunities;
   readonly provenance?: ProvenanceMetadata;
 }
 
@@ -241,6 +257,14 @@ export interface HistoricalTrafficMonth {
   readonly googleUpdate?: string | undefined;
 }
 
+export interface CompetitorOverlapItem {
+  readonly domain: string;
+  readonly overlapScore: number; // 0 to 100
+  readonly commonKeywordsCount: number;
+  readonly estimatedTraffic: number;
+  readonly authorityScore: number;
+}
+
 export interface DomainOverviewReport {
   readonly domain: string;
   readonly countryCode?: string | undefined;
@@ -250,6 +274,14 @@ export interface DomainOverviewReport {
   readonly topOrganicKeywords: readonly DomainKeywordRanking[];
   readonly topCompetitors: readonly string[];
   readonly history24Months: readonly HistoricalTrafficMonth[];
+  readonly shareOfVoice?: number; // 0 to 100
+  readonly organicKeywordsDistribution?: {
+    readonly top3: number;
+    readonly top10: number;
+    readonly top20: number;
+    readonly top100: number;
+  };
+  readonly competitorOverlap?: readonly CompetitorOverlapItem[];
   readonly provenance?: ProvenanceMetadata;
 }
 
@@ -259,6 +291,35 @@ export interface KeywordGapComparison {
   readonly sharedKeywords: readonly string[];
   readonly missingForDomainA: readonly string[];
   readonly uniqueToDomainA: readonly string[];
+}
+
+export interface ToxicityRiskVector {
+  readonly name: string;
+  readonly riskLevel: 'clean' | 'low' | 'moderate' | 'high' | 'critical';
+  readonly penaltyScore: number;
+  readonly reason: string;
+  readonly flaggedItems: readonly string[];
+}
+
+export interface ToxicityAuditReport {
+  readonly toxicityScore: number; // 0 to 100
+  readonly toxicityGrade: 'clean' | 'low_risk' | 'suspicious' | 'toxic';
+  readonly toxicLinksCount: number;
+  readonly toxicDomainsCount: number;
+  readonly vectors: readonly ToxicityRiskVector[];
+  readonly recommendations: readonly string[];
+}
+
+export interface CrawledLinkRecord {
+  readonly sourceUrl: string;
+  readonly sourceDomain: string;
+  readonly targetUrl: string;
+  readonly targetDomain: string;
+  readonly anchorText: string;
+  readonly rel: readonly string[];
+  readonly isInternal: boolean;
+  readonly isDofollow: boolean;
+  readonly linkType: 'text' | 'image' | 'button';
 }
 
 export interface BacklinkNode {
@@ -286,6 +347,20 @@ export interface BacklinkProfileReport {
   };
   readonly topAnchors: readonly { readonly text: string; readonly count: number }[];
   readonly recentBacklinks: readonly BacklinkNode[];
+  readonly toxicityAudit?: ToxicityAuditReport;
+  readonly anchorTaxonomy?: {
+    readonly branded: number;
+    readonly exactMatch: number;
+    readonly partialMatch: number;
+    readonly nakedUrl: number;
+    readonly generic: number;
+  };
+  readonly crawledLinksSummary?: {
+    readonly internalCount: number;
+    readonly externalCount: number;
+    readonly dofollowCount: number;
+    readonly nofollowCount: number;
+  };
   readonly provenance?: ProvenanceMetadata;
 }
 
@@ -488,6 +563,36 @@ export interface RankSnapshotRecord {
   readonly foundUrl?: string;
   readonly pageTitle?: string;
   readonly serpFeatures?: readonly string[];
+  readonly ownsFeaturedSnippet?: boolean;
+  readonly ownsSiteLinks?: boolean;
+}
+
+export type RankingAlertType =
+  | 'CRITICAL_DROP'
+  | 'PAGE_ONE_ENTRY'
+  | 'RANK_ONE_GAINED'
+  | 'OUT_OF_INDEX'
+  | 'NEW_SNIPPET_OWNED';
+
+export interface RankingAlert {
+  readonly id: string;
+  readonly type: RankingAlertType;
+  readonly domain: string;
+  readonly keyword: string;
+  readonly previousPosition: number | null;
+  readonly currentPosition: number | null;
+  readonly delta: number;
+  readonly message: string;
+  readonly severity: 'critical' | 'warning' | 'success' | 'info';
+  readonly timestamp: string;
+}
+
+export interface CompetitorRankComparisonItem {
+  readonly competitorDomain: string;
+  readonly winRate: number; // 0.0 to 1.0
+  readonly targetHigherCount: number;
+  readonly competitorHigherCount: number;
+  readonly tiedCount: number;
 }
 
 export interface RankTrackingOverview {
@@ -516,5 +621,7 @@ export interface RankTrackingOverview {
   }[];
   readonly keywords: readonly TrackedKeywordItem[];
   readonly lastUpdated: string;
+  readonly alerts?: readonly RankingAlert[];
+  readonly competitorComparisons?: readonly CompetitorRankComparisonItem[];
   readonly provenance: ProvenanceMetadata;
 }

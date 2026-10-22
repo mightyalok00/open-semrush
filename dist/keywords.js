@@ -49,12 +49,186 @@ export function calculateKeywordDifficulty(query, topCompetitorAuthorityScores =
     return Math.min(100, Math.max(0, Math.round(kdScore)));
 }
 /**
+ * Maps numeric Keyword Difficulty (0 - 100) to 6 industry standard actionable difficulty tiers.
+ */
+export function getKdTier(kd) {
+    const clamped = Math.min(100, Math.max(0, Math.round(kd)));
+    if (clamped <= 14) {
+        return {
+            tier: 'Very Easy',
+            range: '0 - 14%',
+            description: 'New websites can rank on page 1 with basic content quality and zero backlinks.',
+            minReferringDomainsNeeded: 0,
+        };
+    }
+    else if (clamped <= 29) {
+        return {
+            tier: 'Easy',
+            range: '15 - 29%',
+            description: 'Target with well-structured on-page SEO and a couple of internal contextual links.',
+            minReferringDomainsNeeded: 3,
+        };
+    }
+    else if (clamped <= 49) {
+        return {
+            tier: 'Possible',
+            range: '30 - 49%',
+            description: 'Competitive search term; requires comprehensive content depth and several high-quality backlinks.',
+            minReferringDomainsNeeded: 12,
+        };
+    }
+    else if (clamped <= 69) {
+        return {
+            tier: 'Hard',
+            range: '50 - 69%',
+            description: 'Requires established topical authority, high domain rating, and active link-building outreach.',
+            minReferringDomainsNeeded: 35,
+        };
+    }
+    else if (clamped <= 84) {
+        return {
+            tier: 'Very Hard',
+            range: '70 - 84%',
+            description: 'Dominated by major enterprise authorities and publications; high effort required.',
+            minReferringDomainsNeeded: 85,
+        };
+    }
+    else {
+        return {
+            tier: 'Super Hard',
+            range: '85 - 100%',
+            description: 'Ultra-competitive head term with massive search volume; dominated by industry giants.',
+            minReferringDomainsNeeded: 250,
+        };
+    }
+}
+/**
+ * Predicts SERP layout feature opportunities based on query linguistic markers.
+ */
+export function calculateSerpFeatureOpportunities(keyword) {
+    const lower = keyword.toLowerCase().trim();
+    // Snippet opportunity
+    let snippet = 'low';
+    if (/^(what|how|why|when|where|who|can|steps|definition|guide|recipe)\b/i.test(lower) || lower.includes('vs') || lower.includes('best')) {
+        snippet = 'high';
+    }
+    else if (lower.split(/\s+/).length >= 4) {
+        snippet = 'medium';
+    }
+    // PAA opportunity
+    let paa = 'medium';
+    if (/^(how|what|why|can|is|does)\b/i.test(lower)) {
+        paa = 'high';
+    }
+    // Video opportunity
+    let video = 'low';
+    if (/\b(tutorial|how to|review|demo|workout|gameplay|trailer|song|unboxing|assembly)\b/i.test(lower)) {
+        video = 'high';
+    }
+    else if (/^(install|setup|fix|repair)\b/i.test(lower)) {
+        video = 'medium';
+    }
+    // Local pack opportunity
+    let local = 'low';
+    if (/\b(near me|near|in [a-z]+|store|doctor|dentist|plumber|restaurant|clinic|shop|repair)\b/i.test(lower)) {
+        local = 'high';
+    }
+    return {
+        snippetOpportunity: snippet,
+        paaOpportunity: paa,
+        videoOpportunity: video,
+        localPackOpportunity: local,
+    };
+}
+/**
+ * Multi-Angle Keyword Suggestion Expansion across Questions, Comparisons, Prepositions, and Intent.
+ */
+export function expandKeywordMultiAngle(seedKeyword) {
+    const seed = seedKeyword.trim().toLowerCase();
+    const results = [];
+    // 1. Question Angle
+    const questionPatterns = [
+        `how to use ${seed}`,
+        `what is ${seed}`,
+        `why use ${seed}`,
+        `can you learn ${seed} for free`,
+        `how does ${seed} work`,
+    ];
+    for (const q of questionPatterns) {
+        results.push({
+            keyword: q,
+            source: 'heuristic',
+            intent: 'Informational',
+            category: 'question',
+            searchVolume: 1200,
+            keywordDifficulty: 24,
+            cpcUsd: 1.15,
+        });
+    }
+    // 2. Comparison Angle
+    const comparisonPatterns = [
+        `${seed} vs competitors`,
+        `best alternative to ${seed}`,
+        `is ${seed} worth it reviews`,
+        `${seed} pros and cons comparison`,
+    ];
+    for (const c of comparisonPatterns) {
+        results.push({
+            keyword: c,
+            source: 'heuristic',
+            intent: 'Commercial',
+            category: 'comparison',
+            searchVolume: 2400,
+            keywordDifficulty: 42,
+            cpcUsd: 2.80,
+        });
+    }
+    // 3. Preposition & Modifier Angle
+    const prepositionPatterns = [
+        `${seed} for beginners`,
+        `${seed} with step by step guide`,
+        `${seed} without coding`,
+        `${seed} in 2026`,
+    ];
+    for (const p of prepositionPatterns) {
+        results.push({
+            keyword: p,
+            source: 'heuristic',
+            intent: 'Informational',
+            category: 'long-tail',
+            searchVolume: 3500,
+            keywordDifficulty: 32,
+            cpcUsd: 1.65,
+        });
+    }
+    // 4. Commercial & Transactional Angle
+    const transPatterns = [
+        `buy ${seed} online`,
+        `${seed} pricing plans`,
+        `cheap ${seed} discount`,
+    ];
+    for (const t of transPatterns) {
+        results.push({
+            keyword: t,
+            source: 'heuristic',
+            intent: 'Transactional',
+            category: 'autocomplete',
+            searchVolume: 1800,
+            keywordDifficulty: 55,
+            cpcUsd: 4.50,
+        });
+    }
+    return results;
+}
+/**
  * Generates modeled keyword metrics (volume, KD, intent, CPC, seasonality) for a query.
  */
 export function analyzeKeyword(keyword, options) {
     const intentDist = classifySearchIntentProbabilities(keyword);
     const intent = intentDist.primaryIntent;
     const kd = calculateKeywordDifficulty(keyword, options?.competitorAuthorityScores ?? [65, 72, 80, 58, 62, 75, 84, 50, 68, 70], options?.competitorRefDomains ?? [120, 350, 890, 80, 150, 420, 1200, 45, 230, 310]);
+    const kdTier = getKdTier(kd);
+    const serpFeatureOpportunities = calculateSerpFeatureOpportunities(keyword);
     // Deterministic seed simulation for volume and CPC based on keyword hash
     let hash = 0;
     for (let i = 0; i < keyword.length; i++) {
@@ -97,6 +271,8 @@ export function analyzeKeyword(keyword, options) {
         seasonalityTrend,
         intentDistribution: intentDist,
         trafficForecast,
+        kdTier,
+        serpFeatureOpportunities,
         provenance: KEYWORD_HEURISTIC_PROVENANCE,
     };
 }

@@ -65,6 +65,18 @@ const {
   extractQuestions,
   profilePageIntent,
   cleanHtmlToText,
+  auditBacklinkToxicity,
+  extractLinksFromHtml,
+  buildLinkGraphFromCrawl,
+  classifyAnchorText,
+  calculateShareOfVoice,
+  classifyCompetitiveKeywordPositions,
+  getKdTier,
+  calculateSerpFeatureOpportunities,
+  expandKeywordMultiAngle,
+  addTrackedCompetitor,
+  getTrackedCompetitors,
+  getRankingAlerts,
 } = semrushModule;
 
 // Resolve public assets directory
@@ -256,6 +268,38 @@ const server = http.createServer(async (req, res) => {
       } catch (error) {
         sendJson(res, 500, { error: error instanceof Error ? error.message : 'Failed to fetch real keyword research' });
       }
+      return;
+    }
+
+    // API Route: Multi-Angle Keyword Suggestion Expander
+    if (pathname === '/api/keywords/expand' && req.method === 'POST') {
+      const body = await parseJsonBody(req);
+      const query = body.keyword || body.query;
+      if (!query || typeof query !== 'string') {
+        sendJson(res, 400, { error: 'keyword is required' });
+        return;
+      }
+      const expanded = expandKeywordMultiAngle(query);
+      sendJson(res, 200, {
+        keyword: query,
+        ...expanded,
+        provenance: {
+          tier: 'statistical_model',
+          isFactual: false,
+          dataSource: 'Open Semrush Multi-Angle Semantic Expander',
+          methodology: 'Heuristic linguistic expansions across questions, comparisons, prepositions, and transactional modifiers',
+          confidence: 'modeled',
+        },
+      });
+      return;
+    }
+
+    // API Route: 6-Tier Keyword Difficulty Calibrator
+    if (pathname === '/api/keywords/kd' && req.method === 'GET') {
+      const scoreParam = reqUrl.searchParams.get('score');
+      const score = scoreParam !== null ? Number(scoreParam) : 45;
+      const tierInfo = getKdTier(score);
+      sendJson(res, 200, tierInfo);
       return;
     }
 
@@ -488,6 +532,20 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    // API Route: Backlink Toxicity Audit (8-vector deterministic audit)
+    if (pathname === '/api/backlinks/toxicity' && (req.method === 'GET' || req.method === 'POST')) {
+      let domain = reqUrl.searchParams.get('domain') || 'github.com';
+      let links = [];
+      if (req.method === 'POST') {
+        const body = await parseJsonBody(req);
+        if (body.domain) domain = body.domain;
+        if (Array.isArray(body.links)) links = body.links;
+      }
+      const toxicityReport = auditBacklinkToxicity(domain, links);
+      sendJson(res, 200, toxicityReport);
+      return;
+    }
+
     // API Route: Rank Tracker Overview
     if (pathname === '/api/rank-tracker/overview' && req.method === 'GET') {
       const domain = reqUrl.searchParams.get('domain') || 'github.com';
@@ -554,6 +612,34 @@ const server = http.createServer(async (req, res) => {
       }
       const history = getRankHistoryForKeyword(keywordId);
       sendJson(res, 200, { keywordId, history });
+      return;
+    }
+
+    // API Route: Rank Volatility Alerts
+    if (pathname === '/api/rank-tracker/alerts' && req.method === 'GET') {
+      const domain = reqUrl.searchParams.get('domain') || 'github.com';
+      const alerts = getRankingAlerts(domain);
+      sendJson(res, 200, { domain, alerts });
+      return;
+    }
+
+    // API Route: Tracked Competitors List
+    if (pathname === '/api/rank-tracker/competitors' && req.method === 'GET') {
+      const domain = reqUrl.searchParams.get('domain') || 'github.com';
+      const competitors = getTrackedCompetitors(domain);
+      sendJson(res, 200, { domain, competitors });
+      return;
+    }
+
+    // API Route: Add Tracked Competitor
+    if (pathname === '/api/rank-tracker/competitors' && req.method === 'POST') {
+      const body = await parseJsonBody(req);
+      if (!body.domain || !body.competitorDomain) {
+        sendJson(res, 400, { error: 'domain and competitorDomain are required' });
+        return;
+      }
+      const item = addTrackedCompetitor(body.domain, body.competitorDomain);
+      sendJson(res, 201, item);
       return;
     }
 
