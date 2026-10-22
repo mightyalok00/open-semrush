@@ -1,6 +1,7 @@
 // In-memory set of API keys that failed authentication (401/403) to avoid repeated failed network calls
 const invalidKeys = new Set();
 export const OPENROUTER_FREE_MODELS = [
+    'google/gemini-2.5-flash',
     'minimax/minimax-m3.1-flash:free',
     'google/gemma-4-31b-it:free',
     'google/gemma-4-26b-a4b-it:free',
@@ -9,11 +10,11 @@ export const OPENROUTER_FREE_MODELS = [
     'openrouter/free',
 ];
 export const GEMINI_WORKING_MODELS = [
+    'gemini-2.5-flash',
+    'gemini-2.0-flash',
+    'gemini-1.5-flash',
     'gemini-3.5-flash',
     'gemini-3.5-flash-lite',
-    'gemini-3.1-flash-lite',
-    'gemini-3.8-flash',
-    'gemini-3.7-flash',
     'gemini-flash-lite-latest',
     'gemini-flash-latest',
 ];
@@ -29,8 +30,17 @@ export async function queryAiJson(prompt, preferredApiKey, maxTokens = 1500) {
     if (isTestExecution && !process.env.OPEN_SEMRUSH_TEST_LIVE_AI) {
         return null;
     }
-    const openRouterKey = process.env.OPENROUTER_API_KEY?.trim() || (preferredApiKey?.startsWith('sk-or-') ? preferredApiKey.trim() : undefined);
-    const geminiKey = process.env.GEMINI_API_KEY?.trim() || (preferredApiKey && !preferredApiKey.startsWith('sk-or-') ? preferredApiKey.trim() : undefined);
+    // Load .env explicitly if available to pick up project configuration
+    try {
+        process.loadEnvFile();
+    }
+    catch { }
+    const openRouterKey = preferredApiKey?.startsWith('sk-or-')
+        ? preferredApiKey.trim()
+        : process.env.OPENROUTER_API_KEY?.trim();
+    const geminiKey = preferredApiKey && !preferredApiKey.startsWith('sk-or-')
+        ? preferredApiKey.trim()
+        : process.env.GEMINI_API_KEY?.trim();
     // 1. Try OpenRouter first across active and free models
     if (openRouterKey && !invalidKeys.has(openRouterKey)) {
         const candidateModels = process.env.OPENROUTER_MODEL

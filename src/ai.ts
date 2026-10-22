@@ -12,6 +12,7 @@ export interface AiDomainAnalysis {
 const invalidKeys = new Set<string>();
 
 export const OPENROUTER_FREE_MODELS: readonly string[] = [
+  'google/gemini-2.5-flash',
   'minimax/minimax-m3.1-flash:free',
   'google/gemma-4-31b-it:free',
   'google/gemma-4-26b-a4b-it:free',
@@ -21,11 +22,11 @@ export const OPENROUTER_FREE_MODELS: readonly string[] = [
 ];
 
 export const GEMINI_WORKING_MODELS: readonly string[] = [
+  'gemini-2.5-flash',
+  'gemini-2.0-flash',
+  'gemini-1.5-flash',
   'gemini-3.5-flash',
   'gemini-3.5-flash-lite',
-  'gemini-3.1-flash-lite',
-  'gemini-3.8-flash',
-  'gemini-3.7-flash',
   'gemini-flash-lite-latest',
   'gemini-flash-latest',
 ];
@@ -49,8 +50,17 @@ export async function queryAiJson<T>(
     return null;
   }
 
-  const openRouterKey = process.env.OPENROUTER_API_KEY?.trim() || (preferredApiKey?.startsWith('sk-or-') ? preferredApiKey.trim() : undefined);
-  const geminiKey = process.env.GEMINI_API_KEY?.trim() || (preferredApiKey && !preferredApiKey.startsWith('sk-or-') ? preferredApiKey.trim() : undefined);
+  // Load .env explicitly if available to pick up project configuration
+  try {
+    process.loadEnvFile();
+  } catch {}
+
+  const openRouterKey = preferredApiKey?.startsWith('sk-or-')
+    ? preferredApiKey.trim()
+    : process.env.OPENROUTER_API_KEY?.trim();
+  const geminiKey = preferredApiKey && !preferredApiKey.startsWith('sk-or-')
+    ? preferredApiKey.trim()
+    : process.env.GEMINI_API_KEY?.trim();
 
   // 1. Try OpenRouter first across active and free models
   if (openRouterKey && !invalidKeys.has(openRouterKey)) {
