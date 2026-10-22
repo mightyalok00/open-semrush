@@ -12,11 +12,11 @@ export interface AiDomainAnalysis {
 const invalidKeys = new Set<string>();
 
 export const OPENROUTER_FREE_MODELS: readonly string[] = [
-  'google/gemini-2.5-flash',
   'minimax/minimax-m3.1-flash:free',
   'google/gemma-4-31b-it:free',
+  'poolside/laguna-s-2.1:free',
+  'google/gemini-2.5-flash',
   'google/gemma-4-26b-a4b-it:free',
-  'liquid/lfm-2.5-2.6b:free',
   'nvidia/nemotron-3.5-lightning:free',
   'openrouter/free',
 ];

@@ -1,11 +1,11 @@
 // In-memory set of API keys that failed authentication (401/403) to avoid repeated failed network calls
 const invalidKeys = new Set();
 export const OPENROUTER_FREE_MODELS = [
-    'google/gemini-2.5-flash',
     'minimax/minimax-m3.1-flash:free',
     'google/gemma-4-31b-it:free',
+    'poolside/laguna-s-2.1:free',
+    'google/gemini-2.5-flash',
     'google/gemma-4-26b-a4b-it:free',
-    'liquid/lfm-2.5-2.6b:free',
     'nvidia/nemotron-3.5-lightning:free',
     'openrouter/free',
 ];
