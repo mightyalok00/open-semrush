@@ -183,19 +183,23 @@ The clustering engine aggregates related keyword opportunities into topical clus
 To deliver deep semantic understanding without requiring external paid NLP API subscriptions, `open-semrush` includes a local-first, zero-dependency linguistic analysis engine in `src/nlp.ts`:
 
 ### 1. Semantic Keyword Clustering & Subtopic Discovery
+
 - **Hybrid Similarity Function**: Combines morphological stem Jaccard index (70% weight) with character 3-gram similarity (30% weight), capturing both word-level semantic meaning and spelling variants.
 - **Topical Hierarchy**: Groups queries into clusters with an automated cluster theme anchor, intent breakdown (`Informational`, `Commercial`, `Navigational`, `Transactional`), and extracted subtopics.
 
 ### 2. Search Intent vs. Page Content Alignment Auditing
+
 - **Bi-Directional Intent Profiling**: Profiles target landing page DOM signals (transactional CTA buttons, payment fields, comparison tables, review stars, schema.org types) into an empirical intent probability distribution.
 - **Alignment Vector Product**: Computes a normalized intent compatibility score ($0-100\%$) against search query intent, diagnosing misalignment (e.g., transactional purchase query landing on an educational history guide) with actionable remediation advice.
 
 ### 3. Semantic Content-Gap Analysis
+
 - **TF-IDF & BM25 Concept Salience**: Computes unigram and bigram term frequency matrices to identify dominant topics across pages.
 - **Unanswered Question Discovery**: Detects interrogative sentence patterns (`How`, `What`, `Why`, `When`, `Can`) in competitor headings/text absent from the target page.
 - **Topical Coverage Score**: Measures normalized conceptual overlap ($0-100\%$) to guide content expansion.
 
 ### 4. Named Entity Extraction & Content Quality Evaluation
+
 - **Entity Classification**: Identifies `technology` (e.g., TypeScript, Docker, PostgreSQL), `organization` (e.g., Google, Cloudflare), `product`, and `concept` entities with normalized salience scores.
 - **Lexical Diversity**: Measures Root Type-Token Ratio ($R = \frac{V}{\sqrt{N}}$) to distinguish rich, authoritative content from thin writing.
 - **Repetition Entropy & Stuffing Detection**: Calculates 3-gram uniqueness ratios to detect spun content and flags unnatural keyword density ($>7\%$ frequency across $\ge 8$ occurrences in $\ge 100$ words).
