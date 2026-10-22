@@ -31,12 +31,14 @@ All 133 unit, NLP, capability, backtesting, and storage recovery tests pass dete
 ## 3. SEO Traffic Forecasting & Rolling-Origin Backtesting Architecture
 
 ### 3.1 Time Horizons & Status
+
 - **Forecast Horizons**: 30-, 90-, and 180-day intervals.
 - **Parametric 95% Uncertainty Bounds**: Expanding square-root time horizon uncertainty:
   $$\text{margin}(h) = 1.96 \cdot \sigma_{\text{residual}} \cdot \sqrt{1 + \frac{h + 1}{30}}$$
 - **Insufficient Evidence Handling**: When historical observations comprise `< 30` consecutive days or `< 50` total observed clicks, the engine returns `status: 'insufficient_evidence'` with explicit rationale and limitations.
 
 ### 3.2 Leakage-Free Rolling-Origin Temporal Cross-Validation
+
 - Evaluated across rolling holdout windows with assertion:
   $$\max(T_{\text{train}}) < \min(T_{\text{test}})$$
 - **Baseline Models**:
@@ -68,6 +70,7 @@ All 133 unit, NLP, capability, backtesting, and storage recovery tests pass dete
 ```
 
 ### Coverage Report Breakdown
+
 - **All Files Line Coverage**: `85.74%`
 - **Branch Coverage**: `76.91%`
 - **Functions Coverage**: `84.06%`
