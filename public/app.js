@@ -227,6 +227,10 @@ async function fetchDomainOverview(domain) {
     document.getElementById('domainAsBar').style.width = `${data.authorityScore}%`;
     document.getElementById('domainTraffic').textContent = data.estimatedMonthlyOrganicTraffic.toLocaleString();
     document.getElementById('domainKeywordsCount').textContent = data.totalRankedKeywords.toLocaleString();
+    if (typeof data.shareOfVoice === 'number') {
+      const badge = document.querySelector('#domainAsBar')?.closest('.kpi-card')?.querySelector('.kpi-badge');
+      if (badge) badge.textContent = `SOV: ${data.shareOfVoice}%`;
+    }
 
     // Render Competitor Tags with click-to-inspect shortcuts
     const compContainer = document.getElementById('domainCompetitors');
@@ -417,7 +421,21 @@ async function fetchKeywordData(query) {
 
     // Dynamic color coding based on KD difficulty tier
     const kdBadge = document.getElementById('kwKdBadge');
-    if (m.keywordDifficulty > 70) {
+    if (m.kdTier) {
+      kdBadge.textContent = m.kdTier.tier;
+      if (m.kdTier.tier === 'Super Hard' || m.kdTier.tier === 'Very Hard') {
+        kdBadge.className = 'kpi-badge badge-error';
+      } else if (m.kdTier.tier === 'Hard' || m.kdTier.tier === 'Possible') {
+        kdBadge.className = 'kpi-badge badge-warning';
+      } else {
+        kdBadge.className = 'kpi-badge badge-growth';
+      }
+      const kdCard = document.getElementById('kwKdBar')?.closest('.kpi-card');
+      const kdSub = kdCard?.querySelector('.kpi-sub');
+      if (kdSub && m.kdTier.minReferringDomainsNeeded !== undefined) {
+        kdSub.textContent = `Needs ~${m.kdTier.minReferringDomainsNeeded}+ referring domains (${m.kdTier.range})`;
+      }
+    } else if (m.keywordDifficulty > 70) {
       kdBadge.className = 'kpi-badge badge-error';
       kdBadge.textContent = 'Very Hard';
     } else if (m.keywordDifficulty > 45) {

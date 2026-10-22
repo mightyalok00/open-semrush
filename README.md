@@ -5,8 +5,8 @@ Official Google Search Console telemetry, empirical machine learning rank curves
 
 [![CI Quality](https://img.shields.io/badge/CI%20Quality-Passing-brightgreen?logo=github-actions)](https://github.com/mightyalok00/open-semrush/actions/workflows/quality.yml)
 [![Node.js](https://img.shields.io/badge/Node.js-%E2%89%A522.0.0-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
-[![Tests: 95 Passing](https://img.shields.io/badge/Tests-95%20Passing-success)](#-tests-coverage-and-benchmarks)
-[![Coverage: 83.2%](https://img.shields.io/badge/Coverage-83.2%25-informational)](#-tests-coverage-and-benchmarks)
+[![Tests: 127 Passing](https://img.shields.io/badge/Tests-127%20Passing-success)](#-tests-coverage-and-benchmarks)
+[![Coverage: 84.3%](https://img.shields.io/badge/Coverage-84.3%25-informational)](#-tests-coverage-and-benchmarks)
 [![Security Score: 9.5/10](https://img.shields.io/badge/Security%20Score-9.5%2F10-blueviolet)](https://github.com/mightyalok00/open-semrush/blob/main/reports/quality/production-readiness-2026-10-21.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/mightyalok00/open-semrush/blob/main/LICENSE)
 
@@ -17,21 +17,23 @@ Official Google Search Console telemetry, empirical machine learning rank curves
 > Open Semrush enforces a strict **Data Provenance Contract** on every API response and metric. Facts and estimates are never conflated:
 >
 > - `verified_provider`: Direct first-party telemetry from official APIs (Google Search Console Search Analytics API).
-> - `empirical_observation`: Factual measurements observed during active HTTP crawls (status codes, response headers, DOM markup, SSL certificates).
+> - `empirical_observation`: Factual measurements observed during active HTTP crawls (status codes, response headers, DOM markup, SSL certificates, crawled link graph).
 > - `provider_api`: Live search data from external search providers (Google Suggest Autocomplete, DataForSEO Labs).
-> - `statistical_model`: Bounded mathematical regressions (Empirical CTR power-law curve, Softmax intent probability distribution, 95% traffic forecast confidence intervals).
-> - `synthetic_estimate`: Modeled preview simulations for backlinks and competitor authority scores (clearly labeled; do not cite as factual client reporting until a commercial backlink provider is connected).
+> - `statistical_model`: Bounded mathematical regressions (Empirical CTR power-law curve, Softmax intent probability distribution, 8-vector toxicity audit, Share of Voice, 6-tier KD calibration).
+> - `synthetic_estimate`: Modeled preview simulations for initial competitor domain approximations (clearly labeled).
 >
 
 ---
 
 ## ✨ Key Platform Capabilities
 
-- 🕷️ **Asynchronous Technical Crawler**: Bounded multi-page crawler with redirect loop protection, streaming body limit (5 MiB), socket DNS pinning to public IPs, and title/meta/H1/alt/schema validation.
+- 🕷️ **Asynchronous Technical Crawler & Link Graph**: Bounded multi-page crawler with redirect loop protection, streaming body limit (5 MiB), socket DNS pinning, and directed graph topology extraction.
+- 🔗 **Backlink Intelligence & 8-Vector Toxicity Audit**: Real crawl link graph extraction, 5-tier anchor text taxonomy (`Branded`, `Exact Match`, `Partial Match`, `Naked URL`, `Generic`), and 8-vector deterministic toxicity scoring with Google Disavow file candidate generation.
+- 📊 **Competitor Traffic Intelligence & Share of Voice**: Empirical power-law CTR curve aggregation, Market Share of Voice (SOV) calculation against competitor cohorts, and 4-way competitive position classification (`missing`, `weak`, `strong`, `shared`, `unique`).
+- 💎 **Calibrated Keyword Research & Multi-Angle Expansions**: 6-tier Keyword Difficulty (KD) engine with referring domain requirements (`Very Easy` to `Super Hard`), SERP layout feature opportunity predictor (snippets, PAA, video, local packs), and multi-angle query expansions.
 - 🎯 **Deep Google Search Console Intelligence**: Multi-dimensional slicing (`query`, `page`, `device`, `country`), automatic **Striking Distance** keyword detection (positions 11-20 with high impressions), **Keyword Cannibalization** conflict detection across competing landing pages, and **CTR Opportunity** gap analysis vs power-law benchmarks.
-- 🔍 **Real Keyword Research & Query Discovery**: Live Google Suggest autocomplete engine discovering real user questions, comparison modifiers (`vs`, `alternative`), and long-tail intents, with optional commercial DataForSEO Labs integration.
-- 📈 **Scheduled Rank Tracking**: Track target keywords per domain, calculate weighted Visibility Index (0–100), identify ranking winners & losers ($\Delta pos$), and snapshot organic SERP movements over time.
-- 🧠 **Applied ML & Statistical Engine**: Empirical power-law CTR rank curve regression, 4-class softmax intent probability distribution, and parametric 95% traffic forecast intervals ($I_{0.95} = \hat{Y} \pm 1.96\sigma$).
+- 📈 **Scheduled Rank Tracking & Head-to-Head Comparisons**: Track target keywords per domain, calculate weighted Visibility Index (0–100), pairwise head-to-head competitor win rates, and ranking volatility alerts (`CRITICAL_DROP`, `PAGE_ONE_ENTRY`, `RANK_ONE_GAINED`, `OUT_OF_INDEX`).
+- 🧠 **Applied ML & Local-First NLP Engine**: Empirical power-law CTR rank curve regression, 4-class softmax intent distribution, Root TTR lexical diversity, character 3-gram repetition entropy, and semantic content gap analysis.
 - 🤖 **Autonomous Multi-Tier AI Cascade**: Intelligent failover chain connecting OpenRouter free-tier models (`minimax`, `gemma-4`, `lfm-2.5`, `nemotron-3.5`) and Google Gemini (`gemini-3.5-flash`, `gemini-3.1-flash-lite`) with air-gapped deterministic fallback.
 - 🛡️ **Zero-Trust Security & SSRF Defense**: Sockets connect directly to pinned public IPs to defeat DNS rebinding/TOCTOU attacks. In-flight redirect re-validation, proxy header sanitization, constant-time token comparison, and zero-downtime key rotation.
 - 💾 **Dual-Engine Storage & Disaster Recovery**: Atomic JSON storage with `.tmp` staging, `fsync` flushing, and fail-closed corruption defense, plus a relational SQLite engine (`node:sqlite` WAL mode) with ACID rollback and point-in-time backup verification.
@@ -121,18 +123,24 @@ curl 'http://localhost:3000/api/search-console?siteUrl=sc-domain%3Aexample.com&s
 | `GET` | `/api/search-console?siteUrl=...&startDate=...&endDate=...` | 🔒 Token | **Verified Provider Data**: Multi-dimension queries + Striking Distance & Cannibalization intelligence |
 | `GET` | `/api/keywords/real?q=...&provider=...` | 🔓 Public | **Provider Data**: Live Google Suggest questions, comparisons, and long-tail research |
 | `GET` | `/api/keyword?q=...` | 🔓 Public | Statistical search volume, KD%, intent distribution, and CPC |
+| `POST` | `/api/keywords/expand` | 🔓 Public | **Model Expansion**: Multi-angle query suggestion expander (questions, comparisons, long-tail) |
+| `GET` | `/api/keywords/kd?score=...` | 🔓 Public | **Statistical Calibrator**: 6-tier difficulty classification and referring domain requirements |
 | `GET` | `/api/rank-tracker/overview?domain=...` | 🔒 Token | **Empirical Finding**: Visibility index, average position, distribution, winners & losers |
 | `GET` | `/api/rank-tracker/keywords?domain=...` | 🔒 Token | **Empirical Finding**: List active tracked keywords with current positions and deltas |
 | `POST` | `/api/rank-tracker/keywords` | 🔒 Token | Add keyword to scheduled rank tracking |
 | `DELETE` | `/api/rank-tracker/keywords` | 🔒 Token | Remove keyword from scheduled rank tracking |
 | `POST` | `/api/rank-tracker/check` | 🔒 Token | **Empirical Finding**: Trigger on-demand rank check across tracked keywords |
 | `GET` | `/api/rank-tracker/history?keywordId=...` | 🔒 Token | Historical position snapshots for tracked keyword |
-| `GET` | `/api/domain?domain=...&country=...` | 🔓 Public | Modeled domain authority, traffic history, and keywords (`synthetic_estimate`) |
+| `GET` | `/api/rank-tracker/alerts?domain=...` | 🔒 Token | **Empirical Finding**: Real-time ranking volatility alert stream |
+| `GET` | `/api/rank-tracker/competitors?domain=...` | 🔒 Token | List head-to-head tracked competitors for domain |
+| `POST` | `/api/rank-tracker/competitors` | 🔒 Token | Add competitor to head-to-head rank tracking |
+| `GET` | `/api/domain?domain=...&country=...` | 🔓 Public | Modeled domain authority, SOV%, traffic history, and keywords (`synthetic_estimate`) |
 | `GET` | `/api/serp?q=...` | 🔓 Public | Parsed live SERP with feature extraction and fallback examples |
 | `POST` | `/api/audit` | 🔒 Token | **Empirical Finding**: Active crawl & HTML signal audit (`empirical_observation`) |
 | `GET` | `/api/gap?domainA=...&domainB=...` | 🔓 Public | Modeled keyword gap comparison |
 | `GET` | `/api/gap/multi?domains=a,b,c` | 🔓 Public | Modeled multi-domain competitive matrix |
 | `GET` | `/api/backlinks?domain=...` | 🔓 Public | Modeled backlink graph preview (`synthetic_estimate`) |
+| `GET/POST` | `/api/backlinks/toxicity?domain=...` | 🔓 Public | **Statistical Audit**: 8-vector backlink toxicity report & disavow candidates |
 | `POST` | `/api/ai/fix` | 🔒 Token | Autonomous AI code remediation snippet |
 | `POST` | `/api/ai/strategy` | 🔒 Token | Autonomous AI outrank content blueprint |
 | `GET` | `/api/projects` | 🔒 Token | Persisted audit project registry |
@@ -143,10 +151,10 @@ curl 'http://localhost:3000/api/search-console?siteUrl=sc-domain%3Aexample.com&s
 ## 🧪 Tests, Coverage and Benchmarks
 
 ```bash
-# Run full 95-test suite across 13 test suites (Unit, ML, GSC Intelligence, Rank Tracker, Security, Storage)
+# Run full 127-test suite across 18 test suites (Unit, ML, NLP, Capabilities, GSC Intelligence, Rank Tracker, Security, Storage)
 npm test
 
-# Run test coverage with enforced 72% minimum threshold gate
+# Run test coverage with enforced minimum threshold gate (84.3% achieved)
 npm run test:coverage
 
 # Run dedicated security regression test suite
