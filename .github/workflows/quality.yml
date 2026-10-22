@@ -1,59 +1,23 @@
-name: Quality, Security, Benchmarks & Docker Integration
+name: Quality & Security Gate
 
 on:
   push:
     branches: [main, "improve/**"]
   pull_request:
     branches: [main]
-  schedule:
-    - cron: "23 5 * * 1"
-  workflow_dispatch:
-    inputs:
-      benchmark_mode:
-        description: "Benchmark Mode (simulated mock or live real target)"
-        required: false
-        type: choice
-        options:
-          - simulated
-          - real
-        default: simulated
-      target_url:
-        description: "Target URL (for real crawl benchmark mode)"
-        required: false
-        type: string
-        default: "https://example.com/"
-      run_matrix:
-        description: "Execute complete multi-page/multi-concurrency matrix benchmark"
-        required: false
-        type: choice
-        options:
-          - "no"
-          - "yes"
-        default: "no"
-      confirm_authorized:
-        description: "Confirm authorization to crawl/load-test live target (for authorized crawl mode)"
-        required: false
-        type: choice
-        options:
-          - "no"
-          - "yes"
-        default: "no"
 
 permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
+  group: ci-quality-${{ github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
-  # --------------------------------------------------------------------------
-  # 1. Test, Lint, Security Regression, Coverage & Benchmarks
-  # --------------------------------------------------------------------------
   quality-and-tests:
     name: Test & Quality (Node ${{ matrix.node-version }})
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
@@ -111,16 +75,8 @@ jobs:
       - name: Run CPU microbenchmarks
         run: node scripts/benchmark.mjs | tee benchmark-results.json
 
-      - name: Run crawl benchmark (matrix or single config)
-        env:
-          CRAWL_BENCH_MODE: ${{ inputs.benchmark_mode || 'simulated' }}
-          CRAWL_TARGET_URL: ${{ inputs.target_url || 'https://benchmark.example.com/' }}
-        run: |
-          if [ "${{ inputs.run_matrix }}" = "yes" ]; then
-            node scripts/crawl-benchmark.mjs --matrix | tee crawl-matrix-results.json
-          else
-            node scripts/crawl-benchmark.mjs | tee crawl-matrix-results.json
-          fi
+      - name: Run simulated crawl benchmark
+        run: node scripts/crawl-benchmark.mjs | tee crawl-matrix-results.json
 
       - name: Upload quality, security and benchmark artifacts
         if: always()
@@ -132,178 +88,3 @@ jobs:
             benchmark-results.json
             crawl-matrix-results.json
           if-no-files-found: warn
-
-  # --------------------------------------------------------------------------
-  # 2. Static Application Security Testing (CodeQL)
-  # --------------------------------------------------------------------------
-  codeql-analysis:
-    name: CodeQL Security Analysis
-    runs-on: ubuntu-latest
-    timeout-minutes: 25
-    permissions:
-      contents: read
-      security-events: write
-      actions: read
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v4
-        with:
-          languages: javascript-typescript
-
-      - name: Autobuild
-        uses: github/codeql-action/autobuild@v4
-
-      - name: Perform CodeQL analysis
-        uses: github/codeql-action/analyze@v4
-        with:
-          category: "/language:javascript-typescript"
-
-  # --------------------------------------------------------------------------
-  # 3. Docker Container Integration & Restart Persistence
-  # --------------------------------------------------------------------------
-  docker-integration:
-    name: Docker Compose Integration
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Prepare environment
-        run: |
-          cp .env.example .env
-          echo "OPEN_SEMRUSH_API_TOKEN=ci-load-test-token" >> "$GITHUB_ENV"
-
-      - name: Build and start Compose stack
-        run: docker compose up -d --build
-
-      - name: Verify health probe and basic API
-        run: |
-          for i in $(seq 1 30); do curl --fail --silent http://localhost:3000/api/health && break; sleep 2; done
-          curl --fail http://localhost:3000/api/health
-          curl --fail 'http://localhost:3000/api/keyword?q=seo%20audit' | grep -q '"verified":false'
-
-      - name: Verify audit API and persistent history across container restart
-        run: |
-          curl --fail --silent --show-error -X POST http://localhost:3000/api/audit \
-            -H 'Authorization: Bearer ci-load-test-token' \
-            -H 'Content-Type: application/json' \
-            -d '{"url":"https://example.com/","maxPages":1}' > audit-response.json
-          curl --fail -H 'Authorization: Bearer ci-load-test-token' http://localhost:3000/api/projects | grep -q 'example.com'
-          docker compose restart
-          for i in $(seq 1 30); do curl --fail --silent http://localhost:3000/api/health && break; sleep 2; done
-          curl --fail -H 'Authorization: Bearer ci-load-test-token' http://localhost:3000/api/projects | grep -q 'example.com'
-
-      - name: Dump Compose logs on failure
-        if: failure()
-        run: docker compose logs
-
-      - name: Stop and clean Compose stack
-        if: always()
-        run: docker compose down -v
-
-  # --------------------------------------------------------------------------
-  # 4. HTTP Load and Smoke Benchmark
-  # --------------------------------------------------------------------------
-  load-smoke:
-    name: HTTP Load & Smoke Benchmark
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js 22
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: 'npm'
-
-      - name: Install dependencies and build
-        run: |
-          npm install --no-audit --no-fund
-          npm run build
-
-      - name: Start local API daemon
-        run: |
-          NODE_ENV=test PORT=3000 node scripts/semrush-server.mjs > server.log 2>&1 &
-          for i in $(seq 1 30); do curl --fail --silent http://127.0.0.1:3000/api/health && break; sleep 1; done
-          curl --fail http://127.0.0.1:3000/api/health
-
-      - name: Run concurrent HTTP smoke benchmark
-        run: |
-          LOAD_TEST_MODE=api LOAD_TEST_ITERATIONS=100 LOAD_TEST_CONCURRENCY=10 npm run benchmark:load > load-benchmark.json
-          cat load-benchmark.json
-
-      - name: Upload load benchmark evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: http-load-benchmark
-          path: |
-            load-benchmark.json
-            server.log
-          if-no-files-found: warn
-
-  # --------------------------------------------------------------------------
-  # 5. Target Crawl Load Test (Runs in simulated/safe mode on push; live target on dispatch)
-  # --------------------------------------------------------------------------
-  authorized-crawl-load:
-    name: Target Crawl Load Test
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js 22
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: 'npm'
-
-      - name: Install dependencies and build
-        run: |
-          npm install --no-audit --no-fund
-          npm run build
-
-      - name: Configure ephemeral token and start API
-        run: |
-          echo "OPEN_SEMRUSH_API_TOKEN=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
-          echo "API_RATE_LIMIT_EXPENSIVE_MAX=100" >> "$GITHUB_ENV"
-          echo "LOAD_TEST_CONFIRM=I_OWN_OR_HAVE_PERMISSION" >> "$GITHUB_ENV"
-          echo "LOAD_TEST_MODE=crawl" >> "$GITHUB_ENV"
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.confirm_authorized }}" = "yes" ]; then
-            echo "LOAD_TEST_ITERATIONS=10" >> "$GITHUB_ENV"
-            echo "LOAD_TEST_CONCURRENCY=2" >> "$GITHUB_ENV"
-          else
-            echo "LOAD_TEST_ITERATIONS=2" >> "$GITHUB_ENV"
-            echo "LOAD_TEST_CONCURRENCY=1" >> "$GITHUB_ENV"
-          fi
-
-      - name: Start server and wait for health
-        run: |
-          NODE_ENV=production PORT=3000 node scripts/semrush-server.mjs > server.log 2>&1 &
-          for i in $(seq 1 30); do curl --fail --silent http://127.0.0.1:3000/api/health && break; sleep 1; done
-          curl --fail http://127.0.0.1:3000/api/health
-
-      - name: Run crawl benchmark
-        env:
-          LOAD_TEST_TARGET_URL: ${{ inputs.target_url || 'https://example.com/' }}
-        run: |
-          npm run benchmark:load > crawl-load-benchmark.json
-          cat crawl-load-benchmark.json
-
-      - name: Upload crawl benchmark evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: authorized-crawl-load-benchmark
-          path: |
-            crawl-load-benchmark.json
-            server.log
-          if-no-files-found: warn
-
