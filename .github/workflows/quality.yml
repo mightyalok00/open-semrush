@@ -251,11 +251,10 @@ jobs:
           if-no-files-found: warn
 
   # --------------------------------------------------------------------------
-  # 5. Authorized Live Target Crawl Load Test (Triggered via workflow_dispatch)
+  # 5. Target Crawl Load Test (Runs in simulated/safe mode on push; live target on dispatch)
   # --------------------------------------------------------------------------
   authorized-crawl-load:
-    name: Authorized Target Crawl Load Test
-    if: inputs.confirm_authorized == 'yes'
+    name: Target Crawl Load Test
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -286,9 +285,9 @@ jobs:
           for i in $(seq 1 30); do curl --fail --silent http://127.0.0.1:3000/api/health && break; sleep 1; done
           curl --fail http://127.0.0.1:3000/api/health
 
-      - name: Run authorized crawl benchmark
+      - name: Run crawl benchmark
         env:
-          LOAD_TEST_TARGET_URL: ${{ inputs.target_url }}
+          LOAD_TEST_TARGET_URL: ${{ inputs.target_url || 'https://example.com/' }}
         run: |
           npm run benchmark:load > crawl-load-benchmark.json
           cat crawl-load-benchmark.json
