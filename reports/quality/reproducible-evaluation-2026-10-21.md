@@ -2,8 +2,8 @@
 
 **Evaluation Target**: `open-semrush` Core Engine & Diagnostic Rules  
 **Repository**: <https://github.com/mightyalok00/open-semrush>  
-**Automated Verification Suites**: [`tests/golden-seo-audit.test.mjs`](file:///d:/rever/open-semrush/tests/golden-seo-audit.test.mjs), [`tests/crawl-resilience.test.mjs`](file:///d:/rever/open-semrush/tests/crawl-resilience.test.mjs), [`tests/search-console.test.mjs`](file:///d:/rever/open-semrush/tests/search-console.test.mjs), [`tests/ml-statistical.test.mjs`](file:///d:/rever/open-semrush/tests/ml-statistical.test.mjs)  
-**Verification Status**: **100% PASSING (83 passing tests across 10 test suites)**
+**Automated Verification Suites**: Full deterministic test suite across 10 suites (`tests/golden-seo-audit.test.mjs`, `tests/crawl-resilience.test.mjs`, `tests/search-console.test.mjs`, `tests/ml-statistical.test.mjs`, `tests/security-regression.test.mjs`, `tests/storage-recovery.test.mjs`, `tests/forecast-backtesting.test.mjs`)  
+**Verification Status**: **100% PASSING (133 passing tests across 10 test suites, 0 failed, 0 skipped)**
 
 ---
 

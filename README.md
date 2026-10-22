@@ -5,9 +5,9 @@ Official Google Search Console telemetry, empirical machine learning rank curves
 
 [![CI Quality](https://img.shields.io/badge/CI%20Quality-Passing-brightgreen?logo=github-actions)](https://github.com/mightyalok00/open-semrush/actions/workflows/quality.yml)
 [![Node.js](https://img.shields.io/badge/Node.js-%E2%89%A522.0.0-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
-[![Tests: 133 Passing](https://img.shields.io/badge/Tests-133%20Passing-success)](#-key-platform-capabilities)
-[![Coverage: 85.7%](https://img.shields.io/badge/Coverage-85.7%25-informational)](#-key-platform-capabilities)
-[![Security Score: 9.5/10](https://img.shields.io/badge/Security%20Score-9.5%2F10-blueviolet)](https://github.com/mightyalok00/open-semrush/blob/main/reports/quality/production-readiness-2026-10-21.md)
+[![Tests: 133 Passing](https://img.shields.io/badge/Tests-133%20Passing-success)](reports/quality/forecast-backtesting-evaluation-2026-10-22.md)
+[![Coverage: 85.7%](https://img.shields.io/badge/Coverage-85.7%25-informational)](reports/quality/forecast-backtesting-evaluation-2026-10-22.md)
+[![Security Score: 9.5/10](https://img.shields.io/badge/Security%20Score-9.5%2F10-blueviolet)](reports/quality/production-readiness-2026-10-21.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/mightyalok00/open-semrush/blob/main/LICENSE)
 
 ---

@@ -18,11 +18,11 @@ This report records empirical verification and hardening improvements implemente
 
 - Repository: <https://github.com/mightyalok00/open-semrush>
 - Branch: `main`
-- Tested commit: `dad5b07`
+- Tested commit: `f4b88b8` (Reconciled with `reports/quality/forecast-backtesting-evaluation-2026-10-22.md`)
 - Workflow dispatch: Enabled (`workflow_dispatch:` across quality, security, benchmark, and authorized crawl workflows)
 - CI Workflow: <https://github.com/mightyalok00/open-semrush/actions/workflows/quality.yml>
 - Local Runner: Node.js v24.12.0, Windows x64 (verified cross-platform against Linux x64 Node 22/24 in GitHub Actions)
-- Test result: **75 passed, 0 failed** across 9 test suites (execution time: 445ms, zero warnings).
+- Test result: **133 passed, 0 failed** across 10 test suites (execution time: 3.7s, zero warnings).
 - Docker integration: Clean Compose build/start, health probes, authorized audit API, project history persistence across container restart — passed.
 - Concurrent HTTP load smoke: 100 requests at concurrency 10 — passed.
 
