@@ -124,13 +124,14 @@ node -e "import { restoreDb } from './dist/storage.js'; restoreDb('${LATEST_BACK
 curl http://localhost:3000/api/health
 ```
 
-
 ---
 
 ## 4. Docker Deployment, Container Persistence & Security Controls
 
 ### Container Isolation & Hardened Sandbox
+
 The production container specification (`docker-compose.yml` & `Dockerfile`) implements defense-in-depth isolation:
+
 - **Read-Only Root Filesystem**: `read_only: true` prevents unauthorized filesystem modifications by compromised processes.
 - **Dedicated Volume Mount**: `/app/data` is mounted to named volume `open-semrush-data` for durable state persistence across container teardown and upgrade cycles.
 - **Unprivileged User**: Runs as `USER node` (UID 1000). Dropped all Linux capabilities via `cap_drop: - ALL`.
@@ -138,7 +139,9 @@ The production container specification (`docker-compose.yml` & `Dockerfile`) imp
 - **Resource Constraints**: Capped at `cpus: 1.0` and `mem_limit: 768m` to prevent noisy-neighbor memory exhaustion.
 
 ### Restart Persistence Drill (`benchmarks-and-docker.yml`)
+
 The automated CI gate executes a real Docker Compose lifecycle drill:
+
 1. Builds image using Node 24 Alpine minimal runtime.
 2. Ingests an initial project via `POST /api/audit` (`{"url":"https://example.com/","maxPages":1}`).
 3. Verifies project is listed via `GET /api/projects`.
@@ -147,9 +150,11 @@ The automated CI gate executes a real Docker Compose lifecycle drill:
 6. Queries `GET /api/projects` and confirms all audited projects, health scores, and issue summaries remained 100% intact across the hard container restart.
 
 ### Security Controls Beyond Unit Tests: Rate Limiting & Auth Gates
+
 - **Bearer Token Enforcement**: Protected endpoints (`/api/audit`, `/api/projects`, `/api/rank-tracker`, `/api/ai/*`) reject unauthenticated requests with `401 Unauthorized` (`{"error":"Unauthorized"}`).
 - **Two-Tier Adaptive Rate Limiter**:
   - General endpoint quota: 120 req/minute per client IP.
   - Expensive crawler/AI quota: 10 req/minute per client IP.
 - **Rate Limit Headers**: Returns standard RFC 6585 `Retry-After: <seconds>` and HTTP `429 Too Many Requests` when limits are exceeded, tested under sustained multi-worker burst traffic.
 - **Private Network SSRF Prevention**: DNS resolution actively rejects private IP ranges (`127.0.0.0/8`, `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, `169.254.0.0/16`, `::1`) before socket connection.
+
