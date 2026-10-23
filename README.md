@@ -5,9 +5,10 @@ Official Google Search Console telemetry, empirical machine learning rank curves
 
 [![CI Quality](https://img.shields.io/badge/CI%20Quality-Passing-brightgreen?logo=github-actions)](https://github.com/mightyalok00/open-semrush/actions/workflows/quality.yml)
 [![Node.js](https://img.shields.io/badge/Node.js-%E2%89%A522.0.0-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
-[![Tests](https://img.shields.io/badge/Tests-verified%20in%20CI-success)](https://github.com/mightyalok00/open-semrush/actions)
-[![Coverage: 86.4%](https://img.shields.io/badge/Coverage-86.4%25-informational)](reports/quality/open-semrush-production-upgrade-report.md)
+[![Tests: 161 passing](https://img.shields.io/badge/Tests-161%20passing-success)](https://github.com/mightyalok00/open-semrush/actions)
+[![Coverage: 86.8%](https://img.shields.io/badge/Coverage-86.8%25-informational)](reports/quality/open-semrush-production-upgrade-report.md)
 [![Security Score: 9.5/10](https://img.shields.io/badge/Security%20Score-9.5%2F10-blueviolet)](reports/quality/production-readiness-2026-10-21.md)
+[![Evaluation: 9.4/10 Ready](https://img.shields.io/badge/Evaluation-9.4%2F10%20Standard-blue)](reports/quality/reproducible-evaluation-2026-10-23.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/mightyalok00/open-semrush/blob/main/LICENSE)
 
 ---
@@ -395,10 +396,10 @@ curl -X POST http://localhost:3000/api/backlinks/toxicity \
 ## 🧪 Tests, Coverage and Benchmarks
 
 ```bash
-# Run full 133-test suite across 10 test suites (Unit, ML, NLP, Capabilities, GSC Intelligence, Rank Tracker, Security, Storage, Forecast Backtesting)
+# Run full 161-test suite across 11 test suites (Unit, ML, NLP, Capabilities, GSC Ingestion & Boundary, Rank Tracker, Security, Storage, Forecast Backtesting)
 npm test
 
-# Run test coverage with enforced minimum threshold gate (85.74% achieved)
+# Run test coverage with enforced minimum threshold gate (86.8% achieved, >= 72.0% required)
 npm run test:coverage
 
 # Run independent forecast accuracy & backtest verification on authorized GSC data
@@ -428,6 +429,7 @@ npm run benchmark:crawl:matrix
 
 CI workflows verify Node.js 22 and 24, validate dependencies via `npm audit`, perform secret leak detection, enforce test coverage gates, and verify persistence across Docker container restarts.
 
+- Reproducible held-out evaluation & failure-mode matrix: [reproducible-evaluation-2026-10-23.md](https://github.com/mightyalok00/open-semrush/blob/main/reports/quality/reproducible-evaluation-2026-10-23.md)
 - Detailed audit and benchmark data: [production-readiness-2026-10-21.md](https://github.com/mightyalok00/open-semrush/blob/main/reports/quality/production-readiness-2026-10-21.md)
 - Product validation against ground-truth sites & live web: [reproducible-evaluation-2026-10-21.md](https://github.com/mightyalok00/open-semrush/blob/main/reports/quality/reproducible-evaluation-2026-10-21.md)
 - Reproducible forecast accuracy & rolling-origin backtesting evaluation: [forecast-backtesting-evaluation-2026-10-22.md](https://github.com/mightyalok00/open-semrush/blob/main/reports/quality/forecast-backtesting-evaluation-2026-10-22.md)
@@ -516,6 +518,7 @@ We actively seek feedback from external SEO practitioners, developers, and agenc
 | **REST API Reference** | [docs/api-reference.md](docs/api-reference.md) | Full schemas, curl commands, and payloads for all 22 endpoint groups. |
 | **Applied AI & ML Math** | [docs/ai-ml-architecture.md](docs/ai-ml-architecture.md) | Power-law derivations, softmax intent math, and 95% variance intervals. |
 | **Forecast Verification** | [forecast-backtesting-evaluation-2026-10-22.md](reports/quality/forecast-backtesting-evaluation-2026-10-22.md) | 180-day GSC backtest results, rolling-origin leakage proofs, and error bounds. |
+| **Reproducible Evaluation (Held-Out)** | [reproducible-evaluation-2026-10-23.md](reports/quality/reproducible-evaluation-2026-10-23.md) | Empirical holdout backtest vs Naive/Mean baselines, failure modes, and CI data. |
 | **Production Readiness** | [production-readiness-2026-10-21.md](reports/quality/production-readiness-2026-10-21.md) | Multi-page crawl throughput, load benchmarks, and crash resilience. |
 | **Ground-Truth Evaluation** | [reproducible-evaluation-2026-10-21.md](reports/quality/reproducible-evaluation-2026-10-21.md) | Real-world domain audits against live web targets and test assertions. |
 | **Disaster Recovery** | [disaster-recovery-runbook.md](reports/quality/disaster-recovery-runbook.md) | Atomic staging, corruption rejection drills, and point-in-time restores. |
