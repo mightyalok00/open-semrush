@@ -12,6 +12,7 @@
 Open Semrush has been transformed from an engineering prototype into a credible, self-hosted SEO platform inspired by commercial SEO suites (Semrush, Ahrefs, Moz) while maintaining distinct, independent architecture and ethical data boundaries.
 
 The core differentiator of this upgrade is **Truth-in-Data**:
+
 1. **Four-Layer Architecture**: Verified First-Party (Google Search Console), Empirical Observations (Active Web Crawler & SERP Fetcher), External Data Providers (Google Suggest & DataForSEO), and Calibrated Statistical Models (Open Semrush Models).
 2. **Elimination of Fabricated Metrics**: Autocomplete keyword queries no longer synthesize volume hashes; metrics lacking licensed providers explicitly return `searchVolumeStatus: 'unavailable'` and `metricType: 'unavailable'`.
 3. **Forecasting Reliability Resolved**: Addressed the published reliability deficit (previously 64.0% at 30 days and 18.9% at 90 days against 95% target) through leakage-free conformal prediction interval calibration and compound autoregressive horizon variance expansion:
@@ -43,7 +44,7 @@ The core differentiator of this upgrade is **Truth-in-Data**:
 
 Evaluated with `scripts/verify-forecast-accuracy.mjs` against 180-day baseline time series with weekly seasonality and holiday shifts:
 
-```
+```text
 ============================================================
 SEO Traffic Forecast: Conformal Interval Calibration Verification
 ============================================================
@@ -69,6 +70,7 @@ Forecast validation complete: Production interval calibration confirmed.
 ### B. Unit & Integration Test Suite
 
 Executed via `node --test tests/*.test.mjs`:
+
 - **Total Tests:** 141 passing
 - **Failed Tests:** 0
 - **Execution Time:** ~3.7 seconds
