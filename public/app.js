@@ -552,7 +552,14 @@ async function fetchKeywordData(query) {
     intentEl.textContent = m.intent;
 
     // Financial Metrics
-    document.getElementById('kwCpc').textContent = `$${m.cpcUsd.toFixed(2)}`;
+    const cpcEl = document.getElementById('kwCpc');
+    if (m.cpcUsd === null || m.cpcStatus === 'unavailable') {
+      cpcEl.textContent = 'Unavailable';
+      cpcEl.style.fontSize = '1.3rem';
+    } else {
+      cpcEl.textContent = `$${m.cpcUsd.toFixed(2)}${m.cpcStatus === 'modeled' ? ' (modeled)' : ''}`;
+      cpcEl.style.fontSize = '';
+    }
     document.getElementById('kwDensity').textContent = m.competitiveDensity.toFixed(2);
 
     // 12-Month Seasonality Bar Chart
@@ -1609,11 +1616,15 @@ function setupExportCsv() {
     }
 
     const data = currentActiveDomainData;
-    let csv = 'Position,Keyword,Search Volume,Estimated Monthly Traffic,Intent\n';
+    let csv = 'Position,Keyword,Search Volume,Estimated Monthly Traffic,Intent,Provenance\n';
 
     data.topOrganicKeywords.forEach(k => {
       // Escape internal double quotes for RFC 4180 compliance
-      csv += `"${k.position}","${k.keyword.replace(/"/g, '""')}","${k.searchVolume}","${k.estimatedMonthlyTraffic}","${k.intent}"\n`;
+      const volStr = k.searchVolume === null || k.searchVolume === undefined || k.searchVolumeStatus === 'unavailable'
+        ? 'Unavailable'
+        : String(k.searchVolume);
+      const provStr = k.searchVolumeStatus === 'measured' ? 'verified_provider' : 'statistical_model';
+      csv += `"${k.position}","${k.keyword.replace(/"/g, '""')}","${volStr}","${k.estimatedMonthlyTraffic}","${k.intent}","${provStr}"\n`;
     });
 
     // Create virtual blob link and trigger download

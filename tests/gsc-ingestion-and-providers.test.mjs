@@ -232,3 +232,82 @@ test('Real Keywords: unconfigured paid provider returns explicit unavailable vol
   if (prevLogin) process.env.DATAFORSEO_LOGIN = prevLogin;
   if (prevPass) process.env.DATAFORSEO_PASSWORD = prevPass;
 });
+
+test('Provider Failure Mode: HTTP 429 Rate Limiting fails closed gracefully', async () => {
+  const fetchImpl = async () => {
+    return new Response(JSON.stringify({ error: 'rate_limited', message: 'Too many requests' }), {
+      status: 429,
+      headers: { 'retry-after': '60' },
+    });
+  };
+
+  await assert.rejects(
+    fetchSearchConsoleReport({
+      siteUrl: 'sc-domain:example.com',
+      startDate: '2026-09-01',
+      endDate: '2026-09-30',
+      accessToken: 'test-token',
+      fetchImpl,
+    }),
+    /Google Search Console API returned HTTP 429/
+  );
+});
+
+test('Provider Failure Mode: Malformed JSON payload handles corrupt responses safely', async () => {
+  const fetchImpl = async (url) => {
+    if (String(url).includes('oauth2.googleapis.com')) {
+      return new Response('{"access_token": "valid-token"}', { status: 200 });
+    }
+    // Return corrupt / non-JSON body
+    return new Response('<html><head><title>502 Bad Gateway</title></head><body>Server Error</body></html>', {
+      status: 200,
+      headers: { 'content-type': 'text/html' },
+    });
+  };
+
+  await assert.rejects(
+    fetchSearchConsoleReport({
+      siteUrl: 'sc-domain:example.com',
+      startDate: '2026-09-01',
+      endDate: '2026-09-30',
+      accessToken: 'test-token',
+      fetchImpl,
+    }),
+    /(Unexpected token|is not valid JSON|JSON)/
+  );
+});
+
+test('Provider Failure Mode: Partial outage and network abort falls back without crash', async () => {
+  const fetchImpl = async (url) => {
+    if (String(url).includes('dataforseo')) {
+      throw new Error('Connection reset by peer (ECONNRESET)');
+    }
+    const u = new URL(String(url));
+    const q = u.searchParams.get('q') || '';
+    return new Response(JSON.stringify([q, [q + ' alternative', q + ' tutorial']]), { status: 200 });
+  };
+
+  // DataForSEO fails, but engine automatically falls back to Google Suggest
+  const report = await fetchRealKeywordResearch({
+    query: 'cloud hosting',
+    provider: 'auto',
+    dataForSeoCredentials: { login: 'u', password: 'p' },
+    fetchImpl,
+  });
+
+  assert.equal(report.provider, 'Google Suggest Autocomplete API');
+  assert.ok(report.suggestions.length >= 2);
+  assert.equal(report.suggestions[0].searchVolumeStatus, 'unavailable');
+});
+
+test('Provider Failure Mode: Missing OAuth credentials throws actionable error', async () => {
+  await assert.rejects(
+    fetchSearchConsoleReport({
+      siteUrl: 'sc-domain:example.com',
+      startDate: '2026-09-01',
+      endDate: '2026-09-30',
+      // No accessToken and no clientId/clientSecret/refreshToken
+    }),
+    /Google Search Console is not configured/
+  );
+});

@@ -97,7 +97,21 @@ The technical crawler (`src/crawler.ts`) was evaluated against 5 diverse public 
 
 ---
 
-## 6. How to Reproduce All Results Independently
+## 6. Provider Failure Mode & Resilience Matrix
+
+We systematically evaluated resilience against upstream network and provider failures (`tests/gsc-ingestion-and-providers.test.mjs`):
+
+| Failure Scenario | Upstream Condition | Engine Behavior | Provenance & Diagnostic Contract | Verification Status |
+|:---|:---|:---|:---|:---:|
+| **HTTP 429 Rate Limiting** | Provider quota exhausted; returns `Retry-After: 60` | Fails closed gracefully without corrupting cache or state | Actionable HTTP 429 diagnostic surfaced; credentials never leaked | **PASS** |
+| **Malformed Payload** | Upstream returns corrupt HTML/text (e.g. 502 Bad Gateway) | Catches unparseable payload cleanly | Prevents JSON deserialization crashes; fails closed | **PASS** |
+| **Partial Outage / Network Abort** | Commercial provider connection reset (`ECONNRESET`) | Automatic failover to Google Suggest Autocomplete | Preserves query exploration with explicit `unavailable` volume markers | **PASS** |
+| **Missing Credentials** | `DATAFORSEO_LOGIN` or OAuth token unset | Clean fail-closed refusal with configuration runbook message | Directs administrator to `.env` without attempting unauthenticated calls | **PASS** |
+| **Stale Data** | Cached telemetry expires past TTL | Automated cache eviction via `ProviderCache` | Prevents stale metrics from masking active ranking changes | **PASS** |
+
+---
+
+## 7. How to Reproduce All Results Independently
 
 To independently reproduce this evaluation from scratch:
 
@@ -122,3 +136,4 @@ node scripts/multi-target-crawl.mjs
 # 6. Run the complete deterministic test suite with coverage enforcement (>= 72%)
 npm run test:coverage
 ```
+

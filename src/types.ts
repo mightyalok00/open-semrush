@@ -234,6 +234,8 @@ export interface KeywordMetrics {
   readonly trafficForecast?: TrafficForecastInterval;
   readonly kdTier?: KdTierInfo;
   readonly serpFeatureOpportunities?: SerpFeatureOpportunities;
+  readonly searchVolumeStatus?: 'measured' | 'provider_estimate' | 'modeled' | 'unavailable';
+  readonly cpcStatus?: 'measured' | 'provider_estimate' | 'modeled' | 'unavailable';
   readonly provenance?: ProvenanceMetadata;
 }
 

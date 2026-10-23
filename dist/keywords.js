@@ -281,6 +281,8 @@ export function analyzeKeyword(keyword, options) {
         trafficForecast,
         kdTier,
         serpFeatureOpportunities,
+        searchVolumeStatus: 'modeled',
+        cpcStatus: 'modeled',
         provenance: KEYWORD_HEURISTIC_PROVENANCE,
     };
 }
