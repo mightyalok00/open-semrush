@@ -500,12 +500,16 @@ export async function runSiteAudit(startUrl, options = {}) {
         }
     });
     const hasSitemap = discoveredSitemapUrls.length > 0;
-    // Step C: Initialize crawl queue
+    // Step C: Initialize crawl queue and link graph tracking
     const queue = [normalizedStartUrl];
     for (const sUrl of discoveredSitemapUrls) {
         if (!queue.includes(sUrl))
             queue.push(sUrl);
     }
+    const depthMap = new Map();
+    depthMap.set(normalizedStartUrl, 0);
+    const incomingInternalLinkCount = new Map();
+    incomingInternalLinkCount.set(normalizedStartUrl, 1);
     const visited = new Set();
     const pageResults = [];
     while (queue.length > 0 && pageResults.length < maxPages) {
@@ -524,15 +528,21 @@ export async function runSiteAudit(startUrl, options = {}) {
                 }, deps);
                 const html = await res.text();
                 const matches = html.matchAll(/<a\b[^>]*href=["']([^"']+)["'][^>]*>/gi);
+                const currentDepth = depthMap.get(currentUrl) ?? 0;
                 for (const match of matches) {
                     const href = match[1];
                     if (!href || href.startsWith('#') || href.startsWith('javascript:'))
                         continue;
                     try {
                         const nextUrl = new URL(href, currentUrl);
-                        if (nextUrl.origin === startOrigin && !visited.has(nextUrl.href)) {
-                            if (!/\.(png|jpg|jpeg|svg|gif|pdf|zip|css|js)$/i.test(nextUrl.pathname)) {
-                                queue.push(nextUrl.href);
+                        if (nextUrl.origin === startOrigin) {
+                            const nextHref = nextUrl.href;
+                            incomingInternalLinkCount.set(nextHref, (incomingInternalLinkCount.get(nextHref) ?? 0) + 1);
+                            if (!depthMap.has(nextHref)) {
+                                depthMap.set(nextHref, currentDepth + 1);
+                            }
+                            if (!visited.has(nextHref) && !/\.(png|jpg|jpeg|svg|gif|pdf|zip|css|js)$/i.test(nextUrl.pathname)) {
+                                queue.push(nextHref);
                             }
                         }
                     }
@@ -549,11 +559,33 @@ export async function runSiteAudit(startUrl, options = {}) {
             await new Promise(r => setTimeout(r, options.politenessDelayMs));
         }
     }
+    // Enrich page results with clickDepth and detect orphan pages
+    const enrichedPages = pageResults.map(p => {
+        const depth = depthMap.get(p.url) ?? 1;
+        const inboundLinks = incomingInternalLinkCount.get(p.url) ?? 0;
+        const isOrphan = p.url !== normalizedStartUrl && inboundLinks === 0;
+        const pageIssues = [...p.issues];
+        if (isOrphan) {
+            pageIssues.push({
+                code: 'ORPHAN_PAGE',
+                severity: 'warning',
+                message: 'Orphan page detected: page was discovered in sitemap but has 0 incoming internal links from crawled pages',
+                recommendation: 'Add contextual internal links from parent categories or relevant articles to pass link equity.',
+                evidence: { metric: 'INTERNAL_INBOUND_LINKS', observed: 0, expected: '>=1 link' },
+            });
+        }
+        return {
+            ...p,
+            clickDepth: depth,
+            isOrphan,
+            issues: pageIssues,
+        };
+    });
     // Calculate Aggregates & Health Score
     let errors = 0;
     let warnings = 0;
     let notices = 0;
-    for (const page of pageResults) {
+    for (const page of enrichedPages) {
         for (const issue of page.issues) {
             if (issue.severity === 'error')
                 errors++;
@@ -563,11 +595,11 @@ export async function runSiteAudit(startUrl, options = {}) {
                 notices++;
         }
     }
-    const penalty = (errors * 4.0 + warnings * 1.5 + notices * 0.3) / Math.max(1, pageResults.length);
+    const penalty = (errors * 4.0 + warnings * 1.5 + notices * 0.3) / Math.max(1, enrichedPages.length);
     const healthScore = Math.max(0, Math.min(100, Math.round(100 - penalty)));
     return {
         targetUrl: normalizedStartUrl,
-        scannedPagesCount: pageResults.length,
+        scannedPagesCount: enrichedPages.length,
         healthScore,
         totalErrors: errors,
         totalWarnings: warnings,
@@ -575,7 +607,7 @@ export async function runSiteAudit(startUrl, options = {}) {
         hasRobotsTxt: robotsInfo.exists,
         hasSitemap,
         discoveredSitemapUrlsCount: discoveredSitemapUrls.length,
-        pages: pageResults,
+        pages: enrichedPages,
         crawlDurationMs: Date.now() - startTime,
         provenance: SITE_AUDIT_PROVENANCE,
     };

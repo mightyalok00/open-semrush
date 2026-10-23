@@ -58,6 +58,10 @@
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="6" cy="6" r="3"/><circle cx="18" cy="6" r="3"/><circle cx="12" cy="18" r="3"/><line x1="8.5" y1="7.5" x2="15.5" y2="7.5"/><line x1="7.5" y1="8.5" x2="10.5" y2="15.5"/><line x1="16.5" y1="8.5" x2="13.5" y2="15.5"/></svg>
           <span>Keyword Clustering</span>
         </button>
+        <button class="nav-item" data-tab="content-brief">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>
+          <span>Content Brief Builder</span>
+        </button>
 
         <div class="nav-section-label">COMPETITORS & RANK</div>
         <button class="nav-item" data-tab="gap">
@@ -67,6 +71,10 @@
         <button class="nav-item" data-tab="rank-tracker">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
           <span>Rank Tracking</span>
+        </button>
+        <button class="nav-item" data-tab="ai-visibility">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10H12V2z"/><path d="M12 2a10 10 0 0 1 10 10h-10V2z" opacity="0.5"/><path d="M12 12l7 7"/></svg>
+          <span>AI Search Visibility</span>
         </button>
 
         <div class="nav-section-label">BACKLINKS</div>
@@ -495,6 +503,46 @@
                   <span class="kpi-badge badge-notice">Advisory</span>
                 </div>
                 <span class="kpi-sub">Missing canonicals, non-indexable</span>
+              </div>
+            </div>
+
+            <!-- Core Web Vitals & Real Experience Performance -->
+            <div class="panel-card" style="margin-bottom: 20px;">
+              <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <h3>Core Web Vitals & Performance</h3>
+                  <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">Audited via Google PageSpeed Insights & empirical DOM payload metrics.</p>
+                </div>
+                <button type="button" id="runPageSpeedBtn" class="btn-secondary" style="font-size: 13px; padding: 6px 14px;">
+                  <span>Test URL PageSpeed</span>
+                </button>
+              </div>
+              <div id="cwvContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px; margin-top: 16px;">
+                <div class="kpi-card" style="padding: 12px; text-align: center;">
+                  <div class="kpi-label">Performance Score</div>
+                  <div id="cwvScore" style="font-size: 24px; font-weight: 700; color: #10b981; margin: 4px 0;">--</div>
+                  <span id="cwvAssessment" class="kpi-badge badge-notice" style="background: #ecfdf5; color: #065f46;">Pending</span>
+                </div>
+                <div class="kpi-card" style="padding: 12px; text-align: center;">
+                  <div class="kpi-label">LCP (Largest Content)</div>
+                  <div id="cwvLcp" style="font-size: 18px; font-weight: 700; color: var(--text-primary); margin: 4px 0;">--</div>
+                  <span style="font-size: 11px; color: var(--text-muted);">Good &lt; 2.5s</span>
+                </div>
+                <div class="kpi-card" style="padding: 12px; text-align: center;">
+                  <div class="kpi-label">FCP (First Paint)</div>
+                  <div id="cwvFcp" style="font-size: 18px; font-weight: 700; color: var(--text-primary); margin: 4px 0;">--</div>
+                  <span style="font-size: 11px; color: var(--text-muted);">Good &lt; 1.8s</span>
+                </div>
+                <div class="kpi-card" style="padding: 12px; text-align: center;">
+                  <div class="kpi-label">CLS (Shift)</div>
+                  <div id="cwvCls" style="font-size: 18px; font-weight: 700; color: var(--text-primary); margin: 4px 0;">--</div>
+                  <span style="font-size: 11px; color: var(--text-muted);">Good &lt; 0.1</span>
+                </div>
+                <div class="kpi-card" style="padding: 12px; text-align: center;">
+                  <div class="kpi-label">TBT (Block Time)</div>
+                  <div id="cwvTbt" style="font-size: 18px; font-weight: 700; color: var(--text-primary); margin: 4px 0;">--</div>
+                  <span style="font-size: 11px; color: var(--text-muted);">Good &lt; 200ms</span>
+                </div>
               </div>
             </div>
 
@@ -1084,6 +1132,188 @@ crm implementation guide</textarea>
 
           <div id="providersGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px;">
             <!-- Populated dynamically from /api/providers/status -->
+          </div>
+        </section>
+
+        <!-- TAB: SEO CONTENT BRIEF BUILDER -->
+        <section id="tab-content-brief" class="tab-pane">
+          <div class="query-card">
+            <form id="contentBriefForm" class="search-form" style="flex-wrap: wrap;">
+              <div class="input-wrapper" style="flex: 2; min-width: 260px;">
+                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <input type="text" id="briefKeywordInput" placeholder="Enter target keyword (e.g. technical seo audit guide)..." value="technical seo audit guide" required>
+              </div>
+              <div class="page-select-wrapper" style="min-width: 140px;">
+                <select id="briefIntentSelect">
+                  <option value="">Auto-Detect Intent</option>
+                  <option value="informational">Informational</option>
+                  <option value="commercial">Commercial</option>
+                  <option value="transactional">Transactional</option>
+                  <option value="navigational">Navigational</option>
+                </select>
+              </div>
+              <button type="submit" class="btn-primary">
+                <span>Generate Content Brief</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </button>
+            </form>
+          </div>
+
+          <div id="briefLoading" class="loader-overlay hidden">
+            <div class="spinner"></div>
+            <p>Synthesizing SERP heading patterns, intent distributions, and entity targets...</p>
+          </div>
+
+          <div id="briefResults" class="results-container hidden">
+            <div class="kpi-grid">
+              <div class="kpi-card">
+                <div class="kpi-label">Primary Intent</div>
+                <div class="kpi-value-row">
+                  <span id="briefIntentBadge" class="kpi-value" style="font-size: 20px; text-transform: capitalize;">Informational</span>
+                </div>
+                <span class="kpi-sub">Classified via Softmax ML model</span>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Recommended Length</div>
+                <div class="kpi-value-row">
+                  <span id="briefWordCount" class="kpi-value">2,400</span>
+                  <span class="kpi-badge badge-growth">Words</span>
+                </div>
+                <span class="kpi-sub">Target for page depth</span>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Competitor Median</div>
+                <div class="kpi-value-row">
+                  <span id="briefCompetitorWords" class="kpi-value">2,208</span>
+                  <span class="kpi-sub">words in Top 10</span>
+                </div>
+                <span class="kpi-sub">Sample size: 10 ranking URLs</span>
+              </div>
+            </div>
+
+            <!-- Recommended Title & Architecture -->
+            <div class="panel-card" style="margin-top: 18px;">
+              <div class="panel-header">
+                <h3>Recommended SEO Title Tag (Under 60 Chars)</h3>
+              </div>
+              <div id="briefTitleBox" style="font-size: 16px; font-weight: 600; padding: 12px 16px; background: rgba(15, 23, 42, 0.6); border-radius: 8px; border: 1px solid var(--border-subtle); color: #38bdf8;">
+                --
+              </div>
+            </div>
+
+            <!-- Heading Outline -->
+            <div class="panel-card" style="margin-top: 18px;">
+              <div class="panel-header">
+                <h3>Structured Headings Blueprint (H2 & H3)</h3>
+              </div>
+              <div id="briefHeadingsContainer" style="display: flex; flex-direction: column; gap: 8px;">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+
+            <!-- People Also Ask & Entities -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px; margin-top: 18px;">
+              <div class="panel-card">
+                <div class="panel-header">
+                  <h3>Essential Questions to Answer (PAA)</h3>
+                </div>
+                <ul id="briefQuestionsList" style="padding-left: 20px; font-size: 14px; line-height: 1.8; color: var(--text-secondary);">
+                  <!-- Dynamically populated -->
+                </ul>
+              </div>
+              <div class="panel-card">
+                <div class="panel-header">
+                  <h3>Target Entities & Recommended Density</h3>
+                </div>
+                <div id="briefEntitiesContainer" style="display: flex; flex-wrap: wrap; gap: 8px;">
+                  <!-- Dynamically populated -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB: AI SEARCH VISIBILITY -->
+        <section id="tab-ai-visibility" class="tab-pane">
+          <div class="query-card">
+            <form id="aiVisibilityForm" class="search-form" style="flex-wrap: wrap;">
+              <div class="input-wrapper" style="flex: 2; min-width: 220px;">
+                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10H12V2z"/></svg>
+                <input type="text" id="aiVisDomainInput" placeholder="Domain (e.g. stripe.com)..." value="stripe.com" required>
+              </div>
+              <div class="input-wrapper" style="flex: 1; min-width: 160px;">
+                <input type="text" id="aiVisBrandInput" placeholder="Brand Name (e.g. Stripe)">
+              </div>
+              <button type="submit" class="btn-primary">
+                <span>Audit AI Visibility</span>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </button>
+            </form>
+          </div>
+
+          <div id="aiVisLoading" class="loader-overlay hidden">
+            <div class="spinner"></div>
+            <p>Evaluating AI answer engines, brand mentions, cited sources, and Share of AI Voice...</p>
+          </div>
+
+          <div id="aiVisResults" class="results-container hidden">
+            <div class="kpi-grid">
+              <div class="kpi-card">
+                <div class="kpi-label">AI Visibility Rate</div>
+                <div class="kpi-value-row">
+                  <span id="aiVisRate" class="kpi-value">100%</span>
+                  <span class="kpi-badge badge-growth">Mentioned</span>
+                </div>
+                <span class="kpi-sub">Brand present in generative answers</span>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">AI Citation Rate</div>
+                <div class="kpi-value-row">
+                  <span id="aiVisCitationRate" class="kpi-value">87.5%</span>
+                  <span class="kpi-badge badge-growth">Cited Link</span>
+                </div>
+                <span class="kpi-sub">Domain linked in source references</span>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Share of AI Voice</div>
+                <div class="kpi-value-row">
+                  <span id="aiVisShareVoice" class="kpi-value">62.5%</span>
+                  <span class="kpi-badge badge-notice">vs Competitors</span>
+                </div>
+                <span class="kpi-sub">Brand mentions / total market mentions</span>
+              </div>
+              <div class="kpi-card">
+                <div class="kpi-label">Tested Model & Freshness</div>
+                <div class="kpi-value-row">
+                  <span id="aiVisModelBadge" class="kpi-badge badge-notice" style="font-size: 13px;">benchmark_v1</span>
+                </div>
+                <span id="aiVisDate" class="kpi-sub">Today</span>
+              </div>
+            </div>
+
+            <!-- Prompt Evaluations Table -->
+            <div class="panel-card" style="margin-top: 18px;">
+              <div class="panel-header">
+                <h3>Multi-Intent AI Prompt Evaluations</h3>
+                <span id="aiVisSampleCount" class="badge-count">8 Prompts Audited</span>
+              </div>
+              <div style="overflow-x: auto;">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Evaluated Prompt</th>
+                      <th>Brand Mentioned</th>
+                      <th>Brand Cited Link</th>
+                      <th>Sentiment</th>
+                      <th>Competitor Mentions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="aiVisTableBody">
+                    <!-- Populated dynamically -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         </section>
       </div>

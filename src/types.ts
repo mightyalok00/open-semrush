@@ -82,6 +82,8 @@ export interface PageAuditResult {
   readonly contentQuality?: ContentQualityMetrics;
   readonly intentProfile?: PageIntentProfile;
   readonly questionsAnswered?: readonly ExtractedQuestion[];
+  readonly clickDepth?: number;
+  readonly isOrphan?: boolean;
 }
 
 export type EntityType = 'organization' | 'product' | 'technology' | 'concept' | 'person' | 'location';
@@ -824,4 +826,89 @@ export interface TopPagePerformance {
   readonly isVerified: boolean;
   readonly provenance: ProvenanceMetadata;
 }
+
+/* =========================================================================
+ * AI Search Visibility & Brand Citation Types
+ * ========================================================================= */
+
+export interface AiSearchPromptSample {
+  readonly prompt: string;
+  readonly category: 'informational' | 'commercial' | 'transactional' | 'navigational';
+  readonly targetBrand: string;
+}
+
+export interface AiSearchEvaluationResult {
+  readonly prompt: string;
+  readonly model: string;
+  readonly brandMentioned: boolean;
+  readonly citedUrls: readonly string[];
+  readonly brandCited: boolean;
+  readonly sentiment: 'positive' | 'neutral' | 'negative' | 'unmentioned';
+  readonly competitorMentions: readonly string[];
+  readonly excerpt?: string;
+}
+
+export interface AiSearchVisibilityReport {
+  readonly domain: string;
+  readonly brandName: string;
+  readonly sampleSize: number;
+  readonly date: string;
+  readonly modelTested: string;
+  readonly visibilityRate: number; // 0.0 to 1.0
+  readonly citationRate: number;   // 0.0 to 1.0
+  readonly shareOfAiVoice: number; // 0.0 to 100.0%
+  readonly results: readonly AiSearchEvaluationResult[];
+  readonly limitations: readonly string[];
+  readonly provenance: ProvenanceMetadata;
+}
+
+/* =========================================================================
+ * SEO Content Brief & Blueprint Types
+ * ========================================================================= */
+
+export interface ContentBriefHeading {
+  readonly level: 'h2' | 'h3';
+  readonly text: string;
+  readonly intent: string;
+}
+
+export interface ContentBriefEntityTarget {
+  readonly name: string;
+  readonly type: string;
+  readonly recommendedDensity: string;
+}
+
+export interface SeoContentBrief {
+  readonly keyword: string;
+  readonly searchIntent: string;
+  readonly recommendedWordCount: number;
+  readonly recommendedTitle: string;
+  readonly headingsOutline: readonly ContentBriefHeading[];
+  readonly essentialQuestions: readonly string[];
+  readonly targetEntities: readonly ContentBriefEntityTarget[];
+  readonly competitorBenchmark: {
+    readonly sampleSize: number;
+    readonly medianWordCount: number;
+    readonly commonHeadings: readonly string[];
+  };
+  readonly provenance: ProvenanceMetadata;
+}
+
+/* =========================================================================
+ * Core Web Vitals & Real Experience Performance Types
+ * ========================================================================= */
+
+export interface CoreWebVitalsMetrics {
+  readonly url: string;
+  readonly performanceScore: number; // 0 to 100
+  readonly fcpMs: number;            // First Contentful Paint
+  readonly lcpMs: number;            // Largest Contentful Paint
+  readonly cls: number;              // Cumulative Layout Shift
+  readonly tbtMs: number;            // Total Blocking Time
+  readonly speedIndexMs: number;
+  readonly assessment: 'good' | 'needs_improvement' | 'poor';
+  readonly isSyntheticHeuristic: boolean;
+  readonly provenance: ProvenanceMetadata;
+}
+
 

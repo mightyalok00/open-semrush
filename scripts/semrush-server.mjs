@@ -81,6 +81,9 @@ const {
   ProviderRegistry,
   generateEvidenceBackedRecommendations,
   addKeywordAnnotation,
+  evaluateAiSearchVisibility,
+  generateSeoContentBrief,
+  fetchCoreWebVitals,
 } = semrushModule;
 
 // Resolve public assets directory
@@ -810,6 +813,55 @@ const server = http.createServer(async (req, res) => {
 
       const report = generateTrafficForecast(domain, observations, options);
       sendJson(res, 200, report);
+      return;
+    }
+
+    // API Route: AI Search Visibility & Brand Citations
+    if (pathname === '/api/ai-visibility' && req.method === 'POST') {
+      const body = await parseJsonBody(req);
+      const domain = typeof body.domain === 'string' ? body.domain.trim() : '';
+      if (!domain) {
+        sendJson(res, 400, { error: 'domain is required' });
+        return;
+      }
+      const brandName = typeof body.brandName === 'string' ? body.brandName.trim() : undefined;
+      const prompts = Array.isArray(body.prompts) ? body.prompts : undefined;
+      const report = await evaluateAiSearchVisibility(domain, brandName, prompts);
+      sendJson(res, 200, report);
+      return;
+    }
+
+    // API Route: SEO Content Brief & Heading Outline
+    if (pathname === '/api/content/brief' && req.method === 'POST') {
+      const body = await parseJsonBody(req);
+      const keyword = typeof body.keyword === 'string' ? body.keyword.trim() : '';
+      if (!keyword) {
+        sendJson(res, 400, { error: 'keyword is required' });
+        return;
+      }
+      const brief = await generateSeoContentBrief(keyword, {
+        searchIntent: typeof body.searchIntent === 'string' ? body.searchIntent : undefined,
+        targetWordCount: typeof body.targetWordCount === 'number' ? body.targetWordCount : undefined,
+      });
+      sendJson(res, 200, brief);
+      return;
+    }
+
+    // API Route: Core Web Vitals & PageSpeed Insights
+    if (pathname === '/api/audit/pagespeed' && req.method === 'GET') {
+      const targetUrl = reqUrl.searchParams.get('url');
+      if (!targetUrl) {
+        sendJson(res, 400, { error: 'url parameter is required' });
+        return;
+      }
+      try {
+        await assertPublicHttpUrl(targetUrl);
+      } catch (err) {
+        sendJson(res, 400, { error: err.message });
+        return;
+      }
+      const metrics = await fetchCoreWebVitals(targetUrl);
+      sendJson(res, 200, metrics);
       return;
     }
 

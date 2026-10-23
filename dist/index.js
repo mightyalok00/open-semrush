@@ -13,3 +13,6 @@ export * from './rank-tracker.js';
 export * from './nlp.js';
 export * from './forecast.js';
 export * from './provider-adapter.js';
+export * from './ai-visibility.js';
+export * from './content-brief.js';
+export * from './page-speed.js';

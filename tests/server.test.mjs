@@ -227,3 +227,40 @@ test('HTTP API Phase 5 endpoints: toxicity, keyword expansion, KD calibrator, al
   assert.ok(compGetData.competitors.includes('gitlab.com'));
 });
 
+test('HTTP API handles AI visibility, Content Briefs, and Core Web Vitals', async () => {
+  // 1. AI Search Visibility endpoint
+  const visRes = await fetch(`${baseUrl}/api/ai-visibility`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ domain: 'stripe.com', brandName: 'Stripe' }),
+  });
+  assert.equal(visRes.status, 200);
+  const visData = await visRes.json();
+  assert.equal(visData.domain, 'stripe.com');
+  assert.ok(visData.sampleSize > 0);
+  assert.ok(typeof visData.visibilityRate === 'number');
+
+  // 2. SEO Content Brief endpoint
+  const briefRes = await fetch(`${baseUrl}/api/content/brief`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ keyword: 'technical seo audit guide', searchIntent: 'informational' }),
+  });
+  assert.equal(briefRes.status, 200);
+  const briefData = await briefRes.json();
+  assert.equal(briefData.keyword, 'technical seo audit guide');
+  assert.ok(briefData.recommendedWordCount > 1000);
+  assert.ok(briefData.headingsOutline.length > 5);
+
+  // 3. Core Web Vitals endpoint (rejects private addresses)
+  const privateCwvRes = await fetch(`${baseUrl}/api/audit/pagespeed?url=http://127.0.0.1:8080/private`);
+  assert.equal(privateCwvRes.status, 400);
+
+  // 4. Core Web Vitals endpoint (validates public URL)
+  const publicCwvRes = await fetch(`${baseUrl}/api/audit/pagespeed?url=https://example.com/test-page`);
+  assert.equal(publicCwvRes.status, 200);
+  const cwvData = await publicCwvRes.json();
+  assert.ok(cwvData.performanceScore >= 0);
+  assert.ok(cwvData.fcpMs > 0);
+});
+

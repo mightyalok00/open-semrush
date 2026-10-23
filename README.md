@@ -5,7 +5,7 @@ Official Google Search Console telemetry, empirical machine learning rank curves
 
 [![CI Quality](https://img.shields.io/badge/CI%20Quality-Passing-brightgreen?logo=github-actions)](https://github.com/mightyalok00/open-semrush/actions/workflows/quality.yml)
 [![Node.js](https://img.shields.io/badge/Node.js-%E2%89%A522.0.0-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
-[![Tests: 141 Passing](https://img.shields.io/badge/Tests-141%20Passing-success)](reports/quality/open-semrush-production-upgrade-report.md)
+[![Tests: 153 Passing](https://img.shields.io/badge/Tests-153%20Passing-success)](reports/quality/open-semrush-production-upgrade-report.md)
 [![Coverage: 86.4%](https://img.shields.io/badge/Coverage-86.4%25-informational)](reports/quality/open-semrush-production-upgrade-report.md)
 [![Security Score: 9.5/10](https://img.shields.io/badge/Security%20Score-9.5%2F10-blueviolet)](reports/quality/production-readiness-2026-10-21.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/mightyalok00/open-semrush/blob/main/LICENSE)
@@ -62,7 +62,10 @@ See the complete architectural design and safety specifications in [docs/archite
 
 ## ✨ Key Platform Capabilities
 
-- 🕷 **Asynchronous Technical Crawler & Link Graph**: Bounded multi-page crawler with redirect loop protection, streaming body limit (5 MiB), socket DNS pinning, and directed graph topology extraction.
+- 🕷 **Asynchronous Technical Crawler & Link Graph**: Bounded multi-page crawler with redirect loop protection, streaming body limit (5 MiB), socket DNS pinning, directed graph topology extraction, **Click Depth calculation**, and **Orphan Page detection** for unlinked sitemap URLs.
+- 🤖 **AI Search Visibility & Brand Citations**: Evaluate brand presence, cited source links, sentiment, and Share of AI Voice across generative answer engines with zero API cost using calibrated benchmark matrices or free-tier LLMs.
+- 📝 **SEO Content Brief & Blueprint Generator**: Synthesize data-backed content outlines, search intent word counts, recommended SEO title tags, H2/H3 headings, PAA questions, and target entity densities for $0.
+- ⚡ **Core Web Vitals & Real Experience Performance**: Lighthouse-weighted performance audits (FCP, LCP, CLS, TBT, Speed Index) connecting to Google's public PageSpeed Insights API with empirical local DOM heuristic fallback.
 - 🔗 **Backlink Intelligence & 8-Vector Toxicity Audit**: Real crawl link graph extraction, 5-tier anchor text taxonomy (`Branded`, `Exact Match`, `Partial Match`, `Naked URL`, `Generic`), and 8-vector deterministic toxicity scoring with Google Disavow file candidate generation.
 - 📊 **Competitor Traffic Intelligence & Share of Voice**: Empirical power-law CTR curve aggregation, Market Share of Voice (SOV) calculation against competitor cohorts, and 4-way competitive position classification (`missing`, `weak`, `strong`, `shared`, `unique`).
 - 💎 **Calibrated Keyword Research & Multi-Angle Expansions**: 6-tier Keyword Difficulty (KD) engine with referring domain requirements (`Very Easy` to `Super Hard`), SERP layout feature opportunity predictor (snippets, PAA, video, local packs), and multi-angle query expansions.

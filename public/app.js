@@ -112,6 +112,14 @@ const tabMeta = {
   providers: {
     title: 'Data Provider Architecture',
     desc: 'Strict 4-layer separation of verified first-party, empirical crawl, external APIs, and statistical models.'
+  },
+  'content-brief': {
+    title: 'SEO Content Brief & Heading Outline',
+    desc: 'Generate data-backed content outlines, search intent word counts, and target entity densities for $0.'
+  },
+  'ai-visibility': {
+    title: 'AI Search Visibility & Brand Citations',
+    desc: 'Audit brand mentions, source citations, sentiment, and Share of AI Voice across LLM answer engines.'
   }
 };
 
@@ -157,6 +165,8 @@ document.addEventListener('DOMContentLoaded', () => {
   setupKeywordMagic();
   setupClustering();
   setupSiteAudit();
+  setupContentBrief();
+  setupAiVisibility();
   setupKeywordGap();
   setupRankTracker();
   setupBacklinkAnalytics();
@@ -796,6 +806,8 @@ function setupSiteAudit() {
             <div class="page-badges">
               <span class="kpi-badge ${page.statusCode === 200 ? 'badge-growth' : 'badge-error'}">HTTP ${page.statusCode}</span>
               <span class="kpi-badge">TTFB: ${page.ttfbMs || page.loadTimeMs}ms</span>
+              <span class="kpi-badge" title="Crawl click distance from start URL">Depth: ${page.clickDepth ?? 0}</span>
+              ${page.isOrphan ? '<span class="kpi-badge badge-warning">⚠️ Orphan Page</span>' : ''}
               ${schemaBadges}
               ${secBadges}
             </div>
@@ -824,6 +836,193 @@ function setupSiteAudit() {
       results.classList.remove('hidden');
     } catch (err) {
       alert(`Site audit error: ${err.message}`);
+    } finally {
+      loader.classList.add('hidden');
+    }
+  });
+
+  // PageSpeed / Core Web Vitals Tester
+  const pageSpeedBtn = document.getElementById('runPageSpeedBtn');
+  if (pageSpeedBtn) {
+    pageSpeedBtn.addEventListener('click', async () => {
+      const targetUrl = urlInput.value.trim();
+      if (!targetUrl) return;
+      pageSpeedBtn.disabled = true;
+      pageSpeedBtn.textContent = 'Testing...';
+      try {
+        const res = await fetch(`/api/audit/pagespeed?url=${encodeURIComponent(targetUrl)}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        const scoreEl = document.getElementById('cwvScore');
+        if (scoreEl) {
+          scoreEl.textContent = data.performanceScore;
+          scoreEl.style.color = data.performanceScore >= 90 ? '#10b981' : (data.performanceScore >= 50 ? '#f59e0b' : '#ef4444');
+        }
+        const assessEl = document.getElementById('cwvAssessment');
+        if (assessEl) {
+          assessEl.textContent = data.assessment.replace('_', ' ').toUpperCase();
+          assessEl.className = `kpi-badge ${data.assessment === 'good' ? 'badge-growth' : (data.assessment === 'needs_improvement' ? 'badge-warning' : 'badge-error')}`;
+        }
+        document.getElementById('cwvLcp').textContent = `${(data.lcpMs / 1000).toFixed(2)}s`;
+        document.getElementById('cwvFcp').textContent = `${(data.fcpMs / 1000).toFixed(2)}s`;
+        document.getElementById('cwvCls').textContent = data.cls.toFixed(3);
+        document.getElementById('cwvTbt').textContent = `${data.tbtMs}ms`;
+      } catch (err) {
+        alert('Could not test PageSpeed: ' + err.message);
+      } finally {
+        pageSpeedBtn.disabled = false;
+        pageSpeedBtn.textContent = 'Test URL PageSpeed';
+      }
+    });
+  }
+}
+
+/**
+ * Sets up SEO Content Brief generator.
+ */
+function setupContentBrief() {
+  const form = document.getElementById('contentBriefForm');
+  if (!form) return;
+  const keywordInput = document.getElementById('briefKeywordInput');
+  const intentSelect = document.getElementById('briefIntentSelect');
+  const loader = document.getElementById('briefLoading');
+  const results = document.getElementById('briefResults');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const keyword = keywordInput.value.trim();
+    if (!keyword) return;
+
+    loader.classList.remove('hidden');
+    results.classList.add('hidden');
+
+    try {
+      const res = await protectedFetch('/api/content/brief', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          keyword,
+          searchIntent: intentSelect.value || undefined,
+        }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+
+      document.getElementById('briefIntentBadge').textContent = data.searchIntent;
+      document.getElementById('briefWordCount').textContent = data.recommendedWordCount.toLocaleString();
+      document.getElementById('briefCompetitorWords').textContent = data.competitorBenchmark.medianWordCount.toLocaleString();
+      document.getElementById('briefTitleBox').textContent = data.recommendedTitle;
+
+      // Headings Outline
+      const headingsContainer = document.getElementById('briefHeadingsContainer');
+      headingsContainer.innerHTML = '';
+      (data.headingsOutline || []).forEach(h => {
+        const row = document.createElement('div');
+        row.style.cssText = `padding: 10px 14px; background: rgba(15, 23, 42, 0.4); border-radius: 6px; border-left: 3px solid ${h.level === 'h2' ? '#38bdf8' : '#a855f7'}; margin-left: ${h.level === 'h3' ? '24px' : '0'}; display: flex; justify-content: space-between; align-items: center;`;
+        row.innerHTML = `
+          <div>
+            <span style="font-weight: 700; font-size: 11px; padding: 2px 6px; border-radius: 4px; background: ${h.level === 'h2' ? 'rgba(56, 189, 248, 0.2)' : 'rgba(168, 85, 247, 0.2)'}; color: ${h.level === 'h2' ? '#38bdf8' : '#c084fc'}; margin-right: 8px;">${h.level.toUpperCase()}</span>
+            <span style="font-size: 14px; font-weight: ${h.level === 'h2' ? '600' : '400'}; color: #fff;">${escapeHtml(h.text)}</span>
+          </div>
+          <span class="kpi-badge badge-notice" style="font-size: 11px;">${escapeHtml(h.intent)}</span>
+        `;
+        headingsContainer.appendChild(row);
+      });
+
+      // Questions List
+      const questionsList = document.getElementById('briefQuestionsList');
+      questionsList.innerHTML = '';
+      (data.essentialQuestions || []).forEach(q => {
+        const li = document.createElement('li');
+        li.textContent = q;
+        questionsList.appendChild(li);
+      });
+
+      // Target Entities
+      const entitiesContainer = document.getElementById('briefEntitiesContainer');
+      entitiesContainer.innerHTML = '';
+      (data.targetEntities || []).forEach(ent => {
+        const pill = document.createElement('div');
+        pill.className = 'kpi-badge badge-growth';
+        pill.style.cssText = 'padding: 6px 12px; font-size: 13px; display: inline-flex; align-items: center; gap: 6px;';
+        pill.innerHTML = `<strong>${escapeHtml(ent.name)}</strong> <span style="opacity: 0.8; font-size: 11px;">(${escapeHtml(ent.recommendedDensity)})</span>`;
+        entitiesContainer.appendChild(pill);
+      });
+
+      results.classList.remove('hidden');
+    } catch (err) {
+      alert('Error generating Content Brief: ' + err.message);
+    } finally {
+      loader.classList.add('hidden');
+    }
+  });
+}
+
+/**
+ * Sets up AI Search Visibility auditor.
+ */
+function setupAiVisibility() {
+  const form = document.getElementById('aiVisibilityForm');
+  if (!form) return;
+  const domainInput = document.getElementById('aiVisDomainInput');
+  const brandInput = document.getElementById('aiVisBrandInput');
+  const loader = document.getElementById('aiVisLoading');
+  const results = document.getElementById('aiVisResults');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const domain = domainInput.value.trim();
+    if (!domain) return;
+    const brandName = brandInput.value.trim() || undefined;
+
+    loader.classList.remove('hidden');
+    results.classList.add('hidden');
+
+    try {
+      const res = await protectedFetch('/api/ai-visibility', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ domain, brandName }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+
+      document.getElementById('aiVisRate').textContent = `${Math.round(data.visibilityRate * 100)}%`;
+      document.getElementById('aiVisCitationRate').textContent = `${Math.round(data.citationRate * 100)}%`;
+      document.getElementById('aiVisShareVoice').textContent = `${data.shareOfAiVoice}%`;
+      document.getElementById('aiVisModelBadge').textContent = data.modelTested;
+      document.getElementById('aiVisDate').textContent = `Audited ${data.date}`;
+      document.getElementById('aiVisSampleCount').textContent = `${data.sampleSize} Prompts Audited`;
+
+      const tbody = document.getElementById('aiVisTableBody');
+      tbody.innerHTML = '';
+      (data.results || []).forEach(r => {
+        const tr = document.createElement('tr');
+        const citedHtml = r.brandCited
+          ? `<span class="kpi-badge badge-growth">✅ Cited (${r.citedUrls.length})</span>`
+          : `<span class="kpi-badge badge-notice">❌ Uncited</span>`;
+
+        const sentClass = r.sentiment === 'positive' ? 'badge-growth' : (r.sentiment === 'negative' ? 'badge-error' : 'badge-notice');
+        const compHtml = r.competitorMentions.length > 0
+          ? r.competitorMentions.map(c => `<span class="kpi-badge" style="margin-right: 4px;">${escapeHtml(c)}</span>`).join('')
+          : '<span style="color: var(--text-muted); font-size: 12px;">None</span>';
+
+        tr.innerHTML = `
+          <td>
+            <div style="font-weight: 500; color: #fff;">${escapeHtml(r.prompt)}</div>
+            ${r.excerpt ? `<div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">"${escapeHtml(r.excerpt)}"</div>` : ''}
+          </td>
+          <td><span class="kpi-badge ${r.brandMentioned ? 'badge-growth' : 'badge-error'}">${r.brandMentioned ? 'Mentioned' : 'Absent'}</span></td>
+          <td>${citedHtml}</td>
+          <td><span class="kpi-badge ${sentClass}" style="text-transform: capitalize;">${escapeHtml(r.sentiment)}</span></td>
+          <td>${compHtml}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      results.classList.remove('hidden');
+    } catch (err) {
+      alert('Error evaluating AI Visibility: ' + err.message);
     } finally {
       loader.classList.add('hidden');
     }
