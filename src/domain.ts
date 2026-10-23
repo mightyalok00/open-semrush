@@ -265,8 +265,9 @@ export function resolveCompetitorDomains(cleanDomain: string, liveTokens: readon
     }
   }
 
-  const authoritativePeers = ['wikipedia.org', 'github.com', 'medium.com', 'techcrunch.com'];
-  return authoritativePeers.filter(p => !p.includes(brandName)).slice(0, 3);
+  // Do not substitute unrelated high-authority websites for actual competitors.
+  // An empty result is more honest than an unsupported competitor claim.
+  return [];
 }
 
 const COUNTRY_MULTIPLIERS: Record<string, number> = {
