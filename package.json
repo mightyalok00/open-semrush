@@ -12,7 +12,7 @@
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit",
-    "lint": "node --check scripts/semrush-server.mjs scripts/semrush.mjs scripts/production-controls.mjs scripts/benchmark.mjs scripts/crawl-benchmark.mjs scripts/load-benchmark.mjs scripts/check-secrets.mjs scripts/multi-target-crawl.mjs scripts/verify-forecast-accuracy.mjs",
+    "lint": "node --check scripts/semrush-server.mjs scripts/semrush.mjs scripts/production-controls.mjs scripts/benchmark.mjs scripts/crawl-benchmark.mjs scripts/load-benchmark.mjs scripts/check-secrets.mjs scripts/multi-target-crawl.mjs scripts/verify-forecast-accuracy.mjs scripts/verify-open-benchmark.mjs",
     "check:fast": "npm run lint && npm run typecheck",
     "start": "npm run build && node scripts/semrush-server.mjs",
     "dev": "npm run build && node scripts/semrush-server.mjs",
@@ -29,6 +29,7 @@
     "benchmark:crawl:matrix": "npm run build && node scripts/crawl-benchmark.mjs --matrix",
     "benchmark:crawl:multi": "npm run build && node scripts/multi-target-crawl.mjs",
     "verify:forecast": "npm run build && node scripts/verify-forecast-accuracy.mjs",
+    "verify:open-benchmark": "npm run build && node scripts/verify-open-benchmark.mjs",
     "check:security": "npm run build && node --no-warnings=ExperimentalWarning --test tests/security-regression.test.mjs",
     "check:secrets": "node scripts/check-secrets.mjs"
   },

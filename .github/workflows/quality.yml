@@ -50,6 +50,9 @@ jobs:
       - name: Verify independent forecast accuracy & rolling-origin backtests (historical GSC data)
         run: node scripts/verify-forecast-accuracy.mjs
 
+      - name: Verify public independent open-web benchmark (Wikimedia Foundation SEO telemetry)
+        run: node scripts/verify-open-benchmark.mjs
+
       - name: Dedicated security regression test suite (SSRF, DNS Rebinding, Auth)
         run: npm run check:security
 

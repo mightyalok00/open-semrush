@@ -405,6 +405,9 @@ npm run test:coverage
 # Run independent forecast accuracy & backtest verification on authorized GSC data
 npm run verify:forecast
 
+# Run public independent open-web benchmark evaluation (Wikimedia Foundation SEO telemetry)
+npm run verify:open-benchmark
+
 # Run dedicated security regression test suite
 npm run check:security
 
