@@ -160,9 +160,11 @@ export function expandKeywordMultiAngle(seedKeyword) {
             source: 'heuristic',
             intent: 'Informational',
             category: 'question',
-            searchVolume: 1200,
+            searchVolume: 0,
+            searchVolumeStatus: 'unavailable',
+            modeledSearchVolume: 1200,
             keywordDifficulty: 24,
-            cpcUsd: 1.15,
+            cpcUsd: 0,
         });
     }
     // 2. Comparison Angle
@@ -178,9 +180,11 @@ export function expandKeywordMultiAngle(seedKeyword) {
             source: 'heuristic',
             intent: 'Commercial',
             category: 'comparison',
-            searchVolume: 2400,
+            searchVolume: 0,
+            searchVolumeStatus: 'unavailable',
+            modeledSearchVolume: 2400,
             keywordDifficulty: 42,
-            cpcUsd: 2.80,
+            cpcUsd: 0,
         });
     }
     // 3. Preposition & Modifier Angle
@@ -196,9 +200,11 @@ export function expandKeywordMultiAngle(seedKeyword) {
             source: 'heuristic',
             intent: 'Informational',
             category: 'long-tail',
-            searchVolume: 3500,
+            searchVolume: 0,
+            searchVolumeStatus: 'unavailable',
+            modeledSearchVolume: 3500,
             keywordDifficulty: 32,
-            cpcUsd: 1.65,
+            cpcUsd: 0,
         });
     }
     // 4. Commercial & Transactional Angle
@@ -213,9 +219,11 @@ export function expandKeywordMultiAngle(seedKeyword) {
             source: 'heuristic',
             intent: 'Transactional',
             category: 'autocomplete',
-            searchVolume: 1800,
+            searchVolume: 0,
+            searchVolumeStatus: 'unavailable',
+            modeledSearchVolume: 1800,
             keywordDifficulty: 55,
-            cpcUsd: 4.50,
+            cpcUsd: 0,
         });
     }
     return results;

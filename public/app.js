@@ -290,18 +290,23 @@ async function fetchDomainOverview(domain) {
     // Render Competitor Tags with click-to-inspect shortcuts
     const compContainer = document.getElementById('domainCompetitors');
     compContainer.innerHTML = '';
-    (data.topCompetitors || []).forEach(comp => {
-      const tag = document.createElement('span');
-      tag.className = 'tag';
-      tag.textContent = comp;
-      tag.style.cursor = 'pointer';
-      tag.title = 'Click to inspect competitor';
-      tag.onclick = () => {
-        document.getElementById('domainInput').value = comp;
-        fetchDomainOverview(comp);
-      };
-      compContainer.appendChild(tag);
-    });
+    const competitors = data.topCompetitors || [];
+    if (competitors.length === 0) {
+      compContainer.innerHTML = '<span style="color: var(--text-secondary); font-size: 0.85rem; font-style: italic;">No direct vertical competitors detected for this domain.</span>';
+    } else {
+      competitors.forEach(comp => {
+        const tag = document.createElement('span');
+        tag.className = 'tag';
+        tag.textContent = comp;
+        tag.style.cursor = 'pointer';
+        tag.title = 'Click to inspect competitor';
+        tag.onclick = () => {
+          document.getElementById('domainInput').value = comp;
+          fetchDomainOverview(comp);
+        };
+        compContainer.appendChild(tag);
+      });
+    }
 
     // Populate Top Organic Keywords Table
     const tbody = document.getElementById('domainKeywordsTableBody');
@@ -498,7 +503,19 @@ async function fetchKeywordData(query) {
     const m = data.metrics;
 
     // Display Volume & KD%
-    document.getElementById('kwVolume').textContent = m.searchVolume.toLocaleString();
+    const volEl = document.getElementById('kwVolume');
+    const volUnit = volEl.parentElement?.querySelector('.kpi-unit');
+    if (m.searchVolume === null || m.searchVolumeStatus === 'unavailable') {
+      volEl.textContent = 'Unavailable';
+      volEl.style.fontSize = '1.3rem';
+      volEl.style.opacity = '0.8';
+      if (volUnit) volUnit.textContent = '(Connect DataForSEO)';
+    } else {
+      volEl.textContent = Number(m.searchVolume).toLocaleString();
+      volEl.style.fontSize = '';
+      volEl.style.opacity = '';
+      if (volUnit) volUnit.textContent = m.provenance?.tier === 'statistical_model' ? '/ mo (modeled)' : '/ month';
+    }
     document.getElementById('kwKd').textContent = `${m.keywordDifficulty}%`;
     document.getElementById('kwKdBar').style.width = `${m.keywordDifficulty}%`;
 
