@@ -3,7 +3,7 @@
 **Evaluation Date:** October 23, 2026  
 **Repository:** [https://github.com/mightyalok00/open-semrush](https://github.com/mightyalok00/open-semrush)  
 **Status:** Validated Production-Grade Upgrade  
-**Suite Quality:** 153/153 Passing Tests • Zero Type Errors • Zero Lint Warnings  
+**Suite Quality:** See the latest passing GitHub Actions run for the commit-specific test count • TypeScript and script checks are enforced by CI  
 
 ---
 
@@ -71,9 +71,7 @@ Forecast validation complete: Production interval calibration confirmed.
 
 Executed via `node --test tests/*.test.mjs`:
 
-- **Total Tests:** 141 passing
-- **Failed Tests:** 0
-- **Execution Time:** ~3.7 seconds
+- **Historical snapshot:** This section reflects an earlier run and is not a current test-count guarantee. The latest commit-specific pass/fail counts and execution time are available in GitHub Actions.
 - **New Tests Added:**
   - `tests/provider-abstraction.test.mjs` (ProviderRegistry, ProviderCache, ProviderRateLimiter, SuggestAdapter truth-in-data status)
   - `tests/forecast-calibration-regression.test.mjs` (Zero leakage holdout conformal calibration & horizon bounds)
@@ -119,7 +117,7 @@ Executed via `node --test tests/*.test.mjs`:
 To ensure full transparency during peer reviews and rigorous technical due diligence, Open Semrush strictly distinguishes **Engineering Quality** from **SEO Product Data Capability**:
 
 ### A. Engineering Quality (100% Independently Verifiable from Public Repo)
-- **Deterministic Test Suite:** 153/153 passing automated unit and integration tests (`npm test`).
+- **Deterministic Test Suite:** Automated unit and integration tests are run by GitHub Actions on Node.js 22 and 24. Use the linked run for the exact commit-specific count.
 - **Zero-Warning Code Quality:** Strict TypeScript typing (`tsc --noEmit`) and Node syntax verification (`npm run check:fast`) pass with zero errors.
 - **Production Hardening:** SSRF socket DNS pinning, TOCTOU defense, rate limiting, and constant-time secret comparison validated via `tests/security-regression.test.mjs`.
 - **Durable Storage & Recovery:** Relational SQLite WAL engine with verified point-in-time snapshot recovery and rollback tested via `tests/storage-recovery.test.mjs`.
@@ -145,3 +143,10 @@ Open Semrush does not claim to bundle a proprietary, multi-million-dollar global
 ---
 
 **Report Certification:** Validated across 153 test suites and benchmark evaluations on October 23, 2026.
+
+
+## 6. Latest Truth-in-Data Regression Controls
+
+- Heuristic multi-angle keyword expansion must not expose fixed search-volume or CPC constants as measured provider metrics.
+- Unmapped domains must not receive unrelated generic websites as competitor results; an empty competitor list is preferable to an unsupported claim.
+- CI regression tests cover both conditions. These controls improve data honesty but do not substitute for authorized live-provider integration tests or independent SEO benchmark validation.
