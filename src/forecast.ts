@@ -166,6 +166,7 @@ function evaluateHorizonRollingBacktest(
   let totalEvaluatedPoints = 0;
 
   const naiveAbsErrors: number[] = [];
+  const seasonalNaiveAbsErrors: number[] = [];
   const meanAbsErrors: number[] = [];
 
   // Determine split step size
@@ -240,7 +241,14 @@ function evaluateHorizonRollingBacktest(
       }
       totalEvaluatedPoints++;
 
+      // Baseline 1: Standard Naive (flat last observed value)
       naiveAbsErrors.push(Math.abs(actual - naiveValue));
+
+      // Baseline 2: Seasonal-Naive (value observed on the same day-of-week 7 days prior)
+      const seasonalNaiveValue = trainClicks[trainClicks.length - 7 + (h % 7)] ?? naiveValue;
+      seasonalNaiveAbsErrors.push(Math.abs(actual - seasonalNaiveValue));
+
+      // Baseline 3: Historical Training Mean
       meanAbsErrors.push(Math.abs(actual - meanValue));
     }
   }
@@ -254,6 +262,7 @@ function evaluateHorizonRollingBacktest(
   const coverage95 = inIntervalCount / totalEvaluatedPoints;
 
   const naiveMae = naiveAbsErrors.reduce((a, b) => a + b, 0) / totalEvaluatedPoints;
+  const seasonalNaiveMae = seasonalNaiveAbsErrors.reduce((a, b) => a + b, 0) / totalEvaluatedPoints;
   const meanMae = meanAbsErrors.reduce((a, b) => a + b, 0) / totalEvaluatedPoints;
 
   const modelImprovementPercent = naiveMae > 0 ? Number((((naiveMae - mae) / naiveMae) * 100).toFixed(2)) : 0;
@@ -267,6 +276,7 @@ function evaluateHorizonRollingBacktest(
     coverage95: Number(coverage95.toFixed(4)),
     sampleSize: totalEvaluatedPoints,
     naiveMae: Number(naiveMae.toFixed(2)),
+    seasonalNaiveMae: Number(seasonalNaiveMae.toFixed(2)),
     meanMae: Number(meanMae.toFixed(2)),
     modelImprovementPercent,
   };

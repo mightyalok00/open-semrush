@@ -705,6 +705,7 @@ export interface BacktestErrorMetrics {
   readonly coverage95: number; // Fraction (0.0 to 1.0) of actuals within 95% CI
   readonly sampleSize: number;
   readonly naiveMae: number;
+  readonly seasonalNaiveMae: number;
   readonly meanMae: number;
   readonly modelImprovementPercent: number; // Relative to naive baseline
 }

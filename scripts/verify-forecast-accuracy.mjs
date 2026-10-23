@@ -62,24 +62,26 @@ let passAccuracy = true;
 
 for (const [h, m] of Object.entries(metrics)) {
   if (!m) continue;
-  const improvement = ((m.naiveMae - m.mae) / m.naiveMae) * 100;
-  if (improvement < 30) passAccuracy = false;
+  const vsNaive = ((m.naiveMae - m.mae) / m.naiveMae) * 100;
+  const vsSeasonalNaive = ((m.seasonalNaiveMae - m.mae) / m.seasonalNaiveMae) * 100;
+  if (vsNaive < 30 || vsSeasonalNaive < 20) passAccuracy = false;
 
   rows.push({
     'Horizon': `${h} Days`,
     'Model MAE': `${m.mae.toFixed(2)} clicks`,
+    'Seasonal-Naive MAE': `${m.seasonalNaiveMae.toFixed(2)} clicks`,
     'Naive MAE': `${m.naiveMae.toFixed(2)} clicks`,
     'Mean MAE': `${m.meanMae.toFixed(2)} clicks`,
-    'vs Naive': `+${improvement.toFixed(1)}%`,
+    'vs S-Naive': `+${vsSeasonalNaive.toFixed(1)}%`,
+    'vs Naive': `+${vsNaive.toFixed(1)}%`,
     'RMSE': m.rmse.toFixed(2),
-    'MAPE': `${(m.mape * 100).toFixed(2)}%`,
     'Directional Bias': `${m.bias >= 0 ? '+' : ''}${m.bias.toFixed(2)} clicks`,
     '95% Coverage': `${(m.coverage95 * 100).toFixed(1)}%`,
   });
 }
 
 console.table(rows);
-console.log('Verification Standard: Model MAE must beat standard Naive persistence baseline by >= 30%.');
+console.log('Verification Standard: Model MAE must outperform both Naive persistence (>= 30%) and Seasonal-Naive (>= 20%).');
 
 if (!report.backtestEvaluation.dataLeakageFree || !passAccuracy) {
   console.error('\nFAIL: Model failed accuracy threshold or data leakage check.');
