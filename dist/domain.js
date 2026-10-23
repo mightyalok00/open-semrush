@@ -182,6 +182,43 @@ async function inspectLiveDomainTopics(domain) {
         return { title: '', keywords: [] };
     }
 }
+export const VERTICAL_COMPETITOR_MAP = {
+    crm: ['hubspot.com', 'salesforce.com', 'zoho.com', 'pipedrive.com'],
+    sales: ['salesforce.com', 'hubspot.com', 'zoho.com', 'freshsales.io'],
+    developer: ['github.com', 'gitlab.com', 'bitbucket.org', 'sourceforge.net'],
+    git: ['github.com', 'gitlab.com', 'bitbucket.org', 'codeberg.org'],
+    code: ['github.com', 'gitlab.com', 'stackoverflow.com', 'replit.com'],
+    payments: ['stripe.com', 'paypal.com', 'adyen.com', 'square.com'],
+    billing: ['stripe.com', 'chargebee.com', 'recurly.com', 'paddle.com'],
+    ecommerce: ['shopify.com', 'woocommerce.com', 'bigcommerce.com', 'wix.com'],
+    shop: ['shopify.com', 'woocommerce.com', 'bigcommerce.com', 'magento.com'],
+    seo: ['semrush.com', 'ahrefs.com', 'moz.com', 'spyfu.com'],
+    marketing: ['hubspot.com', 'semrush.com', 'mailchimp.com', 'marketo.com'],
+    notes: ['notion.so', 'coda.io', 'evernote.com', 'obsidian.md'],
+    docs: ['notion.so', 'coda.io', 'gitbook.com', 'confluence.atlassian.com'],
+    tasks: ['asana.com', 'trello.com', 'monday.com', 'clickup.com'],
+    cloud: ['aws.amazon.com', 'digitalocean.com', 'cloudflare.com', 'linode.com'],
+    hosting: ['vercel.com', 'netlify.com', 'cloudflare.com', 'render.com'],
+    chat: ['slack.com', 'discord.com', 'teams.microsoft.com'],
+    video: ['youtube.com', 'vimeo.com', 'wistia.com', 'loom.com'],
+    security: ['cloudflare.com', 'crowdstrike.com', 'okta.com', 'paloaltonetworks.com'],
+};
+export function resolveCompetitorDomains(cleanDomain, liveTokens) {
+    const brandName = cleanDomain.split('.')[0]?.toLowerCase() ?? '';
+    for (const [key, competitors] of Object.entries(VERTICAL_COMPETITOR_MAP)) {
+        if (cleanDomain.includes(key) || brandName === key) {
+            return competitors.filter(c => !c.includes(brandName)).slice(0, 4);
+        }
+    }
+    for (const token of liveTokens) {
+        const t = token.toLowerCase();
+        if (VERTICAL_COMPETITOR_MAP[t]) {
+            return VERTICAL_COMPETITOR_MAP[t].filter(c => !c.includes(brandName)).slice(0, 4);
+        }
+    }
+    const authoritativePeers = ['wikipedia.org', 'github.com', 'medium.com', 'techcrunch.com'];
+    return authoritativePeers.filter(p => !p.includes(brandName)).slice(0, 3);
+}
 const COUNTRY_MULTIPLIERS = {
     us: 1.0,
     uk: 0.36,
@@ -427,11 +464,7 @@ export async function generateDomainOverview(domain, countryCode = 'us') {
     }
     const estimatedMonthlyOrganicTraffic = topOrganicKeywords.reduce((acc, k) => acc + k.estimatedMonthlyTraffic, 0) * (6 + (positiveHash % 14));
     const totalRankedKeywords = 450 + (positiveHash % 8500);
-    const topCompetitors = [
-        `${brandName}-alt.com`,
-        `rival${brandName}.io`,
-        `best-${brandName}-alternative.org`,
-    ];
+    const topCompetitors = resolveCompetitorDomains(cleanDomain, liveTopics.keywords);
     const organicKeywordsDistribution = {
         top3: topOrganicKeywords.filter(k => k.position <= 3).length,
         top10: topOrganicKeywords.filter(k => k.position <= 10).length,

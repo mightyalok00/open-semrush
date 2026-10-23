@@ -1348,19 +1348,28 @@ async function fetchBacklinkProfile(domain) {
     // 6. Recent Backlink Feed
     const feed = document.getElementById('blFeedList');
     feed.innerHTML = '';
-    (data.recentBacklinks || []).forEach(link => {
-      const it = document.createElement('div');
-      it.className = 'backlink-item';
-      const badgeClass = link.isDofollow ? 'badge-growth' : 'badge-notice';
-      it.innerHTML = `
-        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-          <span class="bl-source">${escapeHtml(link.sourceUrl)}</span>
-          <span class="kpi-badge ${badgeClass}">${link.isDofollow ? 'dofollow' : 'nofollow'}</span>
+    const links = data.recentBacklinks || [];
+    if (links.length === 0) {
+      feed.innerHTML = `
+        <div style="padding: 18px; color: var(--text-muted); font-size: 13px; text-align: center; border: 1px dashed var(--border-subtle); border-radius: 8px;">
+          ℹ️ No external backlink index connected for this domain. Run a <strong>Technical Site Audit</strong> to extract verified in-page crawl links, or configure <code>DATAFORSEO_LOGIN</code> in .env for global backlink indexes.
         </div>
-        <div class="bl-target">Target: ${escapeHtml(link.targetUrl)} • Anchor: "<strong>${escapeHtml(link.anchorText)}</strong>" (AS: ${link.sourceAuthorityScore})</div>
       `;
-      feed.appendChild(it);
-    });
+    } else {
+      links.forEach(link => {
+        const it = document.createElement('div');
+        it.className = 'backlink-item';
+        const badgeClass = link.isDofollow ? 'badge-growth' : 'badge-notice';
+        it.innerHTML = `
+          <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+            <a href="${escapeHtml(link.sourceUrl)}" target="_blank" rel="noopener noreferrer" class="bl-source" style="color: var(--accent-blue); text-decoration: none;">${escapeHtml(link.sourceUrl)}</a>
+            <span class="kpi-badge ${badgeClass}">${link.isDofollow ? 'dofollow' : 'nofollow'}</span>
+          </div>
+          <div class="bl-target">Target: ${escapeHtml(link.targetUrl)} • Anchor: "<strong>${escapeHtml(link.anchorText)}</strong>" (AS: ${link.sourceAuthorityScore})</div>
+        `;
+        feed.appendChild(it);
+      });
+    }
 
     results.classList.remove('hidden');
   } catch (err) {
