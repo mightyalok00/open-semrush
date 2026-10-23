@@ -463,11 +463,12 @@ export function auditBacklinkToxicity(
   else if (toxicityScore >= 15) toxicityGrade = 'low_risk';
 
   const recommendations: string[] = [];
-  if (toxicityGrade === 'toxic' || toxicityGrade === 'suspicious') {
-    recommendations.push('Prepare a Google Disavow file containing flagged spam and low-authority referring domains.');
+  recommendations.push('Toxicity score is an algorithmic risk indicator, not an automatic recommendation to disavow. Google algorithms routinely ignore passive link spam.');
+  if (toxicityGrade === 'toxic') {
+    recommendations.push('Manual review recommended: If you have received a Manual Action notice in Search Console, evaluate flagged domains for disavow submission.');
   }
   if (exactRatio > 0.25) {
-    recommendations.push('Diversify future link building toward branded, naked URL, and topical partial match anchors.');
+    recommendations.push('Diversify future link acquisition toward branded, naked URL, and topical partial match anchors.');
   }
   if (linksPerDomain > 35) {
     recommendations.push('Audit sitewide affiliate and partner footer links to ensure rel="nofollow" or rel="sponsored" attributes are applied.');

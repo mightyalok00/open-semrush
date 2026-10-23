@@ -140,6 +140,7 @@ export async function auditSinglePage(
         severity: 'error',
         message: `Client error HTTP status ${statusCode}`,
         recommendation: 'Fix broken link or configure a 301 permanent redirect.',
+        evidence: { metric: 'HTTP_STATUS', observed: statusCode, expected: 200 },
       });
     } else if (statusCode >= 500) {
       issues.push({
@@ -147,6 +148,7 @@ export async function auditSinglePage(
         severity: 'error',
         message: `Server returned HTTP status ${statusCode}`,
         recommendation: 'Investigate application logs and server health.',
+        evidence: { metric: 'HTTP_STATUS', observed: statusCode, expected: 200 },
       });
     }
 
@@ -156,6 +158,7 @@ export async function auditSinglePage(
         severity: 'warning',
         message: `Slow Time-to-First-Byte (TTFB): ${ttfbMs}ms (optimal < 800ms)`,
         recommendation: 'Optimize server response time (TTFB), leverage caching, or deploy behind a CDN.',
+        evidence: { metric: 'TTFB_MS', observed: ttfbMs, expected: '<800ms' },
       });
     }
 
@@ -177,6 +180,7 @@ export async function auditSinglePage(
         severity: 'warning',
         message: 'Strict-Transport-Security (HSTS) header is missing',
         recommendation: 'Add Strict-Transport-Security header to enforce secure HTTPS connections.',
+        evidence: { metric: 'STRICT_TRANSPORT_SECURITY', observed: 'missing', expected: 'max-age=31536000' },
       });
     }
 
@@ -186,6 +190,7 @@ export async function auditSinglePage(
         severity: 'notice',
         message: 'Content-Security-Policy (CSP) header is missing',
         recommendation: 'Implement a Content-Security-Policy to mitigate XSS and injection vulnerabilities.',
+        evidence: { metric: 'CONTENT_SECURITY_POLICY', observed: 'missing', expected: 'default-src \'self\'' },
       });
     }
 
@@ -195,6 +200,7 @@ export async function auditSinglePage(
         severity: 'notice',
         message: 'X-Frame-Options clickjacking protection header is missing',
         recommendation: 'Configure X-Frame-Options: SAMEORIGIN to prevent unauthorized framing.',
+        evidence: { metric: 'X_FRAME_OPTIONS', observed: 'missing', expected: 'SAMEORIGIN' },
       });
     }
 
@@ -204,6 +210,7 @@ export async function auditSinglePage(
         severity: 'warning',
         message: `HTML page size is heavy (${pageSizeKb} KB, optimal < 100 KB)`,
         recommendation: 'Minify HTML and defer non-essential scripts and assets to reduce payload.',
+        evidence: { metric: 'PAGE_SIZE_KB', observed: pageSizeKb, expected: '<100KB' },
       });
     }
 
@@ -216,6 +223,7 @@ export async function auditSinglePage(
         severity: 'error',
         message: 'Missing <title> tag in HTML head',
         recommendation: 'Add a concise, descriptive title tag (30-60 characters).',
+        evidence: { metric: 'TITLE_TAG', observed: 'none', expected: '30-60 characters' },
       });
     } else {
       if (title.length < 30) {
@@ -224,6 +232,7 @@ export async function auditSinglePage(
           severity: 'warning',
           message: `Title is too short (${title.length} characters)`,
           recommendation: 'Expand title to at least 30 characters with target keywords.',
+          evidence: { metric: 'TITLE_LENGTH', observed: title.length, expected: '30-60' },
         });
       } else if (title.length > 60) {
         issues.push({
@@ -231,6 +240,7 @@ export async function auditSinglePage(
           severity: 'warning',
           message: `Title exceeds 60 characters (${title.length} characters)`,
           recommendation: 'Keep title under 60 characters to avoid SERP truncation.',
+          evidence: { metric: 'TITLE_LENGTH', observed: title.length, expected: '30-60' },
         });
       }
     }
@@ -245,6 +255,7 @@ export async function auditSinglePage(
         severity: 'warning',
         message: 'Missing meta description tag',
         recommendation: 'Add an engaging meta description between 70 and 160 characters.',
+        evidence: { metric: 'META_DESCRIPTION', observed: 'none', expected: '70-160 characters' },
       });
     } else if (metaDescription.length < 70 || metaDescription.length > 160) {
       issues.push({
@@ -252,6 +263,7 @@ export async function auditSinglePage(
         severity: 'notice',
         message: `Meta description length (${metaDescription.length} chars) is outside optimal 70-160 range`,
         recommendation: 'Refine meta description length to maximize click-through rate.',
+        evidence: { metric: 'META_DESC_LENGTH', observed: metaDescription.length, expected: '70-160' },
       });
     }
 
@@ -264,6 +276,7 @@ export async function auditSinglePage(
         severity: 'notice',
         message: 'No canonical URL specified',
         recommendation: 'Add a self-referencing <link rel="canonical"> to prevent duplicate content issues.',
+        evidence: { metric: 'CANONICAL_URL', observed: 'none', expected: 'Self-referencing canonical URL' },
       });
     }
 
@@ -276,6 +289,7 @@ export async function auditSinglePage(
         severity: 'error',
         message: 'Missing <h1> tag',
         recommendation: 'Ensure each page has exactly one main <h1> heading.',
+        evidence: { metric: 'H1_COUNT', observed: 0, expected: 1 },
       });
     } else if (h1Count > 1) {
       issues.push({
@@ -283,6 +297,7 @@ export async function auditSinglePage(
         severity: 'warning',
         message: `Multiple <h1> tags detected (${h1Count} found)`,
         recommendation: 'Use only one <h1> per page for clearer topic hierarchy.',
+        evidence: { metric: 'H1_COUNT', observed: h1Count, expected: 1 },
       });
     }
 
@@ -311,6 +326,7 @@ export async function auditSinglePage(
         severity: 'notice',
         message: 'No Schema.org structured data (JSON-LD) detected',
         recommendation: 'Implement JSON-LD structured data (Organization, WebPage, Article, or Product) for rich SERP snippets.',
+        evidence: { metric: 'SCHEMA_TYPES_COUNT', observed: 0, expected: '>=1 Schema.org JSON-LD' },
       });
     }
 
@@ -325,6 +341,7 @@ export async function auditSinglePage(
         severity: 'notice',
         message: 'Incomplete Open Graph metadata (missing og:title, og:description, or og:image)',
         recommendation: 'Add complete Open Graph meta tags to ensure clean preview cards on social platforms.',
+        evidence: { metric: 'OPENGRAPH_STATUS', observed: `title:${hasOgTitle}, desc:${hasOgDesc}, img:${hasOgImg}`, expected: 'Complete og:title, og:description, and og:image' },
       });
     }
 
@@ -338,6 +355,7 @@ export async function auditSinglePage(
         severity: 'notice',
         message: 'Page has a noindex directive',
         recommendation: 'Confirm that this page is intended to be excluded from search indexes.',
+        evidence: { metric: 'ROBOTS_DIRECTIVE', observed: 'noindex', expected: 'index, follow' },
       });
     }
 
@@ -355,6 +373,7 @@ export async function auditSinglePage(
         severity: 'warning',
         message: `${missingAltCount} image(s) missing descriptive alt attributes`,
         recommendation: 'Add informative alt text to all visual images for accessibility and image search.',
+        evidence: { metric: 'IMAGES_MISSING_ALT_COUNT', observed: missingAltCount, expected: 0 },
       });
     }
 
@@ -374,6 +393,7 @@ export async function auditSinglePage(
         severity: 'warning',
         message: `Low word count (${wordCount} words)`,
         recommendation: 'Expand content with valuable information to avoid thin content penalties.',
+        evidence: { metric: 'WORD_COUNT', observed: wordCount, expected: '>=200 words' },
       });
     }
 

@@ -1,4 +1,10 @@
-import type { AiFixRecommendation, ContentStrategyOutline, DomainKeywordRanking } from './types.js';
+import type {
+  AiFixRecommendation,
+  ContentStrategyOutline,
+  DomainKeywordRanking,
+  EvidenceBackedRecommendation,
+  SiteAuditReport,
+} from './types.js';
 
 export interface AiDomainAnalysis {
   readonly authorityScore: number;
@@ -484,3 +490,105 @@ export function getAiEngineStatus(): AiEngineStatus {
     totalInvalidatedKeys: invalidKeys.size,
   };
 }
+
+/**
+ * Generates evidence-backed SEO recommendations derived directly from observed audit and ranking metrics.
+ * Explains why each action matters, the expected impact, confidence score, and exact empirical evidence.
+ */
+export function generateEvidenceBackedRecommendations(
+  auditReport: SiteAuditReport
+): readonly EvidenceBackedRecommendation[] {
+  const recommendations: EvidenceBackedRecommendation[] = [];
+  const provenance = {
+    tier: 'empirical_observation' as const,
+    isFactual: true,
+    dataSource: 'Open Semrush Crawl Telemetry & Audit Findings',
+    methodology: 'Empirical issue mapping with impact scoring and supporting evidence references',
+    confidence: 'high' as const,
+    metricType: 'measured' as const,
+    retrievalTimestamp: new Date().toISOString(),
+  };
+
+  let recIndex = 1;
+
+  for (const page of auditReport.pages) {
+    for (const issue of page.issues) {
+      if (issue.severity === 'error') {
+        recommendations.push({
+          id: `rec_${recIndex++}`,
+          category: issue.code.includes('HTTP') ? 'technical' : 'content',
+          title: `Resolve Critical ${issue.code.replace(/_/g, ' ')} on ${new URL(page.url).pathname}`,
+          action: issue.recommendation,
+          rationale: `Search engine crawlers deprioritize or drop indexing for URLs encountering ${issue.message.toLowerCase()}. Fixing this preserves indexation and crawl budget.`,
+          expectedImpact: 'high',
+          confidence: 0.95,
+          evidence: {
+            metric: issue.code,
+            observedValue: issue.evidence?.observed ?? issue.message,
+            benchmarkValue: issue.evidence?.expected ?? 'Clean HTTP 200 with valid metadata',
+            sourceUrlOrQuery: page.url,
+          },
+          provenance,
+        });
+      } else if (issue.severity === 'warning') {
+        recommendations.push({
+          id: `rec_${recIndex++}`,
+          category: issue.code.includes('TTFB') || issue.code.includes('SIZE') || issue.code.includes('HSTS') ? 'technical' : 'content',
+          title: `Improve ${issue.code.replace(/_/g, ' ')} for ${new URL(page.url).pathname}`,
+          action: issue.recommendation,
+          rationale: `${issue.message}. Optimizing this signal enhances Core Web Vitals and user engagement metrics correlated with rank preservation.`,
+          expectedImpact: 'medium',
+          confidence: 0.85,
+          evidence: {
+            metric: issue.code,
+            observedValue: issue.evidence?.observed ?? issue.message,
+            benchmarkValue: issue.evidence?.expected ?? 'Optimal standard compliance',
+            sourceUrlOrQuery: page.url,
+          },
+          provenance,
+        });
+      }
+    }
+
+    if (page.spaDetected) {
+      recommendations.push({
+        id: `rec_${recIndex++}`,
+        category: 'technical',
+        title: `Enable Pre-Rendering or SSR for Client-Side Hydrated SPA`,
+        action: 'Implement Dynamic Rendering or Next.js/Nuxt SSR to serve pre-rendered HTML to search bots.',
+        rationale: 'Search engine bot crawlers have limited JavaScript execution resources. Un-rendered SPAs risk having main body content and internal links skipped during indexation passes.',
+        expectedImpact: 'high',
+        confidence: 0.92,
+        evidence: {
+          metric: 'SPA_DETECTED',
+          observedValue: `SPA root shell with word count = ${page.wordCount}`,
+          benchmarkValue: 'Server-rendered HTML with full text and headings',
+          sourceUrlOrQuery: page.url,
+        },
+        provenance,
+      });
+    }
+
+    if (page.contentQuality && page.contentQuality.isKeywordStuffed) {
+      recommendations.push({
+        id: `rec_${recIndex++}`,
+        category: 'content',
+        title: `Normalize Lexical Density and Remove Repetitive Phrases`,
+        action: 'Diversify vocabulary using related topical entities and decrease keyword frequency.',
+        rationale: 'High repetition entropy and excessive keyword density trigger spam quality algorithms and lower helpful-content confidence.',
+        expectedImpact: 'medium',
+        confidence: 0.88,
+        evidence: {
+          metric: 'KEYWORD_STUFFING',
+          observedValue: page.contentQuality.stuffedTerms[0]?.density ? `${(page.contentQuality.stuffedTerms[0].density * 100).toFixed(1)}% density` : 'Repetitive density',
+          benchmarkValue: 'Natural keyword density < 2.5%',
+          sourceUrlOrQuery: page.url,
+        },
+        provenance,
+      });
+    }
+  }
+
+  return recommendations;
+}
+

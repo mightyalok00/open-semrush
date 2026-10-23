@@ -4,12 +4,25 @@
 
 export type IssueSeverity = 'error' | 'warning' | 'notice';
 
+export interface SeoIssueEvidence {
+  readonly metric: string;
+  readonly observed: string | number;
+  readonly expected?: string | number;
+  readonly context?: string;
+}
+
 export interface SeoIssue {
   readonly code: string;
   readonly severity: IssueSeverity;
   readonly message: string;
   readonly recommendation: string;
+  readonly evidence?: SeoIssueEvidence;
 }
+
+/**
+ * Metric classification distinguishing factual observations, licensed provider feeds, and models.
+ */
+export type MetricType = 'measured' | 'provider_estimate' | 'modeled' | 'unavailable';
 
 /**
  * Data provenance classification hierarchy to distinguish verified telemetry from estimates.
@@ -26,7 +39,13 @@ export interface ProvenanceMetadata {
   readonly isFactual: boolean;
   readonly dataSource: string;
   readonly methodology: string;
-  readonly confidence: 'exact' | 'high' | 'modeled' | 'illustrative';
+  readonly confidence: 'exact' | 'high' | 'modeled' | 'illustrative' | 'unavailable';
+  readonly metricType?: MetricType;
+  readonly geography?: string;
+  readonly device?: 'desktop' | 'mobile' | 'all';
+  readonly retrievalTimestamp?: string;
+  readonly freshnessHours?: number;
+  readonly dataLimitations?: readonly string[];
   readonly warning?: string;
 }
 
@@ -282,6 +301,7 @@ export interface DomainOverviewReport {
     readonly top100: number;
   };
   readonly competitorOverlap?: readonly CompetitorOverlapItem[];
+  readonly topPages?: readonly TopPagePerformance[];
   readonly isSyntheticExample?: boolean;
   readonly dataLimitations?: readonly string[];
   readonly provenance?: ProvenanceMetadata;
@@ -522,8 +542,10 @@ export interface SearchConsoleReport {
 export interface RealKeywordSuggestion {
   readonly keyword: string;
   readonly source: 'google-suggest' | 'gsc-queries' | 'dataforseo' | 'heuristic';
-  readonly searchVolume?: number;
-  readonly cpcUsd?: number;
+  readonly searchVolume?: number | null;
+  readonly searchVolumeStatus?: 'measured' | 'provider_estimate' | 'modeled' | 'unavailable';
+  readonly modeledSearchVolume?: number;
+  readonly cpcUsd?: number | null;
   readonly keywordDifficulty?: number;
   readonly intent: SearchIntent;
   readonly category: 'question' | 'comparison' | 'long-tail' | 'autocomplete';
@@ -541,6 +563,11 @@ export interface RealKeywordResearchReport {
  * Scheduled Rank Tracking Types
  * ========================================================================= */
 
+export interface TrackedKeywordAnnotation {
+  readonly date: string;
+  readonly note: string;
+}
+
 export interface TrackedKeywordItem {
   readonly id: string;
   readonly domain: string;
@@ -553,6 +580,10 @@ export interface TrackedKeywordItem {
   readonly previousPosition?: number | null;
   readonly positionDelta?: number;
   readonly lastCheckedAt?: string;
+  readonly device?: 'desktop' | 'mobile';
+  readonly country?: string;
+  readonly searchEngine?: string;
+  readonly annotations?: readonly TrackedKeywordAnnotation[];
 }
 
 export interface RankSnapshotRecord {
@@ -712,3 +743,85 @@ export interface StoredForecastRecord {
   readonly actualOutcomeClicks?: number;
   readonly evaluatedAt?: string;
 }
+
+/* =========================================================================
+ * Provider Abstraction & Telemetry Status Types
+ * ========================================================================= */
+
+export type ProviderCategory =
+  | 'search_console'
+  | 'crawler'
+  | 'serp'
+  | 'external_keywords'
+  | 'external_backlinks'
+  | 'models';
+
+export interface ProviderStatusInfo {
+  readonly id: string;
+  readonly name: string;
+  readonly category: ProviderCategory;
+  readonly isConfigured: boolean;
+  readonly isHealthy: boolean;
+  readonly rateLimitStatus?: {
+    readonly remainingRequests?: number;
+    readonly resetInSeconds?: number;
+  };
+  readonly message: string;
+}
+
+/* =========================================================================
+ * Evidence-Backed SEO Recommendations Types
+ * ========================================================================= */
+
+export type RecommendationCategory =
+  | 'technical'
+  | 'content'
+  | 'intent'
+  | 'backlinks'
+  | 'ranking';
+
+export interface RecommendationEvidence {
+  readonly metric: string;
+  readonly observedValue: string | number;
+  readonly benchmarkValue: string | number;
+  readonly sourceUrlOrQuery?: string;
+}
+
+export interface EvidenceBackedRecommendation {
+  readonly id: string;
+  readonly category: RecommendationCategory;
+  readonly title: string;
+  readonly action: string;
+  readonly rationale: string;
+  readonly expectedImpact: 'high' | 'medium' | 'low';
+  readonly confidence: number; // 0.0 to 1.0
+  readonly evidence: RecommendationEvidence;
+  readonly provenance: ProvenanceMetadata;
+}
+
+/* =========================================================================
+ * Crawl Projects & Top Pages Types
+ * ========================================================================= */
+
+export interface CrawlProjectRecord {
+  readonly id: string;
+  readonly name: string;
+  readonly targetUrl: string;
+  readonly maxPages: number;
+  readonly scheduleCron?: string;
+  readonly lastCrawlAt?: string;
+  readonly lastHealthScore?: number;
+  readonly createdAt: string;
+}
+
+export interface TopPagePerformance {
+  readonly url: string;
+  readonly path: string;
+  readonly estimatedTrafficShare: number; // 0.0 to 1.0
+  readonly estimatedMonthlyClicks: number;
+  readonly topKeywordsCount: number;
+  readonly primaryKeyword: string;
+  readonly isVerified: boolean;
+  readonly provenance: ProvenanceMetadata;
+}
+

@@ -113,6 +113,37 @@ function generateFutureDates(lastDateStr: string, count: number): string[] {
 }
 
 /**
+ * Calibrates prediction interval multiplier on internal training-window holdout splits
+ * with zero temporal leakage (max(T_subtrain) < min(T_calib)).
+ */
+function calibratePredictionIntervalMultiplier(
+  trainClicks: readonly number[],
+  trainSet: readonly DailyObservation[],
+  resStd: number
+): number {
+  if (trainClicks.length < 30 || resStd <= 0) return 1.96;
+  const calibLen = Math.max(10, Math.floor(trainClicks.length * 0.3));
+  const calibStart = trainClicks.length - calibLen;
+  const subClicks = trainClicks.slice(0, calibStart);
+  const { slope: subSlope, intercept: subIntercept } = fitLinearTrend(subClicks);
+  const subMults = computeDayOfWeekMultipliers(trainSet.slice(0, calibStart));
+
+  const ratios: number[] = [];
+  for (let i = 0; i < calibLen; i++) {
+    const idx = calibStart + i;
+    const obs = trainSet[idx]!;
+    const dow = new Date(obs.date + 'T00:00:00Z').getUTCDay();
+    const p = Math.max(0, (subIntercept + subSlope * idx) * subMults[dow]!);
+    const step = i + 1;
+    const expansion = Math.sqrt(1 + step / 10 + Math.pow(step / 30, 1.5));
+    ratios.push(Math.abs(obs.clicks - p) / (resStd * expansion));
+  }
+  ratios.sort((a, b) => a - b);
+  const q95Idx = Math.min(ratios.length - 1, Math.floor(ratios.length * 0.95));
+  return Math.max(1.96, Math.min(3.5, ratios[q95Idx] ?? 1.96));
+}
+
+/**
  * Executes a rolling-origin backtest for a specific horizon with zero data leakage.
  */
 function evaluateHorizonRollingBacktest(
@@ -177,6 +208,9 @@ function evaluateHorizonRollingBacktest(
     }
     const residualStd = Math.sqrt(residualSumSq / Math.max(1, trainSet.length - 2));
 
+    // Calibrate prediction interval quantile strictly on train validation split
+    const calibMultiplier = calibratePredictionIntervalMultiplier(trainClicks, trainSet, residualStd);
+
     // Predict across test horizon
     for (let h = 0; h < testSet.length; h++) {
       const testPoint = testSet[h]!;
@@ -184,9 +218,9 @@ function evaluateHorizonRollingBacktest(
       const dow = new Date(testPoint.date + 'T00:00:00Z').getUTCDay();
       const predicted = Math.max(0, (intercept + slope * t) * dowMultipliers[dow]!);
 
-      // Growing forecast horizon uncertainty
-      const horizonExpansion = Math.sqrt(1 + (h + 1) / 30);
-      const margin = 1.96 * residualStd * horizonExpansion;
+      // Compound forecast horizon uncertainty incorporating autoregressive variance
+      const horizonExpansion = Math.sqrt(1 + (h + 1) / 10 + Math.pow((h + 1) / 30, 1.5));
+      const margin = calibMultiplier * residualStd * horizonExpansion;
       const lower95 = Math.max(0, predicted - margin);
       const upper95 = predicted + margin;
 
@@ -312,14 +346,17 @@ export function generateTrafficForecast(
   const futureDates = generateFutureDates(endDate, 180);
   const allFuturePoints: ForecastPoint[] = [];
 
+  // Calibrate prediction interval quantile strictly on internal holdout split
+  const calibMultiplier = calibratePredictionIntervalMultiplier(clicks, observations, residualStd);
+
   for (let h = 0; h < futureDates.length; h++) {
     const date = futureDates[h]!;
     const t = observations.length + h;
     const dow = new Date(date + 'T00:00:00Z').getUTCDay();
     const predClicks = Math.max(0, Math.round((intercept + slope * t) * dowMultipliers[dow]!));
 
-    const expansion = Math.sqrt(1 + (h + 1) / 30);
-    const margin = Math.round(1.96 * residualStd * expansion);
+    const expansion = Math.sqrt(1 + (h + 1) / 10 + Math.pow((h + 1) / 30, 1.5));
+    const margin = Math.round(calibMultiplier * residualStd * expansion);
 
     allFuturePoints.push({
       date,

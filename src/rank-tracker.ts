@@ -113,7 +113,14 @@ export function calculateVisibilityScore(positions: readonly (number | null)[]):
 export function addTrackedKeyword(
   domain: string,
   keyword: string,
-  options: { targetUrl?: string; tags?: readonly string[]; dbPath?: string } = {}
+  options: {
+    targetUrl?: string;
+    tags?: readonly string[];
+    dbPath?: string;
+    device?: 'desktop' | 'mobile';
+    country?: string;
+    searchEngine?: string;
+  } = {}
 ): TrackedKeywordItem {
   const cleanDomain = normalizeDomain(domain);
   const cleanKeyword = keyword.trim().toLowerCase();
@@ -136,11 +143,46 @@ export function addTrackedKeyword(
     tags: options.tags ? [...options.tags] : [],
     active: true,
     createdAt: new Date().toISOString(),
+    device: options.device ?? 'desktop',
+    country: options.country ?? 'us',
+    searchEngine: options.searchEngine ?? 'google',
+    annotations: [],
   };
 
   db.trackedKeywords.push(newItem);
   writeRankTrackerDb(db, options.dbPath);
   return newItem;
+}
+
+/**
+ * Attaches a historical note/annotation to a tracked keyword (e.g. site redesign, core update).
+ */
+export function addKeywordAnnotation(
+  domain: string,
+  keywordId: string,
+  note: string,
+  date?: string,
+  dbPath?: string
+): boolean {
+  const cleanDomain = normalizeDomain(domain);
+  const db = readRankTrackerDb(dbPath);
+  const item = db.trackedKeywords.find(k => k.domain === cleanDomain && k.id === keywordId);
+  if (!item) return false;
+
+  const currentAnnotations = Array.isArray(item.annotations) ? [...item.annotations] : [];
+  currentAnnotations.push({
+    date: date ?? new Date().toISOString().slice(0, 10),
+    note: note.trim(),
+  });
+
+  const updatedItem: TrackedKeywordItem = {
+    ...item,
+    annotations: currentAnnotations,
+  };
+
+  db.trackedKeywords = db.trackedKeywords.map(k => k.id === keywordId ? updatedItem : k);
+  writeRankTrackerDb(db, dbPath);
+  return true;
 }
 
 /**

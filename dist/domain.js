@@ -191,6 +191,54 @@ const COUNTRY_MULTIPLIERS = {
     au: 0.22,
 };
 /**
+ * Generates modeled top landing pages and traffic distribution for a domain.
+ */
+export function generateModeledTopPages(domain, traffic, topKeywords) {
+    const brandName = domain.replace(/\.[a-z0-9.-]+$/i, '');
+    return [
+        {
+            url: `https://${domain}/`,
+            path: '/',
+            estimatedTrafficShare: 0.44,
+            estimatedMonthlyClicks: Math.round(traffic * 0.44),
+            topKeywordsCount: Math.max(1, Math.round(topKeywords.length * 0.4)),
+            primaryKeyword: topKeywords[0]?.keyword ?? brandName,
+            isVerified: false,
+            provenance: DOMAIN_OVERVIEW_PROVENANCE,
+        },
+        {
+            url: `https://${domain}/features`,
+            path: '/features',
+            estimatedTrafficShare: 0.22,
+            estimatedMonthlyClicks: Math.round(traffic * 0.22),
+            topKeywordsCount: Math.max(1, Math.round(topKeywords.length * 0.25)),
+            primaryKeyword: topKeywords[1]?.keyword ?? `${brandName} features`,
+            isVerified: false,
+            provenance: DOMAIN_OVERVIEW_PROVENANCE,
+        },
+        {
+            url: `https://${domain}/pricing`,
+            path: '/pricing',
+            estimatedTrafficShare: 0.18,
+            estimatedMonthlyClicks: Math.round(traffic * 0.18),
+            topKeywordsCount: Math.max(1, Math.round(topKeywords.length * 0.2)),
+            primaryKeyword: `${brandName} pricing`,
+            isVerified: false,
+            provenance: DOMAIN_OVERVIEW_PROVENANCE,
+        },
+        {
+            url: `https://${domain}/docs`,
+            path: '/docs',
+            estimatedTrafficShare: 0.11,
+            estimatedMonthlyClicks: Math.round(traffic * 0.11),
+            topKeywordsCount: Math.max(1, Math.round(topKeywords.length * 0.15)),
+            primaryKeyword: `${brandName} guide`,
+            isVerified: false,
+            provenance: DOMAIN_OVERVIEW_PROVENANCE,
+        },
+    ];
+}
+/**
  * Generates an accurate 24-month historical trajectory of organic traffic & keyword growth.
  */
 export function generate24MonthTrendline(currentTraffic, currentKeywords, hashSeed) {
@@ -282,6 +330,7 @@ export async function generateDomainOverview(domain, countryCode = 'us') {
             totalRankedKeywords: scaledKeywords,
             topOrganicKeywords: topKeywords,
             topCompetitors: curated.topCompetitors,
+            topPages: generateModeledTopPages(cleanDomain, scaledTraffic, topKeywords),
             history24Months: generate24MonthTrendline(scaledTraffic, scaledKeywords, positiveHash),
             shareOfVoice,
             organicKeywordsDistribution,
@@ -322,6 +371,7 @@ export async function generateDomainOverview(domain, countryCode = 'us') {
                 totalRankedKeywords: scaledKeywords,
                 topOrganicKeywords: aiResult.topOrganicKeywords,
                 topCompetitors: aiResult.topCompetitors,
+                topPages: generateModeledTopPages(cleanDomain, scaledTraffic, aiResult.topOrganicKeywords),
                 history24Months: generate24MonthTrendline(scaledTraffic, scaledKeywords, positiveHash),
                 shareOfVoice: calculateShareOfVoice(aiResult.authorityScore, competitorOverlap.map(c => c.authorityScore)),
                 organicKeywordsDistribution,
@@ -404,6 +454,7 @@ export async function generateDomainOverview(domain, countryCode = 'us') {
         totalRankedKeywords,
         topOrganicKeywords,
         topCompetitors,
+        topPages: generateModeledTopPages(cleanDomain, estimatedMonthlyOrganicTraffic, topOrganicKeywords),
         history24Months: generate24MonthTrendline(estimatedMonthlyOrganicTraffic, totalRankedKeywords, positiveHash),
         shareOfVoice,
         organicKeywordsDistribution,

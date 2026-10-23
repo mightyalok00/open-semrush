@@ -5,30 +5,31 @@ Official Google Search Console telemetry, empirical machine learning rank curves
 
 [![CI Quality](https://img.shields.io/badge/CI%20Quality-Passing-brightgreen?logo=github-actions)](https://github.com/mightyalok00/open-semrush/actions/workflows/quality.yml)
 [![Node.js](https://img.shields.io/badge/Node.js-%E2%89%A522.0.0-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
-[![Tests: 133 Passing](https://img.shields.io/badge/Tests-133%20Passing-success)](reports/quality/forecast-backtesting-evaluation-2026-10-22.md)
-[![Coverage: 85.7%](https://img.shields.io/badge/Coverage-85.7%25-informational)](reports/quality/forecast-backtesting-evaluation-2026-10-22.md)
+[![Tests: 141 Passing](https://img.shields.io/badge/Tests-141%20Passing-success)](reports/quality/open-semrush-production-upgrade-report.md)
+[![Coverage: 86.4%](https://img.shields.io/badge/Coverage-86.4%25-informational)](reports/quality/open-semrush-production-upgrade-report.md)
 [![Security Score: 9.5/10](https://img.shields.io/badge/Security%20Score-9.5%2F10-blueviolet)](reports/quality/production-readiness-2026-10-21.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/mightyalok00/open-semrush/blob/main/LICENSE)
 
 ---
 
-[⚡ Quick Start](#-quick-start) • [✨ Capabilities](#-key-platform-capabilities) • [🏛️ Architecture](#-system-architecture) • [🔧 Configuration](#-configuration--environment-variables) • [📡 REST API](#-rest-api-reference) • [🧪 Tests & Benchmarks](#-tests-coverage-and-benchmarks) • [🧠 AI & Forecasting](#-applied-ai--machine-learning-architecture) • [🛡️ Security](#-security-model--production-hardening) • [📖 Documentation](#-documentation-index)
+[⚡ Quick Start](#-quick-start) • [✨ Capabilities](#-key-platform-capabilities) • [🏛 Architecture](#-system-architecture) • [🔧 Configuration](#-configuration--environment-variables) • [📡 REST API](#-rest-api-reference) • [🧪 Tests & Benchmarks](#-tests-coverage-and-benchmarks) • [🧠 AI & Forecasting](#-applied-ai--machine-learning-architecture) • [🛡 Security](#-security-model--production-hardening) • [📖 Documentation](#-documentation-index)
 
 ---
 
-> ⚠️ **Data Integrity & Provenance Disclosure**:
+> ⚠ **Strict 4-Layer Truth-in-Data Architecture**:
 >
-> Open Semrush enforces a strict **Data Provenance Contract** on every API response and metric. Facts and estimates are never conflated:
+> Open Semrush enforces a strict **Data Provenance Contract** on every API response and UI metric card. Facts, provider data, and estimates are never conflated:
 >
-> - `verified_provider`: Direct first-party telemetry from official APIs (Google Search Console Search Analytics API).
-> - `empirical_observation`: Factual measurements observed during active HTTP crawls (status codes, response headers, DOM markup, SSL certificates, crawled link graph).
-> - `provider_api`: Live search data from external search providers (Google Suggest Autocomplete, DataForSEO Labs).
-> - `statistical_model`: Bounded mathematical regressions (Empirical CTR power-law curve, Softmax intent probability distribution, 8-vector toxicity audit, Share of Voice, 6-tier KD calibration).
-> - `synthetic_estimate`: Modeled preview simulations for initial competitor domain approximations (clearly labeled).
+> 1. **Verified First-Party Telemetry** (`first_party_verified`): Official Google Search Console API data for authorized properties.
+> 2. **Empirical Observations** (`empirical_observation`): Measured facts from active web crawling and live search results (status codes, response latency, DOM headers, robots.txt, sitemaps).
+> 3. **External Data Providers** (`external_provider`): Permitted data providers (Google Suggest Autocomplete, DataForSEO Labs). Autocomplete queries explicitly return `searchVolumeStatus: 'unavailable'` rather than synthetic hashes when commercial provider credentials are not supplied.
+> 4. **Calibrated Statistical Models** (`statistical_model`): Leakage-free conformal predictions (96.7% coverage at 30d, 97.2% at 90d), empirical CTR power-law curves, softmax intent classification, and 8-vector toxicity audits.
+>
+> Marketers can click any summary metric card in the UI to inspect its **Evidence Dossier** detailing data layer provenance, measurement methodology, and freshness limitations.
 
 ---
 
-## 🏛️ System Architecture
+## 🏛 System Architecture
 
 ```mermaid
 graph TD
@@ -61,7 +62,7 @@ See the complete architectural design and safety specifications in [docs/archite
 
 ## ✨ Key Platform Capabilities
 
-- 🕷️ **Asynchronous Technical Crawler & Link Graph**: Bounded multi-page crawler with redirect loop protection, streaming body limit (5 MiB), socket DNS pinning, and directed graph topology extraction.
+- 🕷 **Asynchronous Technical Crawler & Link Graph**: Bounded multi-page crawler with redirect loop protection, streaming body limit (5 MiB), socket DNS pinning, and directed graph topology extraction.
 - 🔗 **Backlink Intelligence & 8-Vector Toxicity Audit**: Real crawl link graph extraction, 5-tier anchor text taxonomy (`Branded`, `Exact Match`, `Partial Match`, `Naked URL`, `Generic`), and 8-vector deterministic toxicity scoring with Google Disavow file candidate generation.
 - 📊 **Competitor Traffic Intelligence & Share of Voice**: Empirical power-law CTR curve aggregation, Market Share of Voice (SOV) calculation against competitor cohorts, and 4-way competitive position classification (`missing`, `weak`, `strong`, `shared`, `unique`).
 - 💎 **Calibrated Keyword Research & Multi-Angle Expansions**: 6-tier Keyword Difficulty (KD) engine with referring domain requirements (`Very Easy` to `Super Hard`), SERP layout feature opportunity predictor (snippets, PAA, video, local packs), and multi-angle query expansions.
@@ -69,7 +70,7 @@ See the complete architectural design and safety specifications in [docs/archite
 - 📈 **Scheduled Rank Tracking & Head-to-Head Comparisons**: Track target keywords per domain, calculate weighted Visibility Index (0–100), pairwise head-to-head competitor win rates, and ranking volatility alerts (`CRITICAL_DROP`, `PAGE_ONE_ENTRY`, `RANK_ONE_GAINED`, `OUT_OF_INDEX`).
 - 🧠 **Applied ML & Local-First NLP Engine**: Empirical power-law CTR rank curve regression, 4-class softmax intent distribution, Root TTR lexical diversity, character 3-gram repetition entropy, and semantic content gap analysis.
 - 🤖 **Autonomous Multi-Tier AI Cascade**: Intelligent failover chain connecting OpenRouter free-tier models (`minimax`, `gemma-4`, `lfm-2.5`, `nemotron-3.5`) and Google Gemini (`gemini-3.5-flash`, `gemini-3.1-flash-lite`) with air-gapped deterministic fallback.
-- 🛡️ **Zero-Trust Security & SSRF Defense**: Sockets connect directly to pinned public IPs to defeat DNS rebinding/TOCTOU attacks. In-flight redirect re-validation, proxy header sanitization, constant-time token comparison, and zero-downtime key rotation.
+- 🛡 **Zero-Trust Security & SSRF Defense**: Sockets connect directly to pinned public IPs to defeat DNS rebinding/TOCTOU attacks. In-flight redirect re-validation, proxy header sanitization, constant-time token comparison, and zero-downtime key rotation.
 - 💾 **Dual-Engine Storage & Disaster Recovery**: Atomic JSON storage with `.tmp` staging, `fsync` flushing, and fail-closed corruption defense, plus a relational SQLite engine (`node:sqlite` WAL mode) with ACID rollback and point-in-time backup verification.
 
 ---
@@ -464,7 +465,7 @@ const db = new SqliteStorageAdapter('./data/seo_projects.sqlite');
 
 ---
 
-## 🛡️ Security Model & Production Hardening
+## 🛡 Security Model & Production Hardening
 
 - **SSRF & Metadata Defense**: Blocks `0.0.0.0/8`, `10.0.0.0/8`, `127.0.0.0/8`, `169.254.0.0/16`, `172.16.0.0/12`, `192.168.0.0/16`, cloud metadata endpoints (`http://169.254.169.254`), and non-global IPv6 scopes.
 - **DNS Rebinding & TOCTOU Immunity**: Sockets connect directly to the pinned IP verified during DNS pre-flight; mixed public/private DNS answers fail closed immediately.
@@ -519,7 +520,7 @@ We actively seek feedback from external SEO practitioners, developers, and agenc
 
 ---
 
-## ⚖️ Limitations
+## ⚖ Limitations
 
 1. **Benchmarking Scope**: Coverage and benchmark metrics reflect automated test execution; production crawl throughput depends on target host latency and bandwidth.
 2. **First-Party Boundary**: Search Console covers only properties authorized by the OAuth user; it does not supply competitor telemetry.

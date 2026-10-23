@@ -361,8 +361,9 @@ export async function fetchRealKeywordResearch(options) {
                         return {
                             keyword: kw,
                             source: 'dataforseo',
-                            searchVolume: item.keyword_info?.search_volume,
-                            cpcUsd: item.keyword_info?.cpc,
+                            searchVolume: item.keyword_info?.search_volume ?? null,
+                            searchVolumeStatus: item.keyword_info?.search_volume !== undefined ? 'measured' : 'unavailable',
+                            cpcUsd: item.keyword_info?.cpc ?? null,
                             keywordDifficulty: calculateKeywordDifficulty(kw),
                             intent,
                             category,
@@ -420,8 +421,10 @@ export async function fetchRealKeywordResearch(options) {
             suggestions.push({
                 keyword: clean,
                 source: 'google-suggest',
-                searchVolume: analyzed.searchVolume,
-                cpcUsd: analyzed.cpcUsd,
+                searchVolume: null,
+                searchVolumeStatus: 'unavailable',
+                modeledSearchVolume: analyzed.searchVolume,
+                cpcUsd: null,
                 keywordDifficulty: analyzed.keywordDifficulty,
                 intent: analyzed.intent,
                 category: finalCategory,
@@ -439,6 +442,10 @@ export async function fetchRealKeywordResearch(options) {
             dataSource: 'Google Suggest Search Engine Autocomplete',
             methodology: 'Real-time search engine query suggestions and question modifiers with lexical intent classification',
             confidence: 'high',
+            metricType: 'unavailable',
+            dataLimitations: [
+                'Google Suggest provides real query autocomplete strings. Numerical search volume is unavailable without a licensed keyword data provider (e.g. DataForSEO).',
+            ],
         },
     };
 }

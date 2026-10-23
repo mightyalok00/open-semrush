@@ -78,6 +78,9 @@ const {
   getTrackedCompetitors,
   getRankingAlerts,
   generateTrafficForecast,
+  ProviderRegistry,
+  generateEvidenceBackedRecommendations,
+  addKeywordAnnotation,
 } = semrushModule;
 
 // Resolve public assets directory
@@ -227,6 +230,17 @@ const server = http.createServer(async (req, res) => {
           heapTotalBytes: mem.heapTotal,
           rssBytes: mem.rss,
         },
+      });
+      return;
+    }
+
+    // API Route: Provider Status Summary & 3-Layer Data Telemetry
+    if (pathname === '/api/providers/status' && req.method === 'GET') {
+      const registry = ProviderRegistry.getInstance();
+      const statusSummary = await registry.getStatusSummary();
+      sendJson(res, 200, {
+        providers: statusSummary,
+        timestamp: new Date().toISOString(),
       });
       return;
     }
@@ -443,6 +457,27 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    // API Route: Evidence-Backed SEO Recommendations
+    if (pathname === '/api/recommendations' && (req.method === 'GET' || req.method === 'POST')) {
+      let auditReport = null;
+      if (req.method === 'POST') {
+        const body = await parseJsonBody(req);
+        if (body.auditReport) auditReport = body.auditReport;
+      }
+      if (!auditReport) {
+        const targetUrl = reqUrl.searchParams.get('url') || 'https://example.com';
+        auditReport = await runSiteAudit(targetUrl, { maxPages: 2 });
+      }
+      const recommendations = generateEvidenceBackedRecommendations(auditReport);
+      sendJson(res, 200, {
+        targetUrl: auditReport.targetUrl,
+        totalRecommendations: recommendations.length,
+        recommendations,
+        healthScore: auditReport.healthScore,
+      });
+      return;
+    }
+
     // API Route: AI Model Cascade Status
     if (pathname === '/api/ai/status' && req.method === 'GET') {
       sendJson(res, 200, {
@@ -573,8 +608,23 @@ const server = http.createServer(async (req, res) => {
       const item = addTrackedKeyword(body.domain, body.keyword, {
         targetUrl: body.targetUrl,
         tags: Array.isArray(body.tags) ? body.tags : [],
+        device: body.device || 'desktop',
+        country: body.country || 'us',
+        searchEngine: body.searchEngine || 'google',
       });
       sendJson(res, 201, item);
+      return;
+    }
+
+    // API Route: Add Tracked Keyword Annotation
+    if (pathname === '/api/rank-tracker/annotate' && req.method === 'POST') {
+      const body = await parseJsonBody(req);
+      if (!body.domain || !body.keywordId || !body.note) {
+        sendJson(res, 400, { error: 'domain, keywordId, and note are required' });
+        return;
+      }
+      const ok = addKeywordAnnotation(body.domain, body.keywordId, body.note, body.date);
+      sendJson(res, ok ? 200 : 404, { success: ok });
       return;
     }
 
