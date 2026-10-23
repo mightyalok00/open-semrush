@@ -157,4 +157,3 @@ The automated CI gate executes a real Docker Compose lifecycle drill:
   - Expensive crawler/AI quota: 10 req/minute per client IP.
 - **Rate Limit Headers**: Returns standard RFC 6585 `Retry-After: <seconds>` and HTTP `429 Too Many Requests` when limits are exceeded, tested under sustained multi-worker burst traffic.
 - **Private Network SSRF Prevention**: DNS resolution actively rejects private IP ranges (`127.0.0.0/8`, `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, `169.254.0.0/16`, `::1`) before socket connection.
-
