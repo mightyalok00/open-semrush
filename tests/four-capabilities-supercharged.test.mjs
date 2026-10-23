@@ -12,6 +12,7 @@ import {
   calculateShareOfVoice,
   classifyCompetitiveKeywordPositions,
   generateDomainOverview,
+  resolveCompetitorDomains,
   // Phase 3: Keywords
   getKdTier,
   calculateSerpFeatureOpportunities,
@@ -217,6 +218,16 @@ test('Phase 3: expandKeywordMultiAngle generates rich taxonomy expansions', () =
   assert.ok(categories.includes('comparison'));
   assert.ok(categories.includes('long-tail'));
   assert.ok(categories.includes('autocomplete'));
+  for (const item of expansions) {
+    assert.equal(item.searchVolume, 0, 'Heuristic expansion must not claim measured volume');
+    assert.equal(item.searchVolumeStatus, 'unavailable');
+    assert.ok(typeof item.modeledSearchVolume === 'number');
+    assert.equal(item.cpcUsd, 0, 'CPC must remain unavailable without a provider');
+  }
+});
+
+test('Phase 3: unknown niches do not receive fabricated competitor domains', () => {
+  assert.deepEqual(resolveCompetitorDomains('unmapped-example-domain.test', []), []);
 });
 
 test('Phase 3: analyzeKeyword attaches kdTier and serpFeatureOpportunities to metrics', () => {
