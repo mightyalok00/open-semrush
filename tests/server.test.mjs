@@ -264,3 +264,78 @@ test('HTTP API handles AI visibility, Content Briefs, and Core Web Vitals', asyn
   assert.ok(cwvData.fcpMs > 0);
 });
 
+
+test('HTTP API handles Kubernetes health probes, Prometheus metrics & W3C tracing', async () => {
+  // 1. Kubernetes health probes
+  const liveRes = await fetch(`${baseUrl}/health/live`);
+  assert.equal(liveRes.status, 200);
+  assert.equal((await liveRes.json()).status, 'ok');
+
+  const readyRes = await fetch(`${baseUrl}/health/ready`);
+  assert.equal(readyRes.status, 200);
+  assert.equal((await readyRes.json()).status, 'ok');
+
+  const startupRes = await fetch(`${baseUrl}/health/startup`);
+  assert.equal(startupRes.status, 200);
+  assert.equal((await startupRes.json()).status, 'ok');
+
+  // 2. Prometheus standard text exposition format
+  const promRes = await fetch(`${baseUrl}/metrics`);
+  assert.equal(promRes.status, 200);
+  assert.ok(promRes.headers.get('content-type')?.includes('text/plain'));
+  const promText = await promRes.text();
+  assert.ok(promText.includes('# HELP http_requests_total'));
+  assert.ok(promText.includes('# TYPE http_requests_total counter'));
+  assert.ok(promText.includes('# HELP open_semrush_active_requests'));
+
+  // 3. W3C distributed tracing context propagation
+  const traceHeader = '00-abcdef0123456789abcdef0123456789-1234567890abcdef-01';
+  const traceRes = await fetch(`${baseUrl}/api/health`, {
+    headers: { traceparent: traceHeader },
+  });
+  assert.equal(traceRes.status, 200);
+  assert.equal(traceRes.headers.get('x-trace-id'), 'abcdef0123456789abcdef0123456789');
+  assert.ok(traceRes.headers.get('traceparent')?.startsWith('00-abcdef0123456789abcdef0123456789-'));
+
+  // 4. ML Opportunity Ranking API endpoint
+  const mlRes = await fetch(`${baseUrl}/api/ml/opportunity-ranking`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      candidates: [
+        {
+          query: 'buy seo software',
+          url: 'https://example.com/pricing',
+          impressions: 15000,
+          clicks: 300,
+          ctr: 0.02,
+          position: 11,
+          keywordDifficulty: 40,
+          pageAuthority: 70,
+          contentQuality: 85,
+          searchIntentAlignment: 0.95,
+          backlinkStrength: 35,
+        },
+        {
+          query: 'what is seo',
+          url: 'https://example.com/blog/what-is-seo',
+          impressions: 8000,
+          clicks: 120,
+          ctr: 0.015,
+          position: 22,
+          keywordDifficulty: 80,
+          pageAuthority: 50,
+          contentQuality: 65,
+          searchIntentAlignment: 0.80,
+          backlinkStrength: 10,
+        },
+      ],
+    }),
+  });
+  assert.equal(mlRes.status, 200);
+  const mlData = await mlRes.json();
+  assert.equal(mlData.ranked.length, 2);
+  assert.equal(mlData.ranked[0].query, 'buy seo software');
+  assert.ok(mlData.ranked[0].expectedIncrementalClicks > 0);
+  assert.equal(mlData.summary.totalCandidates, 2);
+});

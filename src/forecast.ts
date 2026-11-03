@@ -168,6 +168,8 @@ function evaluateHorizonRollingBacktest(
   const naiveAbsErrors: number[] = [];
   const seasonalNaiveAbsErrors: number[] = [];
   const meanAbsErrors: number[] = [];
+  const actualValues: number[] = [];
+  const inSampleSeasonalDiffs: number[] = [];
 
   // Determine split step size
   const maxTrainIndex = n - horizon;
@@ -188,6 +190,11 @@ function evaluateHorizonRollingBacktest(
     const minTestDate = testSet[0]!.date;
     if (maxTrainDate >= minTestDate) {
       throw new Error(`Data leakage detected in backtest! maxTrainDate (${maxTrainDate}) >= minTestDate (${minTestDate})`);
+    }
+
+    // Collect in-sample seasonal differences for MASE denominator
+    for (let i = 7; i < trainSet.length; i++) {
+      inSampleSeasonalDiffs.push(Math.abs(trainSet[i].clicks - trainSet[i - 7].clicks));
     }
 
     // Train baseline models
@@ -228,6 +235,7 @@ function evaluateHorizonRollingBacktest(
       const actual = testPoint.clicks;
       const error = actual - predicted;
 
+      actualValues.push(actual);
       actualErrors.push(error);
       absErrors.push(Math.abs(error));
       sqErrors.push(error * error);
@@ -265,6 +273,15 @@ function evaluateHorizonRollingBacktest(
   const seasonalNaiveMae = seasonalNaiveAbsErrors.reduce((a, b) => a + b, 0) / totalEvaluatedPoints;
   const meanMae = meanAbsErrors.reduce((a, b) => a + b, 0) / totalEvaluatedPoints;
 
+  const totalActual = actualValues.reduce((a, b) => a + b, 0);
+  const totalAbsErr = absErrors.reduce((a, b) => a + b, 0);
+  const wape = totalActual > 0 ? (totalAbsErr / totalActual) * 100 : 0;
+
+  const inSampleSeasonalMae = inSampleSeasonalDiffs.length > 0
+    ? inSampleSeasonalDiffs.reduce((a, b) => a + b, 0) / inSampleSeasonalDiffs.length
+    : 1;
+  const mase = inSampleSeasonalMae > 0 ? mae / inSampleSeasonalMae : 1;
+
   const modelImprovementPercent = naiveMae > 0 ? Number((((naiveMae - mae) / naiveMae) * 100).toFixed(2)) : 0;
 
   return {
@@ -272,6 +289,8 @@ function evaluateHorizonRollingBacktest(
     mae: Number(mae.toFixed(2)),
     rmse: Number(rmse.toFixed(2)),
     mape: Number(mape.toFixed(2)),
+    wape: Number(wape.toFixed(2)),
+    mase: Number(mase.toFixed(2)),
     bias: Number(bias.toFixed(2)),
     coverage95: Number(coverage95.toFixed(4)),
     sampleSize: totalEvaluatedPoints,

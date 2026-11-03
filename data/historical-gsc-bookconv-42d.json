@@ -1,0 +1,316 @@
+{
+  "provider": "gsc_searchstudies_datadive",
+  "verified": true,
+  "siteUrl": "https://www.bookconv.com",
+  "startDate": "2026-07-23",
+  "endDate": "2026-09-02",
+  "totalDays": 42,
+  "totalClicks": 6,
+  "totalImpressions": 2642,
+  "averageCtr": 0.0023,
+  "averagePosition": 55.7,
+  "provenance": {
+    "tier": "empirical_observation",
+    "isFactual": true,
+    "dataSource": "SearchStudies SEO Data Dive 2025 Benchmark (www.bookconv.com)",
+    "methodology": "Multi-snapshot daily impressions, clicks, CTR, and SERP position telemetry",
+    "domain": "www.bookconv.com",
+    "vertical": "Utilities / File Conversion SaaS"
+  },
+  "dailyObservations": [
+    {
+      "date": "2026-07-23",
+      "clicks": 0,
+      "impressions": 0,
+      "ctr": 0,
+      "averagePosition": 45
+    },
+    {
+      "date": "2026-07-24",
+      "clicks": 0,
+      "impressions": 0,
+      "ctr": 0,
+      "averagePosition": 45
+    },
+    {
+      "date": "2026-07-25",
+      "clicks": 0,
+      "impressions": 1,
+      "ctr": 0,
+      "averagePosition": 34
+    },
+    {
+      "date": "2026-07-26",
+      "clicks": 0,
+      "impressions": 5,
+      "ctr": 0,
+      "averagePosition": 16.6
+    },
+    {
+      "date": "2026-07-27",
+      "clicks": 0,
+      "impressions": 10,
+      "ctr": 0,
+      "averagePosition": 44.2
+    },
+    {
+      "date": "2026-07-28",
+      "clicks": 0,
+      "impressions": 4,
+      "ctr": 0,
+      "averagePosition": 28
+    },
+    {
+      "date": "2026-07-29",
+      "clicks": 0,
+      "impressions": 6,
+      "ctr": 0,
+      "averagePosition": 60.7
+    },
+    {
+      "date": "2026-07-30",
+      "clicks": 0,
+      "impressions": 14,
+      "ctr": 0,
+      "averagePosition": 57.6
+    },
+    {
+      "date": "2026-07-31",
+      "clicks": 0,
+      "impressions": 16,
+      "ctr": 0,
+      "averagePosition": 54.8
+    },
+    {
+      "date": "2026-08-01",
+      "clicks": 0,
+      "impressions": 16,
+      "ctr": 0,
+      "averagePosition": 52.9
+    },
+    {
+      "date": "2026-08-02",
+      "clicks": 0,
+      "impressions": 27,
+      "ctr": 0,
+      "averagePosition": 57.2
+    },
+    {
+      "date": "2026-08-03",
+      "clicks": 0,
+      "impressions": 32,
+      "ctr": 0,
+      "averagePosition": 56.6
+    },
+    {
+      "date": "2026-08-04",
+      "clicks": 0,
+      "impressions": 18,
+      "ctr": 0,
+      "averagePosition": 49.5
+    },
+    {
+      "date": "2026-08-05",
+      "clicks": 0,
+      "impressions": 41,
+      "ctr": 0,
+      "averagePosition": 40.2
+    },
+    {
+      "date": "2026-08-06",
+      "clicks": 0,
+      "impressions": 47,
+      "ctr": 0,
+      "averagePosition": 35.8
+    },
+    {
+      "date": "2026-08-07",
+      "clicks": 0,
+      "impressions": 45,
+      "ctr": 0,
+      "averagePosition": 36.6
+    },
+    {
+      "date": "2026-08-08",
+      "clicks": 0,
+      "impressions": 37,
+      "ctr": 0,
+      "averagePosition": 42.4
+    },
+    {
+      "date": "2026-08-09",
+      "clicks": 0,
+      "impressions": 150,
+      "ctr": 0,
+      "averagePosition": 39.5
+    },
+    {
+      "date": "2026-08-10",
+      "clicks": 0,
+      "impressions": 116,
+      "ctr": 0,
+      "averagePosition": 36.3
+    },
+    {
+      "date": "2026-08-11",
+      "clicks": 0,
+      "impressions": 131,
+      "ctr": 0,
+      "averagePosition": 33.5
+    },
+    {
+      "date": "2026-08-12",
+      "clicks": 0,
+      "impressions": 221,
+      "ctr": 0,
+      "averagePosition": 60.1
+    },
+    {
+      "date": "2026-08-13",
+      "clicks": 0,
+      "impressions": 171,
+      "ctr": 0,
+      "averagePosition": 63.4
+    },
+    {
+      "date": "2026-08-14",
+      "clicks": 0,
+      "impressions": 159,
+      "ctr": 0,
+      "averagePosition": 54.6
+    },
+    {
+      "date": "2026-08-15",
+      "clicks": 0,
+      "impressions": 147,
+      "ctr": 0,
+      "averagePosition": 56.6
+    },
+    {
+      "date": "2026-08-16",
+      "clicks": 0,
+      "impressions": 209,
+      "ctr": 0,
+      "averagePosition": 63.7
+    },
+    {
+      "date": "2026-08-17",
+      "clicks": 0,
+      "impressions": 178,
+      "ctr": 0,
+      "averagePosition": 58.1
+    },
+    {
+      "date": "2026-08-18",
+      "clicks": 1,
+      "impressions": 153,
+      "ctr": 0.0065,
+      "averagePosition": 59.6
+    },
+    {
+      "date": "2026-08-19",
+      "clicks": 0,
+      "impressions": 164,
+      "ctr": 0,
+      "averagePosition": 64.5
+    },
+    {
+      "date": "2026-08-20",
+      "clicks": 0,
+      "impressions": 150,
+      "ctr": 0,
+      "averagePosition": 62.5
+    },
+    {
+      "date": "2026-08-21",
+      "clicks": 0,
+      "impressions": 142,
+      "ctr": 0,
+      "averagePosition": 65.1
+    },
+    {
+      "date": "2026-08-22",
+      "clicks": 0,
+      "impressions": 32,
+      "ctr": 0,
+      "averagePosition": 60.6
+    },
+    {
+      "date": "2026-08-23",
+      "clicks": 0,
+      "impressions": 8,
+      "ctr": 0,
+      "averagePosition": 79.8
+    },
+    {
+      "date": "2026-08-24",
+      "clicks": 0,
+      "impressions": 31,
+      "ctr": 0,
+      "averagePosition": 46.4
+    },
+    {
+      "date": "2026-08-25",
+      "clicks": 1,
+      "impressions": 24,
+      "ctr": 0.0417,
+      "averagePosition": 80.6
+    },
+    {
+      "date": "2026-08-26",
+      "clicks": 0,
+      "impressions": 27,
+      "ctr": 0,
+      "averagePosition": 86.1
+    },
+    {
+      "date": "2026-08-27",
+      "clicks": 1,
+      "impressions": 17,
+      "ctr": 0.0588,
+      "averagePosition": 65.8
+    },
+    {
+      "date": "2026-08-28",
+      "clicks": 1,
+      "impressions": 11,
+      "ctr": 0.0909,
+      "averagePosition": 74.6
+    },
+    {
+      "date": "2026-08-29",
+      "clicks": 0,
+      "impressions": 19,
+      "ctr": 0,
+      "averagePosition": 79.1
+    },
+    {
+      "date": "2026-08-30",
+      "clicks": 0,
+      "impressions": 15,
+      "ctr": 0,
+      "averagePosition": 74.7
+    },
+    {
+      "date": "2026-08-31",
+      "clicks": 2,
+      "impressions": 20,
+      "ctr": 0.1,
+      "averagePosition": 65
+    },
+    {
+      "date": "2026-09-01",
+      "clicks": 0,
+      "impressions": 15,
+      "ctr": 0,
+      "averagePosition": 84.1
+    },
+    {
+      "date": "2026-09-02",
+      "clicks": 0,
+      "impressions": 13,
+      "ctr": 0,
+      "averagePosition": 68.2
+    }
+  ]
+}

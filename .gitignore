@@ -10,6 +10,13 @@ node_modules/
 data/*.json
 !data/.gitkeep
 !data/historical-gsc-anonymized-180d.json
+!data/historical-gsc-ecommerce-180d.json
+!data/historical-gsc-publisher-180d.json
+!data/seo-data-dive-benchmark.json
+!data/historical-gsc-bookconv-42d.json
+!data/seo-data-dive-bookconv-opportunities.json
+!data/seo-data-dive-bookconv-generative-ai.json
+!data/seo-data-dive-bookconv.csv
 
 # System & IDE
 .DS_Store

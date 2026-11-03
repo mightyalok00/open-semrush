@@ -1,0 +1,593 @@
+{
+  "dataset": "searchstudies/SEO-Data-Dive-Data-Challenge-2025",
+  "domain": "www.bookconv.com",
+  "searchType": "generative_ai",
+  "recordCount": 58,
+  "observations": [
+    {
+      "dimension": "page",
+      "date": "2026-09-05",
+      "query": null,
+      "page": "https://www.bookconv.com/es/blog/azw3-vs-mobi",
+      "clicks": 0,
+      "impressions": 10,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "page",
+      "date": "2026-09-05",
+      "query": null,
+      "page": "https://www.bookconv.com/blog/can-kindle-read-azw3",
+      "clicks": 0,
+      "impressions": 2,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "page",
+      "date": "2026-09-05",
+      "query": null,
+      "page": "https://www.bookconv.com/blog/mobi-or-azw3-for-kindle",
+      "clicks": 0,
+      "impressions": 2,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "page",
+      "date": "2026-09-05",
+      "query": null,
+      "page": "https://www.bookconv.com/blog/ebook-formats-explained",
+      "clicks": 0,
+      "impressions": 1,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "page",
+      "date": "2026-09-05",
+      "query": null,
+      "page": "https://www.bookconv.com/blog/why-convert-lit-to-epub",
+      "clicks": 0,
+      "impressions": 1,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "country",
+      "date": "2026-09-05",
+      "query": null,
+      "page": null,
+      "clicks": 0,
+      "impressions": 4,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "country",
+      "date": "2026-09-05",
+      "query": null,
+      "page": null,
+      "clicks": 0,
+      "impressions": 3,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "country",
+      "date": "2026-09-05",
+      "query": null,
+      "page": null,
+      "clicks": 0,
+      "impressions": 2,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "country",
+      "date": "2026-09-05",
+      "query": null,
+      "page": null,
+      "clicks": 0,
+      "impressions": 2,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "country",
+      "date": "2026-09-05",
+      "query": null,
+      "page": null,
+      "clicks": 0,
+      "impressions": 1,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "country",
+      "date": "2026-09-05",
+      "query": null,
+      "page": null,
+      "clicks": 0,
+      "impressions": 1,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "country",
+      "date": "2026-09-05",
+      "query": null,
+      "page": null,
+      "clicks": 0,
+      "impressions": 1,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "country",
+      "date": "2026-09-05",
+      "query": null,
+      "page": null,
+      "clicks": 0,
+      "impressions": 1,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "country",
+      "date": "2026-09-05",
+      "query": null,
+      "page": null,
+      "clicks": 0,
+      "impressions": 1,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "device",
+      "date": "2026-09-05",
+      "query": null,
+      "page": null,
+      "clicks": 0,
+      "impressions": 14,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "device",
+      "date": "2026-09-05",
+      "query": null,
+      "page": null,
+      "clicks": 0,
+      "impressions": 2,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "date",
+      "date": "2026-07-23",
+      "query": null,
+      "page": null,
+      "clicks": 0,
+      "impressions": 0,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "date",
+      "date": "2026-07-24",
+      "query": null,
+      "page": null,
+      "clicks": 0,
+      "impressions": 0,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "date",
+      "date": "2026-07-25",
+      "query": null,
+      "page": null,
+      "clicks": 0,
+      "impressions": 0,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "date",
+      "date": "2026-07-26",
+      "query": null,
+      "page": null,
+      "clicks": 0,
+      "impressions": 0,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "date",
+      "date": "2026-07-27",
+      "query": null,
+      "page": null,
+      "clicks": 0,
+      "impressions": 0,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "date",
+      "date": "2026-07-28",
+      "query": null,
+      "page": null,
+      "clicks": 0,
+      "impressions": 0,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "date",
+      "date": "2026-07-29",
+      "query": null,
+      "page": null,
+      "clicks": 0,
+      "impressions": 0,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "date",
+      "date": "2026-07-30",
+      "query": null,
+      "page": null,
+      "clicks": 0,
+      "impressions": 0,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "date",
+      "date": "2026-07-31",
+      "query": null,
+      "page": null,
+      "clicks": 0,
+      "impressions": 0,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "date",
+      "date": "2026-08-01",
+      "query": null,
+      "page": null,
+      "clicks": 0,
+      "impressions": 0,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "date",
+      "date": "2026-08-02",
+      "query": null,
+      "page": null,
+      "clicks": 0,
+      "impressions": 0,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "date",
+      "date": "2026-08-03",
+      "query": null,
+      "page": null,
+      "clicks": 0,
+      "impressions": 0,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "date",
+      "date": "2026-08-04",
+      "query": null,
+      "page": null,
+      "clicks": 0,
+      "impressions": 0,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "date",
+      "date": "2026-08-05",
+      "query": null,
+      "page": null,
+      "clicks": 0,
+      "impressions": 2,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "date",
+      "date": "2026-08-06",
+      "query": null,
+      "page": null,
+      "clicks": 0,
+      "impressions": 2,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "date",
+      "date": "2026-08-07",
+      "query": null,
+      "page": null,
+      "clicks": 0,
+      "impressions": 0,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "date",
+      "date": "2026-08-08",
+      "query": null,
+      "page": null,
+      "clicks": 0,
+      "impressions": 0,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "date",
+      "date": "2026-08-09",
+      "query": null,
+      "page": null,
+      "clicks": 0,
+      "impressions": 3,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "date",
+      "date": "2026-08-10",
+      "query": null,
+      "page": null,
+      "clicks": 0,
+      "impressions": 3,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "date",
+      "date": "2026-08-11",
+      "query": null,
+      "page": null,
+      "clicks": 0,
+      "impressions": 2,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "date",
+      "date": "2026-08-12",
+      "query": null,
+      "page": null,
+      "clicks": 0,
+      "impressions": 0,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "date",
+      "date": "2026-08-13",
+      "query": null,
+      "page": null,
+      "clicks": 0,
+      "impressions": 0,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "date",
+      "date": "2026-08-14",
+      "query": null,
+      "page": null,
+      "clicks": 0,
+      "impressions": 1,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "date",
+      "date": "2026-08-15",
+      "query": null,
+      "page": null,
+      "clicks": 0,
+      "impressions": 0,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "date",
+      "date": "2026-08-16",
+      "query": null,
+      "page": null,
+      "clicks": 0,
+      "impressions": 0,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "date",
+      "date": "2026-08-17",
+      "query": null,
+      "page": null,
+      "clicks": 0,
+      "impressions": 0,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "date",
+      "date": "2026-08-18",
+      "query": null,
+      "page": null,
+      "clicks": 0,
+      "impressions": 0,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "date",
+      "date": "2026-08-19",
+      "query": null,
+      "page": null,
+      "clicks": 0,
+      "impressions": 2,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "date",
+      "date": "2026-08-20",
+      "query": null,
+      "page": null,
+      "clicks": 0,
+      "impressions": 1,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "date",
+      "date": "2026-08-21",
+      "query": null,
+      "page": null,
+      "clicks": 0,
+      "impressions": 0,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "date",
+      "date": "2026-08-22",
+      "query": null,
+      "page": null,
+      "clicks": 0,
+      "impressions": 0,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "date",
+      "date": "2026-08-23",
+      "query": null,
+      "page": null,
+      "clicks": 0,
+      "impressions": 0,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "date",
+      "date": "2026-08-24",
+      "query": null,
+      "page": null,
+      "clicks": 0,
+      "impressions": 0,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "date",
+      "date": "2026-08-25",
+      "query": null,
+      "page": null,
+      "clicks": 0,
+      "impressions": 0,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "date",
+      "date": "2026-08-26",
+      "query": null,
+      "page": null,
+      "clicks": 0,
+      "impressions": 0,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "date",
+      "date": "2026-08-27",
+      "query": null,
+      "page": null,
+      "clicks": 0,
+      "impressions": 0,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "date",
+      "date": "2026-08-28",
+      "query": null,
+      "page": null,
+      "clicks": 0,
+      "impressions": 0,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "date",
+      "date": "2026-08-29",
+      "query": null,
+      "page": null,
+      "clicks": 0,
+      "impressions": 0,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "date",
+      "date": "2026-08-30",
+      "query": null,
+      "page": null,
+      "clicks": 0,
+      "impressions": 0,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "date",
+      "date": "2026-08-31",
+      "query": null,
+      "page": null,
+      "clicks": 0,
+      "impressions": 0,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "date",
+      "date": "2026-09-01",
+      "query": null,
+      "page": null,
+      "clicks": 0,
+      "impressions": 0,
+      "ctr": 0,
+      "position": 0
+    },
+    {
+      "dimension": "date",
+      "date": "2026-09-02",
+      "query": null,
+      "page": null,
+      "clicks": 0,
+      "impressions": 0,
+      "ctr": 0,
+      "position": 0
+    }
+  ],
+  "provenance": {
+    "tier": "empirical_observation",
+    "dataSource": "SearchStudies SEO Data Dive 2025 (Generative AI search type export)",
+    "isFactual": true
+  }
+}

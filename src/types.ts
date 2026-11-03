@@ -701,6 +701,8 @@ export interface BacktestErrorMetrics {
   readonly mae: number;
   readonly rmse: number;
   readonly mape: number;
+  readonly wape?: number; // Weighted Absolute Percentage Error (%)
+  readonly mase?: number; // Mean Absolute Scaled Error (relative to in-sample seasonal naive)
   readonly bias: number;
   readonly coverage95: number; // Fraction (0.0 to 1.0) of actuals within 95% CI
   readonly sampleSize: number;
@@ -708,6 +710,38 @@ export interface BacktestErrorMetrics {
   readonly seasonalNaiveMae: number;
   readonly meanMae: number;
   readonly modelImprovementPercent: number; // Relative to naive baseline
+}
+
+export type ForecastingModelId =
+  | 'seasonal_naive'
+  | 'linear_ols'
+  | 'ridge_regression'
+  | 'random_forest'
+  | 'gradient_boosting'
+  | 'sarima_autoregressive'
+  | 'prophet_additive'
+  | 'ensemble_production';
+
+export interface ModelBenchmarkScore {
+  readonly modelId: ForecastingModelId;
+  readonly modelName: string;
+  readonly horizonDays: ForecastHorizon;
+  readonly mae: number;
+  readonly rmse: number;
+  readonly wape: number;
+  readonly mase: number;
+  readonly coverage95: number;
+  readonly bias: number;
+  readonly vsSeasonalNaivePct: number;
+  readonly vsNaivePct: number;
+}
+
+export interface DomainBenchmarkEvaluation {
+  readonly domain: string;
+  readonly sector: string;
+  readonly totalDays: number;
+  readonly totalClicks: number;
+  readonly models: readonly ModelBenchmarkScore[];
 }
 
 export interface BacktestEvaluationReport {

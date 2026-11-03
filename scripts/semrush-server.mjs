@@ -84,7 +84,19 @@ const {
   evaluateAiSearchVisibility,
   generateSeoContentBrief,
   fetchCoreWebVitals,
+  initStandardMetrics,
+  PrometheusRegistry,
+  extractTraceContext,
+  formatTraceparent,
+  HealthMonitor,
+  runRenderedAudit,
+  rankSeoOpportunities,
+  summarizeOpportunityPlan,
 } = semrushModule;
+
+const prometheusRegistry = initStandardMetrics ? initStandardMetrics() : (PrometheusRegistry ? PrometheusRegistry.getInstance() : null);
+const healthMonitor = HealthMonitor ? new HealthMonitor() : null;
+if (healthMonitor) healthMonitor.markStarted();
 
 // Resolve public assets directory
 const candidatePublicDirs = [
@@ -190,9 +202,25 @@ const server = http.createServer(async (req, res) => {
 
   activeRequests += 1;
   totalRequests += 1;
+  const requestStartTime = process.hrtime.bigint();
+  const traceCtx = extractTraceContext ? extractTraceContext(req.headers["traceparent"], req.headers["x-tenant-id"]) : null;
+  if (traceCtx) {
+    res.setHeader("x-trace-id", traceCtx.traceId);
+    if (formatTraceparent) res.setHeader("traceparent", formatTraceparent(traceCtx));
+  }
   res.on('finish', () => {
     activeRequests = Math.max(0, activeRequests - 1);
     if (res.statusCode >= 500) totalErrors += 1;
+    if (prometheusRegistry) {
+      const durationSec = Number(process.hrtime.bigint() - requestStartTime) / 1e9;
+      prometheusRegistry.incrementCounter("http_requests_total", 1, { method: req.method || "GET", status: String(res.statusCode) });
+      prometheusRegistry.observeHistogram("http_request_duration_seconds", durationSec);
+      const mem = process.memoryUsage();
+      prometheusRegistry.setGauge("open_semrush_memory_heap_bytes", mem.heapUsed);
+      prometheusRegistry.setGauge("open_semrush_memory_rss_bytes", mem.rss);
+      prometheusRegistry.setGauge("open_semrush_active_requests", activeRequests);
+      prometheusRegistry.setGauge("open_semrush_server_uptime_seconds", Math.floor((Date.now() - serverStartTime) / 1000));
+    }
   });
 
   const reqUrl = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
@@ -865,6 +893,63 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    // Kubernetes Health Probes: Liveness, Readiness, Startup
+    if (pathname === "/health/live" && req.method === "GET") {
+      const live = healthMonitor ? await healthMonitor.checkLiveness() : { status: "ok" };
+      sendJson(res, 200, live);
+      return;
+    }
+    if (pathname === "/health/ready" && req.method === "GET") {
+      const ready = healthMonitor ? await healthMonitor.checkReadiness() : { status: isShuttingDown ? "degraded" : "ok" };
+      sendJson(res, ready.status === "ok" ? 200 : 503, ready);
+      return;
+    }
+    if (pathname === "/health/startup" && req.method === "GET") {
+      const startup = healthMonitor ? healthMonitor.checkStartup() : { status: "ok" };
+      sendJson(res, startup.status === "ok" ? 200 : 503, startup);
+      return;
+    }
+
+    // Prometheus Standard Text Exposition Format
+    if (pathname === "/metrics" && req.method === "GET") {
+      res.writeHead(200, { "Content-Type": "text/plain; version=0.0.4; charset=utf-8" });
+      res.end(prometheusRegistry ? prometheusRegistry.exportPrometheusText() : "# HELP none\n");
+      return;
+    }
+
+    // API Route: Playwright Headless Browser Rendered SEO Audit
+    if (pathname === "/api/audit/rendered" && req.method === "POST") {
+      const body = await parseJsonBody(req);
+      const targetUrl = typeof body.url === "string" ? body.url.trim() : "";
+      if (!targetUrl) {
+        sendJson(res, 400, { error: "url is required" });
+        return;
+      }
+      try {
+        const report = await runRenderedAudit(targetUrl);
+        if (prometheusRegistry) prometheusRegistry.incrementCounter("seo_crawls_total", 1);
+        sendJson(res, 200, report);
+      } catch (err) {
+        sendJson(res, 400, { error: err.message });
+      }
+      return;
+    }
+
+    // API Route: ML SEO Opportunity Ranking & Expected Traffic Impact
+    if (pathname === "/api/ml/opportunity-ranking" && req.method === "POST") {
+      const body = await parseJsonBody(req);
+      const candidates = Array.isArray(body.candidates) ? body.candidates : [];
+      if (candidates.length === 0) {
+        sendJson(res, 400, { error: "candidates array is required" });
+        return;
+      }
+      const ranked = rankSeoOpportunities(candidates);
+      const summary = summarizeOpportunityPlan(ranked);
+      if (prometheusRegistry) prometheusRegistry.incrementCounter("seo_opportunity_rankings_total", 1);
+      sendJson(res, 200, { ranked, summary });
+      return;
+    }
+
     // Serve static files
     serveStaticFile(req, res, pathname);
 
@@ -905,6 +990,7 @@ function startServer(port) {
 function gracefulShutdown(signal) {
   if (isShuttingDown) return;
   isShuttingDown = true;
+  if (healthMonitor) healthMonitor.markDraining();
   console.log(`\nReceived ${signal}. Initiating graceful shutdown (draining ${activeRequests} active requests)...`);
 
   server.close(() => {

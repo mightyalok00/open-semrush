@@ -75,6 +75,8 @@ for (const [h, m] of Object.entries(metrics)) {
     'vs S-Naive': `+${vsSeasonalNaive.toFixed(1)}%`,
     'vs Naive': `+${vsNaive.toFixed(1)}%`,
     'RMSE': m.rmse.toFixed(2),
+    'WAPE': m.wape !== undefined ? `${m.wape.toFixed(1)}%` : 'N/A',
+    'MASE': m.mase !== undefined ? m.mase.toFixed(2) : 'N/A',
     'Directional Bias': `${m.bias >= 0 ? '+' : ''}${m.bias.toFixed(2)} clicks`,
     '95% Coverage': `${(m.coverage95 * 100).toFixed(1)}%`,
   });
